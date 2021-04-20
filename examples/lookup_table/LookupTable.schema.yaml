@@ -4,9 +4,6 @@ Schema:
   Description: Schema Lookup Tables using data group templates
   Version: "0.1.0"
   Root Data Group: LookupTable
-  Unit Systems:
-    IPUnits:
-      - ft
   Data Group Templates:
     LookupTable:
       Object Type Name: Lookup Table

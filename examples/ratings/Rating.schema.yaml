@@ -1,0 +1,17 @@
+Schema:
+  Object Type: "Meta"
+  Title: Rating
+  Description: Schema Lookup Tables using data group templates
+  Version: "0.1.0"
+  Root Data Group: LookupTable
+  Unit Systems:
+    IPUnits:
+      - ft
+  Data Group Templates:
+    Rating:
+      Object Type Name: Rating
+      Required Data Elements:
+        - rating_reproducible_from_data:
+            Data Type: Boolean
+            Required: True
+      Unit System: IPUnits
