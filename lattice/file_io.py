@@ -6,6 +6,12 @@ import yaml
 def get_extension(file):
     return os.path.splitext(file)[1]
 
+def get_file_basename(file, depth=0):
+    basename = os.path.basename(file)
+    for i in range(depth):
+        basename = os.path.splitext(basename)[0]
+    return basename
+
 def load(input_file_path):
     ext = get_extension(input_file_path).lower()
     if (ext == '.json'):
