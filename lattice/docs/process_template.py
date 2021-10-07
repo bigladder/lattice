@@ -299,5 +299,5 @@ def process_templates(input_dir, output_dir):
         os.mkdir(new_output_dir)
       process_templates(path, new_output_dir)
     elif '.md.j2' in file:
-      process_template(os.path.join(input_dir,file), os.path.join(output_dir,'doc.md'), schema_dir=input_dir)
+      process_template(os.path.join(input_dir,file), os.path.join(output_dir,file[:-3]), schema_dir=input_dir)
 

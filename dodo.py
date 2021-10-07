@@ -16,7 +16,7 @@ EXAMPLE_SCHEMAS = lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml')
 
 EXAMPLE_TEMPLATES = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2')
 
-OUTPUT_MD = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2', output_dir=BUILD_PATH, new_extension=".md")
+OUTPUT_MD = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2', output_dir=BUILD_PATH, new_extension="")
 
 def task_generate_meta_schemas():
   '''Generate JSON meta schemas'''
@@ -50,7 +50,10 @@ def task_doc_generation():
   '''Generate markdown documentation from templates'''
   return {
     'task_dep': ['meta_validation'],
+    'targets': OUTPUT_MD,
+    'file_dep': META_SCHEMAS + EXAMPLE_SCHEMAS + EXAMPLE_TEMPLATES,
     'actions': [
       (lattice.process_templates, [EXAMPLES_PATH, BUILD_PATH])
-    ]
+    ],
+    'clean': True
   }
