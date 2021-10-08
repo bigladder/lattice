@@ -28,10 +28,40 @@ definitions:
         type: array
         items:
           type: string
-      Data Group Templates:
-        type: object
       Unit Systems:
         type: object
+        patternProperties:
+          "**GENERATED**":
+            type: array
+            items:
+              type: string
+            minItems: 1
+      Data Group Templates:
+        type: object
+        patternProperties:
+          "**GENERATED**":
+            type: object
+            properties:
+              Object Type Name:
+                type: string
+                pattern: "**GENERATED**"
+              Required Data Elements:
+                type: object
+                patternProperties:
+                  "**GENERATED**":
+                    "$ref": meta.schema.json#/definitions/DataElementAttributes
+              Unit System:
+                type: string
+              Required Data Types:
+                type: array
+                items:
+                  type: string
+                minItems: 1
+              Data Elements Required:
+                type: boolean
+            required:
+              - Object Type Name
+            additionalProperties: false
     required:
     - Object Type
     additionalProperties: false
@@ -159,16 +189,6 @@ definitions:
         "$ref": meta.schema.json#/definitions/Required
       Notes:
         "$ref": meta.schema.json#/definitions/Notes
-  DataElement:
-    type: object
-    patternProperties:
-      "**GENERATED**":
-        "$ref": meta.schema.json#/definitions/DataElementAttributes
-        required:
-        - Description
-        - Data Type
-        additionalProperties: false
-    additionalProperties: false
   DataGroup:
     type: object
     properties:
@@ -176,7 +196,15 @@ definitions:
         type: string
         const: Data Group
       Data Elements:
-        "$ref": meta.schema.json#/definitions/DataElement
+        type: object
+        patternProperties:
+          "**GENERATED**":
+            "$ref": meta.schema.json#/definitions/DataElementAttributes
+            required:
+            - Description
+            - Data Type
+            additionalProperties: false
+        additionalProperties: false
     required:
     - Object Type
     - Data Elements

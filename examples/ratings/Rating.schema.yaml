@@ -11,7 +11,6 @@ Schema:
     Rating:
       Object Type Name: Rating
       Required Data Elements:
-        - rating_reproducible_from_data:
-            Data Type: Boolean
-            Required: True
+        rating_reproducible_from_data:
+          Data Type: Boolean
       Unit System: IPUnits

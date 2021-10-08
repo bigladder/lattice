@@ -8,22 +8,22 @@ Schema:
     LookupTable:
       Object Type Name: Lookup Table
       Required Data Elements:
-        - grid_variables
-        - lookup_variables
+        grid_variables:
+          Required: True
+        lookup_variables:
+          Required: True
     GridVariables:
       Object Type Name: Grid Variables
       Required Data Types:
         - "[Numeric][1..]"
         - "[Integer][1..]"
-      Data Elements Required:
-        - True
+      Data Elements Required: True
     LookupVariables:
       Object Type Name: Lookup Variables
-      Data Type:
+      Required Data Types:
         - "[Numeric/Null][1..]"
         - "[Integer/Null][1..]"
-      Data Elements Required:
-        - True
+      Data Elements Required: True
 
 LookupTable:
   Object Type: "Lookup Table"
