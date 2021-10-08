@@ -208,14 +208,16 @@ def generate_meta_schema(output_path, schema_path=None):
               required_names.append(data_element_name)
               data_element = data_group["Required Data Elements"][data_element_name]
               meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"][f"{data_group_type}DataElementAttributes"])
-              for attribute in data_element:
-                meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"]["properties"][attribute]["const"] = data_element[attribute]
               meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name] = copy.deepcopy(meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][element_names_anchored])
               meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}-{data_element_name}-DataElementAttributes"
-              meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"] += [attribute for attribute in data_element]
+              for attribute in data_element:
+                meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"]["properties"][attribute]["const"] = data_element[attribute]
+                if attribute not in meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"]:
+                  meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"].append(attribute)
             meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["required"] = required_names
-            meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][f"(?!^({'|'.join(required_names)})$)(^{element_names}$)"] = meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop(element_names_anchored)
-            meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][f"(?!^({'|'.join(required_names)})$)(^{element_names}$)"]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
+            exclusive_element_names_anchored = f"(?!^({'|'.join(required_names)})$)(^{element_names}$)"
+            meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored] = meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop(element_names_anchored)
+            meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
           else:
             meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
 
