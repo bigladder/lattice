@@ -41,6 +41,20 @@ String:
   Examples:
     - "Indirect evaporative cooler"
 
+ID:
+  Object Type: "Data Type"
+  Description: "A string used to identify an instance of a data group."
+  JSON Schema Type: string
+  Examples:
+    - "Lobby Zone"
+
+Reference:
+  Object Type: "Data Type"
+  Description: "A string used to reference and identified instance of a data group."
+  JSON Schema Type: string
+  Examples:
+    - "Lobby Zone"
+
 "Null":
   Object Type: "Data Type"
   Description: "Used to represent a missing value. Shall only be used in combination with other data types, e.g., 'Number/Null'."
@@ -53,21 +67,21 @@ String:
 UUID:
   Object Type: "String Type"
   Description: "An effectively unique character string conforming to ITU-T Recommendation X.667 (ITU-T 2012)."
-  JSON Schema Pattern: "[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}"
+  JSON Schema Pattern: "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
   Examples:
     - "123e4567-e89b-12d3-a456-426655440000"
 
 Date:
   Object Type: "String Type"
   Description: "A calendar date formatted per ISO 8601 (ISO 2004)"
-  JSON Schema Pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+  JSON Schema Pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
   Examples:
     - "2015-04-29"
 
 Timestamp:
   Object Type: "String Type"
   Description: "Date with UTC time formatted per ISO 8601 (ISO 2004)"
-  JSON Schema Pattern: "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z"
+  JSON Schema Pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
   Examples:
     - "2016-06-29T14:35Z"
 

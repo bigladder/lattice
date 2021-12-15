@@ -74,7 +74,9 @@ def generate_meta_schema(output_path, schema_path=None):
   # Data Types
   core_types = get_types(core_schema)
 
-  base_types = '|'.join(core_types["Data Type"])
+  regex_base_types = core_types["Data Type"]
+
+  base_types = '|'.join(regex_base_types)
   base_types = f"({base_types})"
 
   string_types = core_types["String Type"]
@@ -106,16 +108,17 @@ def generate_meta_schema(output_path, schema_path=None):
   optional_base_types = f"{base_types}{{1}}(\\/{base_types})*"
   single_type = f"({optional_base_types}|{string_types}|{data_groups}|{enumerations})"
   alternatives = f"\\({single_type}(,\\s*{single_type})+\\)"
-  arrays = f"\\[{base_types}\\]"
+  arrays = f"\\[{single_type}\\](\\[\\d*\\.\\.\\d*\\])*"  # TODO: Fix
   data_types = f"({single_type})|({alternatives})|({arrays})"
   data_types_anchored = f"^{data_types}$"
 
-  pattern = re.compile(data_types)
+  pattern = re.compile(data_types_anchored)
 
   valid_tests = [
     "Numeric",
     "[Numeric]",
-    "{DataGroup}"
+    "{DataGroup}",
+    "[String][1..]",
     ]
 
   invalid_tests = [
@@ -146,13 +149,15 @@ def generate_meta_schema(output_path, schema_path=None):
   multiples = f"%{number}"
   data_element_value = f"({element_names})=({values})"
   sets = f"\\[{number}(, {number})*\\]"
-  constraints = f"({ranges})|({multiples})|({sets})|({data_element_value})"
+  reference_scope = f":{type_base_names}:"
+
+  constraints = f"({ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})"
   constraints_anchored = f"^{constraints}$"
 
   re.compile(constraints)
 
   # Conditional Requirements
-  conditional_requirements = f"if ({element_names})(!?=({values}))?"
+  conditional_requirements = f"if (!?{element_names})(!?=({values}))?"
   conditional_requirements_anchored = f"^{conditional_requirements}$"
 
   re.compile(conditional_requirements)

@@ -171,6 +171,7 @@ definitions:
     - Hz
     - V
     - rev/s
+    - s
   DataTypePattern:
     type: string
     pattern: "**GENERATED**"
