@@ -84,31 +84,30 @@ def generate_meta_schema(output_path, schema_path=None):
     schema_types = get_types(schema)
     if "String Type" in schema_types:
       string_types += ["String Type"]
-  string_types = '|'.join(string_types)
-  string_types = f"({string_types})"
 
+  re_string_types = '|'.join(string_types)
+  re_string_types = f"({re_string_types})"
+
+  template_data_group_prefixes = []
   if schema:
     if 'Schema' in schema:
       # Data Group Template definitions
-      template_data_group_prefixes = []
       if 'Data Group Templates' in schema['Schema']:
         for data_group in schema['Schema']["Data Group Templates"]:
           template_data_group_prefixes.append(data_group)
 
   type_base_names = "[A-Z]([A-Z]|[a-z]|[0-9])*"
   type_base_names_anchored = f"^{type_base_names}$"
-  element_names = "([a-z]+)(_([a-z]|[0-9])+)*"
-  element_names_anchored = f"^{element_names}$"
   if len(template_data_group_prefixes) > 0:
     data_group_names_anchored = f"(^(?!({'|'.join(template_data_group_prefixes)})){type_base_names}$)"
   else:
     data_group_names_anchored = type_base_names_anchored
-  data_groups = f"\\{{{type_base_names}\\}}"
-  enumerations = f"<{type_base_names}>"
-  optional_base_types = f"{base_types}{{1}}(\\/{base_types})*"
-  single_type = f"({optional_base_types}|{string_types}|{data_groups}|{enumerations})"
-  alternatives = f"\\({single_type}(,\\s*{single_type})+\\)"
-  arrays = f"\\[{single_type}\\](\\[\\d*\\.\\.\\d*\\])*"  # TODO: Fix
+  data_groups = fr"\{{{type_base_names}\}}"
+  enumerations = fr"<{type_base_names}>"
+  optional_base_types = fr"{base_types}{{1}}(\/{base_types})*"
+  single_type = fr"({optional_base_types}|{re_string_types}|{data_groups}|{enumerations})"
+  alternatives = fr"\(({single_type})(,\s*{single_type})+\)"
+  arrays = fr"\[({single_type})\](\[\d*\.*\d*\])?"
   data_types = f"({single_type})|({alternatives})|({arrays})"
   data_types_anchored = f"^{data_types}$"
 
@@ -145,6 +144,8 @@ def generate_meta_schema(output_path, schema_path=None):
   re.compile(values)
 
   # Constraints
+  element_names = "([a-z]+)(_([a-z]|[0-9])+)*"
+  element_names_anchored = f"^{element_names}$"
   ranges = f"(>|>=|<=|<){number}"
   multiples = f"%{number}"
   data_element_value = f"({element_names})=({values})"
@@ -175,6 +176,12 @@ def generate_meta_schema(output_path, schema_path=None):
   meta_schema["definitions"]["DataTypePattern"]["pattern"] = data_types_anchored
   meta_schema["definitions"]["DataGroup"]["properties"]["Data Elements"]["patternProperties"][element_names_anchored] = meta_schema["definitions"]["DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop("**GENERATED**")
   meta_schema["patternProperties"][data_group_names_anchored] = meta_schema["patternProperties"].pop("**GENERATED**")
+
+  for string_obj_name in [name for name in core_schema if core_schema[name]['Object Type'] == 'String Type']:
+    if 'Is Regex' in core_schema[string_obj_name]:
+        meta_schema["definitions"][string_obj_name] = {"type":"string", "regex":True}
+    else:
+        meta_schema["definitions"][string_obj_name] = {"type":"string", "pattern":core_schema[string_obj_name]['JSON Schema Pattern']}
 
   if schema:
     if 'Schema' in schema:
@@ -233,6 +240,7 @@ def generate_meta_schema(output_path, schema_path=None):
 
 
 def get_types(schema):
+  '''For each Object Type in a schema, map a list of Objects matching that type.'''
   types = {}
   for object in schema:
     if schema[object]["Object Type"] not in types:
