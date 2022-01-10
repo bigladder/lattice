@@ -91,6 +91,10 @@ class DataGroup:
                     elif '=' in req:
                         self._construct_requirement_if_else(elements, req.split(' ')[1].split('=')[0],
                                                             True, req.split('=')[1], e)
+                    elif '!' in req:
+                        # Here, we convert yaml (iff !B then A) into json (if B then required(!A))
+                        dependency = req.split('!')[1]
+                        dependencies[dependency] = {'not' : {'required' : [e]}}
                     else:
                         dependency = req.split(' ')[1]
                         dependencies[dependency] = [e]
