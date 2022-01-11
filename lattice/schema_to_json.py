@@ -353,7 +353,7 @@ class JSON_translator:
                 elif obj_type == 'Enumeration':
                     sch = {**sch, **(self._process_enumeration(base_level_tag))}
                 else:
-                    dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references, self._kwargs)
+                    dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
                     sch = {**sch, **(dg.add_data_group(base_level_tag,
                                      self._contents[base_level_tag]['Data Elements']))}
         self._schema['definitions'] = sch
