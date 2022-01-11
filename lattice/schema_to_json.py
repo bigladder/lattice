@@ -50,10 +50,11 @@ def dict_compare(d1, d2, errors, level=0, lineage=None, hide_value_mismatches=Fa
 class DataGroup:
 
     array_type = r'\[(.*?)\]'                       # Array of Type notation e.g. '[Type]'
-    minmax_range_type = r'([0-9]*)(\.*\.*)([0-9]*)' # Parse ellipsis range-notation e.g. '[1..]'
+    minmax_range_type = r'([0-9]*)(\.*)([0-9]*)'    # Parse ellipsis range-notation e.g. '[1..]'
     alternative_type = r'\((.*)\)'                  # Parentheses encapsulate a list of options
+    enum_or_def = r'(\{|\<)(.*)(\}|\>)'
 
-    def __init__(self, name, type_list, ref_list=None):
+    def __init__(self, name, type_list, ref_list=None, **kwargs):
         self._name = name
         self._types = type_list
         self._refs = ref_list
@@ -80,7 +81,6 @@ class DataGroup:
             if 'Notes' in element:
                 elements['properties'][e]['notes'] = element['Notes']
             if 'Required' in element:
-                #required.append(e)
                 req = element['Required']
                 if isinstance(req, bool) and req == True:
                     required.append(e)
@@ -92,7 +92,7 @@ class DataGroup:
                         self._construct_requirement_if_else(elements, req.split(' ')[1].split('=')[0],
                                                             True, req.split('=')[1], e)
                     elif '!' in req:
-                        # Here, we convert yaml (iff !B then A) into json (if B then required(!A))
+                        # convert yaml (iff !B then A) into json (if B then required(!A))
                         dependency = req.split('!')[1]
                         dependencies[dependency] = {'not' : {'required' : [e]}}
                     else:
@@ -187,7 +187,7 @@ class DataGroup:
     def _construct_selection_if_then(self, target_dict_to_append, selector, selection, entry_name):
         '''
         Construct paired if-then json entries for allOf collections translated from source-schema
-        "choice" Constraints.
+        "selector" Constraints.
 
         :param target_dict_to_append:   This dictionary is modified in-situ with an if key and
                                         associated then key
@@ -208,10 +208,9 @@ class DataGroup:
             :param type_str:                Input string from source schema's Data Type key
             :param target_dict_to_append:   The json "items" node
         '''
-        enum_or_def = r'(\{|\<)(.*)(\}|\>)'
         internal_type = None
         nested_type = None
-        m = re.match(enum_or_def, type_str)
+        m = re.match(DataGroup.enum_or_def, type_str)
         if m:
             # Find the internal type. It might be inside nested-type syntax, but more likely
             # is a simple definition or enumeration.
@@ -317,10 +316,16 @@ class Enumeration:
 
 # -------------------------------------------------------------------------------------------------
 class JSON_translator:
-    def __init__(self):
+    def __init__(self, object_types: list, **kwargs):
+        '''
+        :param object_types:    A full set of available "Object Types" from core schema plus 
+                                custom types
+        :keyword enum_re:       Regular expression string describing enumerators
+        '''
         self._references = dict()
         self._fundamental_data_types = dict()
-
+        self._schema_object_types = object_types
+        self._kwargs = kwargs
 
     def load_common_schema(self, input_file_path):
         '''Load and process a yaml schema into its json schema equivalent.'''
@@ -348,7 +353,7 @@ class JSON_translator:
                 elif obj_type == 'Enumeration':
                     sch = {**sch, **(self._process_enumeration(base_level_tag))}
                 else:
-                    dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
+                    dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references, self._kwargs)
                     sch = {**sch, **(dg.add_data_group(base_level_tag,
                                      self._contents[base_level_tag]['Data Elements']))}
         self._schema['definitions'] = sch
@@ -372,17 +377,8 @@ class JSON_translator:
         for ref_name in refs:
             ext_dict = load(refs[ref_name])
             external_objects = list()
-            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] in (
-                ['Enumeration',
-                    'Data Group',
-                    'String Type',
-                    'Map Variables',
-                    'Rating Data Group',
-                    'Performance Map',
-                    'Grid Variables',
-                    'Lookup Variables'])]:
+            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] in self._schema_object_types]:
                 external_objects.append(base_item)
-            print(ref_name, external_objects)
             self._references[ref_name] = external_objects
             for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
                 self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
@@ -418,21 +414,6 @@ def print_comparison(original_dir, generated_dir, file_name_root, err):
         print(f"Translation of {file_name_root} successful.")
 
 # -------------------------------------------------------------------------------------------------
-
-
-def translate_dir(input_dir, output_dir):
-  for file in sorted(os.listdir(input_dir)):
-    path = os.path.join(input_dir,file)
-    if os.path.isdir(path):
-      new_output_dir = os.path.join(output_dir, file)
-      if not os.path.exists(new_output_dir):
-        os.mkdir(new_output_dir)
-      translate_dir(path, new_output_dir)
-    elif '.schema.yaml' in file:
-      j = JSON_translator()
-      file_name_root = os.path.splitext(os.path.splitext(file)[0])[0]
-      schema_instance = j.load_common_schema(os.path.join(input_dir,file))
-      dump(schema_instance, os.path.join(output_dir, file_name_root + '.schema.json'))
 
 
 if __name__ == '__main__':

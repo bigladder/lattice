@@ -21,18 +21,6 @@ EXAMPLE_TEMPLATES = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2')
 
 OUTPUT_MD = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2', output_dir=BUILD_PATH, new_extension="")
 
-def task_generate_json_schemas():
-  '''Generate specific JSON schemas'''
-  return {
-    'file_dep': EXAMPLE_SCHEMAS +
-                [os.path.join(SOURCE_PATH, "schema_to_json.py")],
-    'targets': JSON_SCHEMAS,
-    'actions': [
-      (create_folder, [BUILD_PATH]),
-      (lattice.schema_to_json.translate_dir, [EXAMPLES_PATH, BUILD_PATH])
-    ],
-    'clean': True
-  }
 
 def task_generate_meta_schemas():
   '''Generate JSON meta schemas'''
@@ -41,7 +29,7 @@ def task_generate_meta_schemas():
                 [BASE_META_SCHEMA_PATH,
                  CORE_SCHEMA_PATH,
                  os.path.join(SOURCE_PATH, "meta_schema.py")],
-    'targets': META_SCHEMAS,
+    'targets': META_SCHEMAS + JSON_SCHEMAS,
     'actions': [
       (create_folder, [BUILD_PATH]),
       (lattice.generate_meta_schemas, [EXAMPLES_PATH, BUILD_PATH])
