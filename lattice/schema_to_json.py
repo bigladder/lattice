@@ -159,7 +159,6 @@ class DataGroup:
                 # 3. 'items' entry
                 target_property_entry['items'] = dict()
                 self._get_simple_type(m[0], target_property_entry['items'])
-                #target_property_entry['items'][k] = v
                 if 'Constraints' in parent_dict:
                     self._get_simple_constraints(parent_dict['Constraints'], target_dict['items'])
             else:
@@ -170,7 +169,6 @@ class DataGroup:
                     selection_key, selections = parent_dict['Constraints'].split('(')
                     target_dict['allOf'] = list()
                     for s, t in zip(selections.split(','), types):
-                        #c = c.strip()
                         target_dict['allOf'].append(dict())
                         self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
                         self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
@@ -209,18 +207,9 @@ class DataGroup:
             :param target_dict_to_append:   The json "items" node
         '''
         internal_type = None
-        nested_type = None
         m = re.match(DataGroup.enum_or_def, type_str)
         if m:
-            # Find the internal type. It might be inside nested-type syntax, but more likely
-            # is a simple definition or enumeration.
-            m_nested = re.match(r'.*?\((.*)\)', m.group(2))
-            if m_nested:
-                # Rare case of a nested specification e.g. 'ASHRAE205(rs_id=RS0005)'
-                internal_type = m.group(2).split('(')[0]
-                nested_type = m_nested.group(1)
-            else:
-                internal_type = m.group(2)
+            internal_type = m.group(2)
         else:
             internal_type = type_str
         # Look through the references to assign a source to the type
@@ -228,15 +217,10 @@ class DataGroup:
             if internal_type in self._refs[key]:
                 internal_type = key + '.schema.json#/definitions/' + internal_type
                 target_dict_to_append['$ref'] = internal_type
-                if nested_type:
-                    # Always in the form 'rs_id=RSXXXX'
-                    target_dict_to_append['rs_id'] = nested_type.split('=')[1]
                 return
-
         try:
             if '/' in type_str:
                 # e.g. "Numeric/Null" becomes a list of 'type's
-                #return ('type', [self._types[t] for t in type_str.split('/')])
                 target_dict_to_append['type'] = [self._types[t] for t in type_str.split('/')]
             else:
                 target_dict_to_append['type'] = self._types[type_str]
