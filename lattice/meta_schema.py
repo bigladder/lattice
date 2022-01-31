@@ -157,11 +157,12 @@ class SchemaGenerator:
         element_names_anchored = f"^{element_names}$"
         ranges = f"(>|>=|<=|<){number}"
         multiples = f"%{number}"
-        data_element_value = f"({element_names})=({values})"
+        data_element_value = f"{element_names}={values}"
         sets = fr"\[{number}(, {number})*\]"
         reference_scope = f":{type_base_names}:"
+        selector = fr"{element_names}\({values}(,\s*{values})*\)"
 
-        constraints = f"({ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})"
+        constraints = f"({ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})|({selector})"
         constraints_anchored = f"^{constraints}$"
 
         re.compile(constraints)
