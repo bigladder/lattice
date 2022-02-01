@@ -29,7 +29,7 @@ def task_generate_meta_schemas():
                 [BASE_META_SCHEMA_PATH,
                  CORE_SCHEMA_PATH,
                  os.path.join(SOURCE_PATH, "meta_schema.py")],
-    'targets': META_SCHEMAS + JSON_SCHEMAS,
+    'targets': META_SCHEMAS,
     'actions': [
       (create_folder, [BUILD_PATH]),
       (lattice.generate_meta_schemas, [EXAMPLES_PATH, BUILD_PATH])
@@ -46,8 +46,19 @@ def task_meta_validation():
   }
 
 def task_json_translation():
+  '''Generate JSON schemas'''
   return {
-    'actions': []
+    'task_dep': ['generate_meta_schemas'],
+    'file_dep': EXAMPLE_SCHEMAS +
+                [BASE_META_SCHEMA_PATH,
+                 CORE_SCHEMA_PATH,
+                 os.path.join(SOURCE_PATH, "meta_schema.py")],
+    'targets': JSON_SCHEMAS,
+    'actions': [
+      (create_folder, [BUILD_PATH]),
+      (lattice.generate_json_schemas, [EXAMPLES_PATH, BUILD_PATH])
+    ],
+    'clean': True
   }
 
 def task_doc_generation():
