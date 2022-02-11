@@ -336,7 +336,7 @@ class JSON_translator:
                         sch = {**sch, **({base_level_tag : {"type":"string", "pattern":self._contents[base_level_tag]['JSON Schema Pattern']}})}
                 elif obj_type == 'Enumeration':
                     sch = {**sch, **(self._process_enumeration(base_level_tag))}
-                else:
+                elif obj_type == 'Data Group':
                     dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
                     sch = {**sch, **(dg.add_data_group(base_level_tag,
                                      self._contents[base_level_tag]['Data Elements']))}
@@ -359,13 +359,16 @@ class JSON_translator:
             for ref in schema_section['References']:
                 refs.update({f'{ref}' : os.path.join(self._source_dir, ref + '.schema.yaml')})
         for ref_name in refs:
-            ext_dict = load(refs[ref_name])
-            external_objects = list()
-            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] in self._schema_object_types]:
-                external_objects.append(base_item)
-            self._references[ref_name] = external_objects
-            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
-                self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
+            try:
+                ext_dict = load(refs[ref_name])
+                external_objects = list()
+                for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] in self._schema_object_types]:
+                    external_objects.append(base_item)
+                self._references[ref_name] = external_objects
+                for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
+                    self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
+            except RuntimeError:
+                raise RuntimeError(f'{refs[ref_name]} reference file does not exist.') from None
 
 
     def _process_enumeration(self, name_key):
@@ -383,22 +386,33 @@ class JSON_translator:
                 definition.add_enumerator(key)
         return definition.create_dictionary_entry()
 
+# -------------------------------------------------------------------------------------------------
+def generate_json_schema(input_path_to_file, output_dir):
+    if not os.path.isdir(output_dir):
+        os.mkdir(output_dir)
+    if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
+        input_dir, file = os.path.split(input_path_to_file)
+        schematypes = meta_schema.generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), input_path_to_file)
+        j = JSON_translator(schematypes.combined_types)
+        file_name_root = os.path.splitext(file)[0]
+        schema_instance = j.load_common_schema(os.path.join(input_dir,file))
+        dump(schema_instance, os.path.join(output_dir, file_name_root + '.schema.json'))
+
 
 # -------------------------------------------------------------------------------------------------
-def print_comparison(original_dir, generated_dir, file_name_root, err):
-    '''Compare generated dictionary to original; send results to stdout.'''
-    same = compare_dicts(os.path.join(original_dir, file_name_root + '.schema.json'),
-                         os.path.join(generated_dir, file_name_root + '.schema.json'),
-                         err)
-    if not same:
-        print(f'\nError(s) while matching {file_name_root}: Original(1) vs Generated(2)')
-        for e in err:
-            print(e)
-    else:
-        print(f"Translation of {file_name_root} successful.")
+def generate_json_schemas(input_dir, output_dir):
+    for file in sorted(os.listdir(input_dir)):
+        path = os.path.join(input_dir,file)
+        if os.path.isdir(path):
+            new_output_dir = os.path.join(output_dir, file)
+            if not os.path.exists(new_output_dir):
+                os.mkdir(new_output_dir)
+            generate_json_schemas(path, new_output_dir)
+        else:
+            generate_json_schema(path, output_dir)
 
-# -------------------------------------------------------------------------------------------------
 
+import sys
 
 if __name__ == '__main__':
-    pass
+    generate_json_schemas(sys.argv[1], sys.argv[2])

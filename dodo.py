@@ -1,6 +1,5 @@
 import lattice
 import os
-import lattice.schema_to_json
 
 from doit.tools import create_folder
 
@@ -11,7 +10,7 @@ BUILD_PATH = "build"
 BASE_META_SCHEMA_PATH = os.path.join(SOURCE_PATH, "meta.schema.yaml")
 CORE_SCHEMA_PATH = os.path.join(SOURCE_PATH, "core.schema.yaml")
 
-META_SCHEMAS = lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_name='meta.schema', new_extension=".json")
+META_SCHEMAS = list(set(lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_name='meta.schema', new_extension=".json")))
 
 JSON_SCHEMAS = lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_extension=".json")
 
@@ -48,7 +47,7 @@ def task_meta_validation():
 def task_json_translation():
   '''Generate JSON schemas'''
   return {
-    'task_dep': ['generate_meta_schemas'],
+    'task_dep': ['meta_validation'],
     'file_dep': EXAMPLE_SCHEMAS +
                 [BASE_META_SCHEMA_PATH,
                  CORE_SCHEMA_PATH,

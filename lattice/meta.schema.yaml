@@ -80,6 +80,7 @@ definitions:
         - number
         - integer
         - boolean
+        - "null"
       Examples:
         type: array
     required:
@@ -140,7 +141,11 @@ definitions:
           Display Text:
             type: string
           Notes:
-            type: string
+            oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
         required: []
         additionalProperties: false
     additionalProperties: false

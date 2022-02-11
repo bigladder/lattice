@@ -273,21 +273,6 @@ def generate_meta_schemas(input_dir, output_dir):
         elif '.schema.yaml' in file:
             generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), os.path.join(input_dir,file))
 
-def generate_json_schemas(input_dir, output_dir):
-    for file in sorted(os.listdir(input_dir)):
-        path = os.path.join(input_dir,file)
-        if os.path.isdir(path):
-            new_output_dir = os.path.join(output_dir, file)
-            if not os.path.exists(new_output_dir):
-                os.mkdir(new_output_dir)
-            generate_json_schemas(path, new_output_dir)
-        elif '.schema.yaml' in file:
-            schematypes = generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), os.path.join(input_dir,file))
-            j = JSON_translator(schematypes.combined_types)
-            file_name_root = os.path.splitext(os.path.splitext(file)[0])[0]
-            schema_instance = j.load_common_schema(os.path.join(input_dir,file))
-            dump(schema_instance, os.path.join(output_dir, file_name_root + '.schema.json'))
-
 if __name__ == '__main__':
   if len(sys.argv) != 2:
     exit(1)
