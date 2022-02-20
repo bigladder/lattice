@@ -60,6 +60,16 @@ def task_json_translation():
     'clean': True
   }
 
+def task_file_validation():
+  '''Validate input file against JSON schema'''
+  return {
+    'file_dep': [os.path.join(SOURCE_PATH, "schema_to_json.py")],
+    'actions': [
+      (lattice.validate_json_file, ['/Users/tanaya-mankad/src/lattice/examples/fan_spec/Fan-Continuous.RS0003.a205.json', '/Users/tanaya-mankad/src/lattice/build/fan_spec/RS0003.schema.json'])
+    ],
+    'clean': []
+  }
+
 def task_doc_generation():
   '''Generate markdown documentation from templates'''
   return {

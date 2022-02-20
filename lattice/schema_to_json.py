@@ -304,11 +304,10 @@ class JSON_translator:
         '''
         :param object_types:    A full set of available "Object Types" from core schema plus 
                                 custom types
-        :keyword enum_re:       Regular expression string describing enumerators
         '''
         self._references = dict()
         self._fundamental_data_types = dict()
-        self._schema_object_types = object_types
+        self._schema_object_types = ['Data Group', 'String Type', 'Enumeration'] # "Basic" object types - are there more?
         self._kwargs = kwargs
 
     def load_common_schema(self, input_file_path):
@@ -336,13 +335,12 @@ class JSON_translator:
                         sch = {**sch, **({base_level_tag : {"type":"string", "pattern":self._contents[base_level_tag]['JSON Schema Pattern']}})}
                 elif obj_type == 'Enumeration':
                     sch = {**sch, **(self._process_enumeration(base_level_tag))}
-                elif obj_type == 'Data Group':
+                elif obj_type in self._schema_object_types:
                     dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
                     sch = {**sch, **(dg.add_data_group(base_level_tag,
                                      self._contents[base_level_tag]['Data Elements']))}
         self._schema['definitions'] = sch
         return self._schema
-
 
     def _load_meta_info(self, schema_section):
         '''Store the global/common types and the types defined by any named references.'''
@@ -352,8 +350,10 @@ class JSON_translator:
             self._schema['version'] = schema_section['Version']
         if 'Root Data Group' in schema_section:
             self._schema['$ref'] = self._schema_name + '.schema.json#/definitions/' + schema_section['Root Data Group']
+        if 'Data Group Templates' in schema_section:
+            self._schema_object_types += [schema_section['Data Group Templates'][f'{obj_type}']['Object Type Name'] for obj_type in schema_section['Data Group Templates']]
         # Create a dictionary of available external objects for reference
-        refs = {'meta' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'), 
+        refs = {'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'), 
                 f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml')}
         if 'References' in schema_section:
             for ref in schema_section['References']:
@@ -361,15 +361,11 @@ class JSON_translator:
         for ref_name in refs:
             try:
                 ext_dict = load(refs[ref_name])
-                external_objects = list()
-                for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] in self._schema_object_types]:
-                    external_objects.append(base_item)
-                self._references[ref_name] = external_objects
+                self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types]
                 for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
                     self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
             except RuntimeError:
                 raise RuntimeError(f'{refs[ref_name]} reference file does not exist.') from None
-
 
     def _process_enumeration(self, name_key):
         ''' Collect all Enumerators in an Enumeration block. '''
@@ -386,6 +382,38 @@ class JSON_translator:
                 definition.add_enumerator(key)
         return definition.create_dictionary_entry()
 
+import posixpath
+import jsonschema
+import cbor2
+
+class JSONSchemaValidator:
+    def __init__(self, schema_path):
+        with open(schema_path) as meta_schema_file:
+            uri_path = os.path.abspath(os.path.dirname(schema_path))
+            if os.sep != posixpath.sep:
+                uri_path = posixpath.sep + uri_path
+            resolver = jsonschema.RefResolver(f'file://{uri_path}/', meta_schema_file)
+            self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
+
+    def validate(self, instance_path):
+        if instance_path.endswith('.json'):
+            with open(os.path.join(instance_path), 'r') as input_file:
+                instance = json.load(input_file)
+        if instance_path.endswith('.cbor'):
+            with open(os.path.join(instance_path), 'rb') as fp:
+                instance = cbor2.decoder.load(fp)
+        errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
+        file_name =  os.path.basename(instance_path)
+        if len(errors) == 0:
+            print(f"Validation successful for {file_name}")
+        else:
+            messages = []
+            for error in errors:
+                messages.append(f"{error.message} ({'.'.join([str(x) for x in error.path])})")
+            messages = [f"{i}. {message}" for i, message in enumerate(messages, start=1)]
+            message_str = '\n  '.join(messages)
+            raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
+
 # -------------------------------------------------------------------------------------------------
 def generate_json_schema(input_path_to_file, output_dir):
     if not os.path.isdir(output_dir):
@@ -395,8 +423,10 @@ def generate_json_schema(input_path_to_file, output_dir):
         schematypes = meta_schema.generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), input_path_to_file)
         j = JSON_translator(schematypes.combined_types)
         file_name_root = os.path.splitext(file)[0]
-        schema_instance = j.load_common_schema(os.path.join(input_dir,file))
-        dump(schema_instance, os.path.join(output_dir, file_name_root + '.schema.json'))
+        core_instance = j.load_common_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
+        dump(core_instance, os.path.join(output_dir, 'core.schema.json'))
+        schema_instance = j.load_common_schema(input_path_to_file)
+        dump(schema_instance, os.path.join(output_dir, file_name_root + '.json'))
 
 
 # -------------------------------------------------------------------------------------------------
@@ -411,8 +441,12 @@ def generate_json_schemas(input_dir, output_dir):
         else:
             generate_json_schema(path, output_dir)
 
+# -------------------------------------------------------------------------------------------------
+def validate_json_file(input_file, input_schema):
+    v = JSONSchemaValidator(input_schema)
+    v.validate(input_file)
 
 import sys
 
 if __name__ == '__main__':
-    generate_json_schemas(sys.argv[1], sys.argv[2])
+    validate_json_file(sys.argv[1], sys.argv[2])

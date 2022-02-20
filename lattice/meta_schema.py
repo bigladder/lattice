@@ -177,12 +177,6 @@ def generate_meta_schema(output_path, schema_path=None):
 
     # Replace generated patterns from core schema analysis
 
-    for string_obj_name in [name for name in core_schema if core_schema[name]['Object Type'] == 'String Type']:
-        if 'Is Regex' in core_schema[string_obj_name]:
-            meta_schema["definitions"][string_obj_name] = {"type":"string", "regex":True}
-        else:
-            meta_schema["definitions"][string_obj_name] = {"type":"string", "pattern":core_schema[string_obj_name]['JSON Schema Pattern']}
-
     meta_schema["definitions"]["Meta"]["properties"]["Unit Systems"]["patternProperties"][schematypes.type_base_names_anchored] = meta_schema["definitions"]["Meta"]["properties"]["Unit Systems"]["patternProperties"].pop("**GENERATED**")
     meta_schema["definitions"]["Meta"]["properties"]["Data Group Templates"]["patternProperties"][schematypes.type_base_names_anchored] = meta_schema["definitions"]["Meta"]["properties"]["Data Group Templates"]["patternProperties"].pop("**GENERATED**")
     meta_schema["definitions"]["Meta"]["properties"]["Data Group Templates"]["patternProperties"][schematypes.type_base_names_anchored]["properties"]["Required Data Elements"]["patternProperties"][schematypes.element_names_anchored] = meta_schema["definitions"]["Meta"]["properties"]["Data Group Templates"]["patternProperties"][schematypes.type_base_names_anchored]["properties"]["Required Data Elements"]["patternProperties"].pop("**GENERATED**")
