@@ -65,7 +65,7 @@ def task_file_validation():
   return {
     'file_dep': [os.path.join(SOURCE_PATH, "schema_to_json.py")],
     'actions': [
-      (lattice.validate_json_file, ['/Users/tanaya-mankad/src/lattice/examples/fan_spec/Fan-Continuous.RS0003.a205.json', '/Users/tanaya-mankad/src/lattice/build/fan_spec/RS0003.schema.json'])
+      (lattice.validate_json_file, [os.path.join(EXAMPLES_PATH, "fan_spec", "Fan-Continuous.RS0003.a205.json"), os.path.join(BUILD_PATH, "fan_spec", "RS0003.schema.json")])
     ],
     'clean': []
   }
