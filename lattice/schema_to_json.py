@@ -300,11 +300,8 @@ class Enumeration:
 
 # -------------------------------------------------------------------------------------------------
 class JSON_translator:
-    def __init__(self, object_types: list, **kwargs):
-        '''
-        :param object_types:    A full set of available "Object Types" from core schema plus 
-                                custom types
-        '''
+    def __init__(self, **kwargs):
+        ''' '''
         self._references = dict()
         self._fundamental_data_types = dict()
         self._schema_object_types = ['Data Group', 'String Type', 'Enumeration'] # "Basic" object types - are there more?
@@ -420,8 +417,7 @@ def generate_json_schema(input_path_to_file, output_dir):
         os.mkdir(output_dir)
     if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
         input_dir, file = os.path.split(input_path_to_file)
-        schematypes = meta_schema.generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), input_path_to_file)
-        j = JSON_translator(schematypes.combined_types)
+        j = JSON_translator()
         file_name_root = os.path.splitext(file)[0]
         core_instance = j.load_common_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
         dump(core_instance, os.path.join(output_dir, 'core.schema.json'))
