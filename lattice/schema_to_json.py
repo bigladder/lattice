@@ -6,6 +6,9 @@ import yaml
 import os
 from collections import OrderedDict
 import re
+import jsonschema
+import cbor2
+
 
 def compare_dicts(original, modified, error_list):
     o = load(original)
@@ -379,16 +382,14 @@ class JSON_translator:
                 definition.add_enumerator(key)
         return definition.create_dictionary_entry()
 
-import posixpath
-import jsonschema
-import cbor2
 
+# -------------------------------------------------------------------------------------------------
 class JSONSchemaValidator:
     def __init__(self, schema_path):
         with open(schema_path) as meta_schema_file:
             uri_path = os.path.abspath(os.path.dirname(schema_path))
-            if os.sep != posixpath.sep:
-                uri_path = posixpath.sep + uri_path
+            # if os.sep != posixpath.sep:
+            #     uri_path = posixpath.sep + uri_path
             resolver = jsonschema.RefResolver(f'file://{uri_path}/', meta_schema_file)
             self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
 
@@ -413,6 +414,7 @@ class JSONSchemaValidator:
 
 # -------------------------------------------------------------------------------------------------
 def generate_json_schema(input_path_to_file, output_dir):
+    '''Create JSON schema from YAML source schema.'''
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
@@ -424,9 +426,9 @@ def generate_json_schema(input_path_to_file, output_dir):
         schema_instance = j.load_common_schema(input_path_to_file)
         dump(schema_instance, os.path.join(output_dir, file_name_root + '.json'))
 
-
 # -------------------------------------------------------------------------------------------------
 def generate_json_schemas(input_dir, output_dir):
+    '''Create JSON schemas from YAML source schemas in a directory.'''
     for file in sorted(os.listdir(input_dir)):
         path = os.path.join(input_dir,file)
         if os.path.isdir(path):
@@ -438,6 +440,46 @@ def generate_json_schemas(input_dir, output_dir):
             generate_json_schema(path, output_dir)
 
 # -------------------------------------------------------------------------------------------------
+def search_for_reference(schema_path : str, subdict : dict) -> dict:
+    '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
+    subbed = False
+    if '$ref' in subdict.keys():
+        print(subdict['$ref'])
+        subbed = True
+        # parse the ref and locate the sub-dict
+        source_file, ref_loc = subdict['$ref'].split('#')
+        ref = load(os.path.join(schema_path, source_file))
+        key_tree = ref_loc.lstrip('/').split('/')
+        sub_d = ref[key_tree[0]]
+        for k in key_tree[1:]:
+            sub_d = sub_d[k]
+        subdict.update(sub_d)
+        subdict.pop('$ref')
+    else:
+        for key in subdict:
+            if isinstance(subdict[key], dict):
+                search_for_reference(schema_path, subdict[key])
+    return subbed
+    
+# -------------------------------------------------------------------------------------------------
+def flatten_json_schema(input_schema, output_dir):
+    '''Generate a flattened schema from a schema with references.'''
+    schema_path = os.path.abspath(os.path.dirname(input_schema))
+    schema = load(input_schema)
+    while search_for_reference(schema_path, schema):
+        pass
+    file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
+    dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
+    # JsonRef method:
+    # path = os.path.abspath(os.path.dirname(input_schema))
+    # base_uri = f'file://{path}/'
+    # print(base_uri)
+    # file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
+    # with open(input_schema) as input_file:
+    #     schema = jsonref.load(input_file, base_uri=base_uri)
+    #     dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
+
+# -------------------------------------------------------------------------------------------------
 def validate_json_file(input_file, input_schema):
     v = JSONSchemaValidator(input_schema)
     v.validate(input_file)
@@ -445,4 +487,4 @@ def validate_json_file(input_file, input_schema):
 import sys
 
 if __name__ == '__main__':
-    validate_json_file(sys.argv[1], sys.argv[2])
+    flatten_json_schema(sys.argv[1], sys.argv[2])
