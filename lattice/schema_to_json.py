@@ -8,7 +8,7 @@ from collections import OrderedDict
 import re
 import jsonschema
 import cbor2
-
+import posixpath
 
 def compare_dicts(original, modified, error_list):
     o = load(original)
@@ -388,8 +388,8 @@ class JSONSchemaValidator:
     def __init__(self, schema_path):
         with open(schema_path) as meta_schema_file:
             uri_path = os.path.abspath(os.path.dirname(schema_path))
-            if os.sep != os.path.sep:
-                uri_path = os.path.sep + uri_path
+            if os.sep != posixpath.sep:
+                uri_path = posixpath.sep + uri_path
             resolver = jsonschema.RefResolver(f'file://{uri_path}/', meta_schema_file)
             self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
 
