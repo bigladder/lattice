@@ -10,45 +10,6 @@ import jsonschema
 import cbor2
 import posixpath
 
-def compare_dicts(original, modified, error_list):
-    o = load(original)
-    m = load(modified)
-    return dict_compare(o, m, error_list, level=0, lineage=None, hide_value_mismatches=False)
-
-# https://stackoverflow.com/questions/4527942/comparing-two-dictionaries-and-checking-how-many-key-value-pairs-are-equal
-def dict_compare(d1, d2, errors, level=0, lineage=None, hide_value_mismatches=False, hide_key_mismatches=False):
-    ''' Compare two order-independent dictionaries, labeling added or deleted keys or mismatched values. '''
-    if not lineage:
-        lineage = list()
-    if d1 == d2:
-        return True
-    else:
-        if isinstance(d1, dict) and isinstance(d2, dict):
-            d1_keys = sorted(list(d1.keys()))
-            d2_keys = sorted(list(d2.keys()))
-            if d1_keys != d2_keys:
-                added = [k for k in d2_keys if k not in d1_keys]
-                removed = [k for k in d1_keys if k not in d2_keys]
-                err = ''
-                if added and not hide_key_mismatches:
-                    errors.append(f'Keys added to second dictionary at level {level}, lineage {lineage}: {added}')
-                if removed and not hide_key_mismatches:
-                    errors.append(f'Keys removed from first dictionary at level {level}, lineage {lineage}: {removed}.')
-                return False
-            else:
-            # Enter this part of the code if both dictionaries have all keys shared at this level
-                shared_keys = d1_keys
-                for k in shared_keys:
-                    dict_compare(d1[k], d2[k], errors, level+1, lineage+[k], hide_value_mismatches, hide_key_mismatches)
-        elif d1 != d2:
-            # Here, we could use the util.objects_near_equal to compare objects. Currently, d1 and
-            # d2 may have any type, i.e. float 1.0 will be considered equal to int 1.
-            err = f'Mismatch in values: "{d1}" vs. "{d2}" at lineage {lineage}.'
-            if not hide_value_mismatches:
-                errors.append(err)
-            return False
-
-
 # -------------------------------------------------------------------------------------------------
 class DataGroup:
 
@@ -310,7 +271,7 @@ class JSON_translator:
         self._schema_object_types = ['Data Group', 'String Type', 'Enumeration'] # "Basic" object types - are there more?
         self._kwargs = kwargs
 
-    def load_common_schema(self, input_file_path):
+    def load_source_schema(self, input_file_path):
         '''Load and process a yaml schema into its json schema equivalent.'''
         self._schema = {'$schema': 'http://json-schema.org/draft-07/schema#',
                         'title': None,
@@ -421,9 +382,9 @@ def generate_json_schema(input_path_to_file, output_dir):
         input_dir, file = os.path.split(input_path_to_file)
         j = JSON_translator()
         file_name_root = os.path.splitext(file)[0]
-        core_instance = j.load_common_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
+        core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
         dump(core_instance, os.path.join(output_dir, 'core.schema.json'))
-        schema_instance = j.load_common_schema(input_path_to_file)
+        schema_instance = j.load_source_schema(input_path_to_file)
         dump(schema_instance, os.path.join(output_dir, file_name_root + '.json'))
 
 # -------------------------------------------------------------------------------------------------
@@ -440,11 +401,10 @@ def generate_json_schemas(input_dir, output_dir):
             generate_json_schema(path, output_dir)
 
 # -------------------------------------------------------------------------------------------------
-def search_for_reference(schema_path : str, subdict : dict) -> dict:
+def search_for_reference(schema_path : str, subdict : dict) -> bool:
     '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
     subbed = False
     if '$ref' in subdict.keys():
-        print(subdict['$ref'])
         subbed = True
         # parse the ref and locate the sub-dict
         source_file, ref_loc = subdict['$ref'].split('#')
@@ -453,12 +413,18 @@ def search_for_reference(schema_path : str, subdict : dict) -> dict:
         sub_d = ref[key_tree[0]]
         for k in key_tree[1:]:
             sub_d = sub_d[k]
+        # replace the $ref with its contents
         subdict.update(sub_d)
         subdict.pop('$ref')
+        # re-search the substituted dictionary
+        subbed = search_for_reference(schema_path, subdict)
     else:
         for key in subdict:
             if isinstance(subdict[key], dict):
-                search_for_reference(schema_path, subdict[key])
+                subbed = search_for_reference(schema_path, subdict[key])
+            if isinstance(subdict[key], list):
+                for entry in [item for item in subdict[key] if isinstance(item, dict)]:
+                    subbed = search_for_reference(schema_path, entry)
     return subbed
     
 # -------------------------------------------------------------------------------------------------
@@ -470,14 +436,6 @@ def flatten_json_schema(input_schema, output_dir):
         pass
     file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
     dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
-    # JsonRef method:
-    # path = os.path.abspath(os.path.dirname(input_schema))
-    # base_uri = f'file://{path}/'
-    # print(base_uri)
-    # file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
-    # with open(input_schema) as input_file:
-    #     schema = jsonref.load(input_file, base_uri=base_uri)
-    #     dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
 
 # -------------------------------------------------------------------------------------------------
 def validate_json_file(input_file, input_schema):

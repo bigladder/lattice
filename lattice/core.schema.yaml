@@ -50,7 +50,7 @@ ID:
 
 Reference:
   Object Type: "Data Type"
-  Description: "A string used to reference and identified instance of a data group."
+  Description: "A string used to reference an identified instance of a data group."
   JSON Schema Type: string
   Examples:
     - "Lobby Zone"
