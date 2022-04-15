@@ -13,10 +13,14 @@ import posixpath
 # -------------------------------------------------------------------------------------------------
 class DataGroup:
 
-    array_type = r'\[(.*?)\]'                       # Array of Type notation e.g. '[Type]'
-    minmax_range_type = r'([0-9]*)(\.*)([0-9]*)'    # Parse ellipsis range-notation e.g. '[1..]'
-    alternative_type = r'\((.*)\)'                  # Parentheses encapsulate a list of options
+    # The following regular expressions are explicity not Unicode
+    array_type = r'^\[(.*?)\]'                       # Array of type 'Type' e.g. '[Type]'
+                                                    # just the first [] pair; using non-greedy '?'
+    minmax_range_type = r'^(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)'    # Parse ellipsis range-notation e.g. '[1..]'
+    alternative_type = r'^\((.*)\)'                  # Parentheses encapsulate a list of options
     enum_or_def = r'(\{|\<)(.*)(\}|\>)'
+    numeric_type = r'[+-]?[0-9]*\.?[0-9]+|[0-9]+'   # Any optionally signed, floating point number
+    scope_constraint = r'^:(.*):'                    # Lattice scope constraint for ID/Reference
 
     def __init__(self, name, type_list, ref_list=None, **kwargs):
         self._name = name
@@ -104,46 +108,46 @@ class DataGroup:
         :param target_dict:     The json definition node that will be populated
         :param entry_name:      Data Element name
         '''
-        try:
-            # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
-            m = re.findall(DataGroup.array_type, parent_dict['Data Type'])
-            target_property_entry = target_dict['properties'][entry_name]
+        m = re.findall(DataGroup.array_type, parent_dict['Data Type'])
+        target_property_entry = target_dict['properties'][entry_name]
+        if m: # Data Element is an array
+            # 1. 'type' entry
+            target_property_entry['type'] = 'array'
+            # 2. 'm[in/ax]Items' entry
+            if len(m) > 1:
+                # Parse ellipsis range-notation e.g. '[1..]'
+                mnmx = re.match(DataGroup.minmax_range_type, m[1])
+                target_property_entry['minItems'] = int(mnmx.group('min'))
+                if (mnmx.group('ellipsis') and mnmx.group('max')):
+                    target_property_entry['maxItems'] = int(mnmx.group('max'))
+                elif not mnmx.group(2):
+                    target_property_entry['maxItems'] = int(mnmx.group('min'))
+            # 3. 'items' entry
+            target_property_entry['items'] = dict()
+            self._get_simple_type(m[0], target_property_entry['items'])
+            self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
+        else:
+            # If the type is oneOf a set
+            m = re.match(DataGroup.alternative_type, parent_dict['Data Type']) 
             if m:
-                # 1. 'type' entry
-                target_property_entry['type'] = 'array'
-                # 2. 'm[in/ax]Items' entry
-                if len(m) > 1:
-                    # Parse ellipsis range-notation e.g. '[1..]'
-                    mnmx = re.match(DataGroup.minmax_range_type, m[1])
-                    target_property_entry['minItems'] = int(mnmx.group(1))
-                    if (mnmx.group(2) and mnmx.group(3)):
-                        target_property_entry['maxItems'] = int(mnmx.group(3))
-                    elif not mnmx.group(2):
-                        target_property_entry['maxItems'] = int(mnmx.group(1))
-                # 3. 'items' entry
-                target_property_entry['items'] = dict()
-                self._get_simple_type(m[0], target_property_entry['items'])
-                if 'Constraints' in parent_dict:
-                    self._get_simple_constraints(parent_dict['Constraints'], target_dict['items'])
-            else:
-                # If the type is oneOf a set
-                m = re.match(DataGroup.alternative_type, parent_dict['Data Type']) 
+                types = [t.strip() for t in m.group(1).split(',')]
+                selection_key, selections = parent_dict['Constraints'].split('(')
+                target_dict['allOf'] = list()
+                for s, t in zip(selections.split(','), types):
+                    target_dict['allOf'].append(dict())
+                    self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
+                    self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
+            elif parent_dict['Data Type'] in ['ID', 'Reference']:
+                m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
                 if m:
-                    types = [t.strip() for t in m.group(1).split(',')]
-                    selection_key, selections = parent_dict['Constraints'].split('(')
-                    target_dict['allOf'] = list()
-                    for s, t in zip(selections.split(','), types):
-                        target_dict['allOf'].append(dict())
-                        self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
-                        self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
-                else:
-                    # 1. 'type' entry
+                    target_property_entry['scopedType'] = parent_dict['Data Type']
+                    target_property_entry['scope'] = m.group(1)
                     self._get_simple_type(parent_dict['Data Type'], target_property_entry)
-                    # 2. 'm[in/ax]imum' entry
-                    self._get_simple_constraints(parent_dict['Constraints'], target_property_entry)
-        except KeyError as ke:
-            #print('KeyError; no key exists called', ke)
-            pass
+            else:
+                # 1. 'type' entry
+                self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                # 2. 'm[in/ax]imum' entry
+                self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry)
 
 
     def _construct_selection_if_then(self, target_dict_to_append, selector, selection, entry_name):
@@ -193,7 +197,7 @@ class DataGroup:
         return
 
 
-    def _get_simple_constraints(self, constraints_str, target_dict):
+    def _get_numeric_constraints(self, constraints_str, target_dict):
         '''
         Process numeric Constraints into fields.
 
@@ -206,7 +210,8 @@ class DataGroup:
             maximum=None
             for c in constraints:
                 try:
-                    numerical_value = re.findall(r'[+-]?\d*\.?\d+|\d+', c)[0]
+                    # Process numeric constraints
+                    numerical_value = re.findall(DataGroup.numeric_type, c)[0]
                     if '>' in c:
                         minimum = (float(numerical_value) if 'number' in target_dict['type'] else int(numerical_value))
                         mn = 'exclusiveMinimum' if '=' not in c else 'minimum'
@@ -217,10 +222,7 @@ class DataGroup:
                         target_dict[mx] = maximum
                     elif '%' in c:
                         target_dict['multipleOf'] = int(numerical_value)
-                    elif 'string' in target_dict['type']:  # String pattern match
-                        target_dict['pattern'] = c.replace('"','')  # TODO: Find better way to remove quotes.
                 except IndexError:
-                    # Constraint was non-numeric
                     pass
                 except ValueError:
                     pass
