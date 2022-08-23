@@ -84,11 +84,8 @@ class SchemaTypes:
 
         template_data_group_prefixes = []
         if schema:
-            if 'Schema' in schema:
-                # Data Group Template definitions
-                if 'Data Group Templates' in schema['Schema']:
-                    for data_group in schema['Schema']["Data Group Templates"]:
-                        template_data_group_prefixes.append(data_group)
+            for data_group in [key for key in schema if schema[key]['Object Type'] == 'Data Group Template']:
+                template_data_group_prefixes.append(data_group)
 
         self.type_base_names = "[A-Z]([A-Z]|[a-z]|[0-9])*"
         self.type_base_names_anchored = f"^{self.type_base_names}$"
@@ -201,47 +198,46 @@ def generate_meta_schema(output_path, schema_path=None):
                     meta_schema["definitions"][unit_system] = {"type": "string", "enum": schema['Schema']["Unit Systems"][unit_system]}
 
         # Special Data Groups
-        if 'Data Group Templates' in schema['Schema']:
-            for data_group_type in schema['Schema']["Data Group Templates"]:
+        for data_group_type in [key for key in schema if schema[key]['Object Type'] == 'Data Group Template']:
             # Data Element Attributes
-                data_group = schema['Schema']["Data Group Templates"][data_group_type]
-                meta_schema["definitions"][f"{data_group_type}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
+            data_group = schema[data_group_type]
+            meta_schema["definitions"][f"{data_group_type}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 
-                if "Unit System" in data_group:
-                    meta_schema["definitions"][f"{data_group_type}DataElementAttributes"]["properties"]["Units"] = {"$ref": f"meta.schema.json#/definitions/{data_group['Unit System']}"}
+            if "Unit System" in data_group:
+                meta_schema["definitions"][f"{data_group_type}DataElementAttributes"]["properties"]["Units"] = {"$ref": f"meta.schema.json#/definitions/{data_group['Unit System']}"}
 
-                if "Required Data Types" in data_group:
-                    meta_schema["definitions"][f"{data_group_type}DataElementAttributes"]["properties"]["Data Type"] = {"type": "string", "enum": data_group["Required Data Types"]}
+            if "Required Data Types" in data_group:
+                meta_schema["definitions"][f"{data_group_type}DataElementAttributes"]["properties"]["Data Type"] = {"type": "string", "enum": data_group["Required Data Types"]}
 
-                if "Data Elements Required" in data_group:
-                    meta_schema["definitions"][f"{data_group_type}DataElementAttributes"]["properties"]["Required"]["const"] = data_group["Data Elements Required"]
+            if "Data Elements Required" in data_group:
+                meta_schema["definitions"][f"{data_group_type}DataElementAttributes"]["properties"]["Required"]["const"] = data_group["Data Elements Required"]
 
-                # Data Group
-                meta_schema["definitions"][f"{data_group_type}DataGroup"] = copy.deepcopy(meta_schema["definitions"]["DataGroup"])
-                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Object Type"]["const"] = data_group["Object Type Name"]
+            # Data Group
+            meta_schema["definitions"][f"{data_group_type}DataGroup"] = copy.deepcopy(meta_schema["definitions"]["DataGroup"])
+            meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Object Type"]["const"] = data_group["Name"]
 
-                if "Required Data Elements" in data_group:
-                    required_names = []
-                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"] = {}
-                    for data_element_name in data_group["Required Data Elements"]:
-                        required_names.append(data_element_name)
-                        data_element = data_group["Required Data Elements"][data_element_name]
-                        meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"][f"{data_group_type}DataElementAttributes"])
-                        meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name] = copy.deepcopy(meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored])
-                        meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}-{data_element_name}-DataElementAttributes"
-                        for attribute in data_element:
-                            meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"]["properties"][attribute]["const"] = data_element[attribute]
-                            if attribute not in meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"]:
-                                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"].append(attribute)
-                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["required"] = required_names
-                    exclusive_element_names_anchored = f"(?!^({'|'.join(required_names)})$)(^{schematypes.element_names}$)"
-                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored] = meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop(schematypes.element_names_anchored)
-                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
-                else:
-                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
+            if "Required Data Elements" in data_group:
+                required_names = []
+                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"] = {}
+                for data_element_name in data_group["Required Data Elements"]:
+                    required_names.append(data_element_name)
+                    data_element = data_group["Required Data Elements"][data_element_name]
+                    meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"][f"{data_group_type}DataElementAttributes"])
+                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name] = copy.deepcopy(meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored])
+                    meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}-{data_element_name}-DataElementAttributes"
+                    for attribute in data_element:
+                        meta_schema["definitions"][f"{data_group_type}-{data_element_name}-DataElementAttributes"]["properties"][attribute]["const"] = data_element[attribute]
+                        if attribute not in meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"]:
+                            meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"].append(attribute)
+                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["required"] = required_names
+                exclusive_element_names_anchored = f"(?!^({'|'.join(required_names)})$)(^{schematypes.element_names}$)"
+                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored] = meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop(schematypes.element_names_anchored)
+                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
+            else:
+                meta_schema["definitions"][f"{data_group_type}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{data_group_type}DataElementAttributes"
 
-                # Main schema
-                meta_schema["patternProperties"][f"(^{data_group_type}({schematypes.type_base_names})*$)"] = {"$ref": f"meta.schema.json#/definitions/{data_group_type}DataGroup"}
+            # Main schema
+            meta_schema["patternProperties"][f"(^{data_group_type}({schematypes.type_base_names})*$)"] = {"$ref": f"meta.schema.json#/definitions/{data_group_type}DataGroup"}
 
     dump(meta_schema, output_path)
     return schematypes

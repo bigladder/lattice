@@ -1,32 +1,13 @@
 Schema:
   Object Type: "Meta"
   References:
+    - "ASHRAE205"
     - "RS0005"
     - "RS0007"
   Title: "Fan Assembly"
   Description: "Schema for ASHRAE 205 annex RS0003: Fan Assembly"
   Version: "0.2.0"
   Root Data Group: "RS0003"
-  Data Group Templates:
-    PerformanceMap:
-      Object Type Name: Performance Map
-      Required Data Elements:
-        grid_variables:
-          Required: True
-        lookup_variables:
-          Required: True
-    GridVariables:
-      Object Type Name: Grid Variables
-      Required Data Types:
-        - "[Numeric][1..]"
-        - "[Integer][1..]"
-      Data Elements Required: True
-    LookupVariables:
-      Object Type Name: Lookup Variables
-      Required Data Types:
-        - "[Numeric/Null][1..]"
-        - "[Integer/Null][1..]"
-      Data Elements Required: True
 
 # Local Enumerations
 OperationSpeedControlType:
@@ -99,12 +80,12 @@ ComponentType:
 
 # Data Groups
 RS0003:
-  Object Type: "Data Group"
+  Object Type: "Representation Specfication"
   Data Elements:
     metadata:
       Description: "Metadata data group"
       Data Type: "{Metadata}"
-      Constraints: "schema=RS0003"
+      Constraints: ["data_model=ASHRAE_205", "schema=RS0003"]
       Required: True
     description:
       Description: "Data group describing product and rating information"

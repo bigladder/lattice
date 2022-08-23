@@ -6,26 +6,6 @@ Schema:
   Description: "Schema for ASHRAE 205 annex RS0006: Electronic Motor Drive"
   Version: "0.2.0"
   Root Data Group: "RS0006"
-  Data Group Templates:
-    PerformanceMap:
-      Object Type Name: Performance Map
-      Required Data Elements:
-        grid_variables:
-          Required: True
-        lookup_variables:
-          Required: True
-    GridVariables:
-      Object Type Name: Grid Variables
-      Required Data Types:
-        - "[Numeric][1..]"
-        - "[Integer][1..]"
-      Data Elements Required: True
-    LookupVariables:
-      Object Type Name: Lookup Variables
-      Required Data Types:
-        - "[Numeric/Null][1..]"
-        - "[Integer/Null][1..]"
-      Data Elements Required: True
 
 # Local Enumerations
 CoolingMethod:
@@ -48,7 +28,7 @@ CoolingMethod:
 
 # Data Groups
 RS0006:
-  Object Type: "Data Group"
+  Object Type: "Representation Specification"
   Data Elements:
     metadata:
       Description: "Metadata data group"

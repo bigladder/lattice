@@ -7,10 +7,11 @@ Schema:
   Unit Systems:
     IPUnits:
       - ft
-  Data Group Templates:
-    Rating:
-      Object Type Name: Rating
-      Required Data Elements:
-        rating_reproducible_from_data:
-          Data Type: Boolean
-      Unit System: IPUnits
+
+Rating:
+  Object Type: Data Group Template
+  Name: Rating
+  Required Data Elements:
+    rating_reproducible_from_data:
+      Data Type: Boolean
+  Unit System: IPUnits
