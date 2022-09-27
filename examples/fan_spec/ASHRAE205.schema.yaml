@@ -15,29 +15,32 @@ Schema:
 #Data Group Templates
 
 PerformanceMap:
-  Object Type: Data Group Template
+  Object Type: "Data Group Template"
   Name: Performance Map
   Required Data Elements:
     grid_variables:
       Required: True
     lookup_variables:
       Required: True
+
 GridVariables:
-  Object Type: Data Group Template
+  Object Type: "Data Group Template"
   Name: Grid Variables
   Required Data Types:
     - "[Numeric][1..]"
     - "[Integer][1..]"
   Data Elements Required: True
+
 LookupVariables:
-  Object Type: Data Group Template
+  Object Type: "Data Group Template"
   Name: Lookup Variables
   Required Data Types:
     - "[Numeric/Null][1..]"
     - "[Integer/Null][1..]"
   Data Elements Required: True
+  
 RepresentationSpecification:
-  Object Type: Data Group Template
+  Object Type: "Data Group Template"
   Name: Representation Specification
   Required Data Elements:
     metadata:
@@ -170,5 +173,3 @@ LiquidComponent:
       Data Type: "Numeric"
       Constraints: [">=0.0", "<=1.0"]
       Notes: "If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)"
-
-

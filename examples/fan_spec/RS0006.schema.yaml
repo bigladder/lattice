@@ -85,19 +85,19 @@ Performance:
       Data Type: "{PerformanceMap}"
       Required: True
 
-PerformanceMap:
+PerformanceMapDrive:
   Object Type: "Performance Map"
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariables}"
+      Data Type: "{GridVariablesDrive}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
       Data Type: "{LookupVariables}"
       Required: True
 
-GridVariables:
+GridVariablesDrive:
   Object Type: "Grid Variables"
   Data Elements:
     output_power:
@@ -113,7 +113,7 @@ GridVariables:
       Units: "Hz"
       Required: True
 
-LookupVariables:
+LookupVariablesDrive:
   Object Type: "Lookup Variables"
   Data Elements:
     efficiency:

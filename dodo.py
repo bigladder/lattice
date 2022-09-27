@@ -10,7 +10,15 @@ BUILD_PATH = "build"
 BASE_META_SCHEMA_PATH = os.path.join(SOURCE_PATH, "meta.schema.yaml")
 CORE_SCHEMA_PATH = os.path.join(SOURCE_PATH, "core.schema.yaml")
 
-META_SCHEMAS = list(set(lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_name='meta.schema', new_extension=".json")))
+ROOT_SCHEMAS = sorted([os.path.join(EXAMPLES_PATH, "address", "Address.schema.yaml"),
+                os.path.join(EXAMPLES_PATH, "fan_spec", "ASHRAE205.schema.yaml"),
+                os.path.join(EXAMPLES_PATH, "lookup_table", "LookupTable.schema.yaml"),
+                os.path.join(EXAMPLES_PATH, "ratings", "Rating.schema.yaml"),
+                os.path.join(EXAMPLES_PATH, "time_series", "TimeSeries.schema.yaml")])
+
+META_SCHEMAS = sorted(set(lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_name='meta.schema', new_extension=".json")))
+
+CORE_SCHEMAS = sorted(set(lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_name='core.schema', new_extension=".json")))
 
 JSON_SCHEMAS = lattice.file_io.collect_files(EXAMPLES_PATH, 'schema.yaml', output_dir=BUILD_PATH, new_extension=".json")
 
@@ -31,7 +39,7 @@ def task_generate_meta_schemas():
     'targets': META_SCHEMAS,
     'actions': [
       (create_folder, [BUILD_PATH]),
-      (lattice.generate_meta_schemas, [EXAMPLES_PATH, BUILD_PATH])
+      (lattice.generate_meta_schemas, [META_SCHEMAS, ROOT_SCHEMAS])
     ],
     'clean': True
   }
@@ -52,7 +60,7 @@ def task_json_translation():
                 [BASE_META_SCHEMA_PATH,
                  CORE_SCHEMA_PATH,
                  os.path.join(SOURCE_PATH, "meta_schema.py")],
-    'targets': JSON_SCHEMAS,
+    'targets': JSON_SCHEMAS + CORE_SCHEMAS,
     'actions': [
       (create_folder, [BUILD_PATH]),
       (lattice.generate_json_schemas, [EXAMPLES_PATH, BUILD_PATH])

@@ -78,9 +78,8 @@ ComponentType:
       Display Text: "Other"
       Description: "Additional components in air stream"
 
-# Data Groups
 RS0003:
-  Object Type: "Representation Specfication"
+  Object Type: "Representation Specification"
   Data Elements:
     metadata:
       Description: "Metadata data group"

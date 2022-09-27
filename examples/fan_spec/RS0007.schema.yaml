@@ -79,19 +79,19 @@ Performance:
       Data Type: "{PerformanceMap}"
       Required: True
 
-PerformanceMap:
+PerformanceMapMechDrive:
   Object Type: "Performance Map"
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariables}"
+      Data Type: "{GridVariablesMechDrive}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
       Data Type: "{LookupVariables}"
       Required: True
 
-GridVariables:
+GridVariablesMechDrive:
   Object Type: "Grid Variables"
   Data Elements:
     output_power:
@@ -101,7 +101,7 @@ GridVariables:
       Units: "W"
       Required: True
 
-LookupVariables:
+LookupVariablesMechDrive:
   Object Type: "Lookup Variables"
   Data Elements:
     efficiency:

@@ -9,7 +9,7 @@ Schema:
       - ft
 
 Rating:
-  Object Type: Data Group Template
+  Object Type: "Data Group Template"
   Name: Rating
   Required Data Elements:
     rating_reproducible_from_data:

@@ -136,6 +136,8 @@ def load_structure_from_object(instance):
             new_obj = instance[obj]
             compress_notes(new_obj)
             enumerations[obj] = new_obj
+        elif object_type == "Data Group Template":
+            new_obj = instance[obj]
         elif "Data Elements" in instance[obj]:
             data_groups[obj] = instance[obj]
         elif object_type == "Meta":

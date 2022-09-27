@@ -306,6 +306,8 @@ class JSON_translator:
                 obj_type = self._contents[base_level_tag]['Object Type']
                 if obj_type == 'Meta':
                     self._load_meta_info(self._contents[base_level_tag])
+                # elif obj_type == 'Data Group Template':
+                #     self._schema_object_types.append(self._contents[base_level_tag]['Name'])
                 elif obj_type == 'String Type':
                     if 'Is Regex' in self._contents[base_level_tag]:
                         sch = {**sch, **({base_level_tag : {"type":"string", "regex":True}})}
@@ -328,8 +330,8 @@ class JSON_translator:
             self._schema['version'] = schema_section['Version']
         if 'Root Data Group' in schema_section:
             self._schema['$ref'] = self._schema_name + '.schema.json#/definitions/' + schema_section['Root Data Group']
-        if 'Data Group Templates' in schema_section:
-            self._schema_object_types += [schema_section['Data Group Templates'][f'{obj_type}']['Object Type Name'] for obj_type in schema_section['Data Group Templates']]
+        # if 'Data Group Templates' in schema_section:
+        #     self._schema_object_types += [schema_section['Data Group Templates'][f'{obj_type}']['Object Type Name'] for obj_type in schema_section['Data Group Templates']]
         # Create a dictionary of available external objects for reference
         refs = {'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'), 
                 f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml')}
@@ -339,6 +341,10 @@ class JSON_translator:
         for ref_name in refs:
             try:
                 ext_dict = load(refs[ref_name])
+                # Only one of the references should contain Data Group Templates
+                for template_name in [ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template']:
+                    self._schema_object_types.append(template_name)
+                # Template data groups may exist in any of the references
                 self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types]
                 for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
                     self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
@@ -396,12 +402,12 @@ def generate_json_schema(input_path_to_file, output_dir):
     if not os.path.isdir(output_dir):
         os.mkdir(output_dir)
     if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
-        input_dir, file = os.path.split(input_path_to_file)
         j = JSON_translator()
-        file_name_root = os.path.splitext(file)[0]
         core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
         dump(core_instance, os.path.join(output_dir, 'core.schema.json'))
+
         schema_instance = j.load_source_schema(input_path_to_file)
+        file_name_root = os.path.splitext(os.path.split(input_path_to_file)[1])[0]
         dump(schema_instance, os.path.join(output_dir, file_name_root + '.json'))
 
 # -------------------------------------------------------------------------------------------------

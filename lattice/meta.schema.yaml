@@ -10,6 +10,7 @@ definitions:
     - String Type
     - Enumeration
     - Data Group
+    - Data Group Template
   Meta:
     type: object
     properties:
@@ -36,32 +37,6 @@ definitions:
             items:
               type: string
             minItems: 1
-      Data Group Templates:
-        type: object
-        patternProperties:
-          "**GENERATED**":
-            type: object
-            properties:
-              Object Type Name:
-                type: string
-                pattern: "**GENERATED**"
-              Required Data Elements:
-                type: object
-                patternProperties:
-                  "**GENERATED**":
-                    "$ref": meta.schema.json#/definitions/DataElementAttributes
-              Unit System:
-                type: string
-              Required Data Types:
-                type: array
-                items:
-                  type: string
-                minItems: 1
-              Data Elements Required:
-                type: boolean
-            required:
-              - Object Type Name
-            additionalProperties: false
     required:
     - Object Type
     additionalProperties: false
@@ -214,6 +189,31 @@ definitions:
     required:
     - Object Type
     - Data Elements
+    additionalProperties: false
+  DataGroupTemplate:
+    type: object
+    properties:
+      Name:
+        type: string
+      Object Type:
+        type: string
+        pattern: "**GENERATED**"
+      Required Data Elements:
+        type: object
+        patternProperties:
+          "**GENERATED**":
+            "$ref": meta.schema.json#/definitions/DataElementAttributes
+      Unit System:
+        type: string
+      Required Data Types:
+        type: array
+        items:
+          type: string
+        minItems: 1
+      Data Elements Required:
+        type: boolean
+    required:
+      - Object Type
     additionalProperties: false
 type: object
 patternProperties:
