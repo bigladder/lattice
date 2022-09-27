@@ -306,19 +306,16 @@ class JSON_translator:
                 obj_type = self._contents[base_level_tag]['Object Type']
                 if obj_type == 'Meta':
                     self._load_meta_info(self._contents[base_level_tag])
-                # elif obj_type == 'Data Group Template':
-                #     self._schema_object_types.append(self._contents[base_level_tag]['Name'])
                 elif obj_type == 'String Type':
                     if 'Is Regex' in self._contents[base_level_tag]:
-                        sch = {**sch, **({base_level_tag : {"type":"string", "regex":True}})}
+                        sch.update({base_level_tag : {"type":"string", "regex":True}})
                     else:
-                        sch = {**sch, **({base_level_tag : {"type":"string", "pattern":self._contents[base_level_tag]['JSON Schema Pattern']}})}
+                        sch.update({base_level_tag : {"type":"string", "pattern":self._contents[base_level_tag]['JSON Schema Pattern']}})
                 elif obj_type == 'Enumeration':
-                    sch = {**sch, **(self._process_enumeration(base_level_tag))}
+                    sch.update(self._process_enumeration(base_level_tag))
                 elif obj_type in self._schema_object_types:
                     dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
-                    sch = {**sch, **(dg.add_data_group(base_level_tag,
-                                     self._contents[base_level_tag]['Data Elements']))}
+                    sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
         self._schema['definitions'] = sch
         return self._schema
 
@@ -330,8 +327,6 @@ class JSON_translator:
             self._schema['version'] = schema_section['Version']
         if 'Root Data Group' in schema_section:
             self._schema['$ref'] = self._schema_name + '.schema.json#/definitions/' + schema_section['Root Data Group']
-        # if 'Data Group Templates' in schema_section:
-        #     self._schema_object_types += [schema_section['Data Group Templates'][f'{obj_type}']['Object Type Name'] for obj_type in schema_section['Data Group Templates']]
         # Create a dictionary of available external objects for reference
         refs = {'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'), 
                 f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml')}
