@@ -277,7 +277,7 @@ def get_types(schema):
 def generate_meta_schemas(output_schema_list, root_schema_list):
     for output_schema, root_schema in zip(output_schema_list, root_schema_list):
         if not os.path.isdir(os.path.dirname(output_schema)):
-            os.mkdir(os.path.dirname(output_schema))
+            os.makedirs(os.path.dirname(output_schema))
         generate_meta_schema(output_schema, root_schema)
 
 
