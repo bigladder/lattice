@@ -198,7 +198,7 @@ def generate_meta_schema(output_path, common_schema_path=None):
                 # Unit system definitions
                 for unit_system in common_schema['Schema']["Unit Systems"]:
                     meta_schema["definitions"][unit_system] = {"type": "string", "enum": common_schema['Schema']["Unit Systems"][unit_system]}
-
+                    meta_schema["definitions"]["DataElementAttributes"]["properties"]["Units"]["anyOf"].append({"$ref":f"meta.schema.json#/definitions/{unit_system}"})
         # Special Data Groups
         for data_group_type in [key for key in common_schema if common_schema[key]['Object Type'] == 'Data Group Template']:
             # Data Element Attributes

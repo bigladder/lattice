@@ -163,7 +163,8 @@ definitions:
       Data Type:
         "$ref": meta.schema.json#/definitions/DataTypePattern
       Units:
-        "$ref": meta.schema.json#/definitions/StandardUnits
+        "anyOf":
+          - "$ref": meta.schema.json#/definitions/StandardUnits
       Constraints:
         "$ref": meta.schema.json#/definitions/Constraints
       Required:
