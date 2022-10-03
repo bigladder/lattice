@@ -136,14 +136,16 @@ class SchemaTypes:
         # Constraints
         self.element_names = "([a-z]+)(_([a-z]|[0-9])+)*"
         self.element_names_anchored = f"^{self.element_names}$"
+        alpha_array = "(\[A-Z\]{[1-9]+})"
+        numeric_array = "(\[0-9\]{[1-9]+})"
         ranges = f"(>|>=|<=|<){number}"
         multiples = f"%{number}"
         data_element_value = f"{self.element_names}={values}"
-        sets = fr"\[{number}(, {number})*\]"
+        sets = f"\[{number}(, {number})*\]"
         reference_scope = f":{self.type_base_names}:"
         selector = fr"{self.element_names}\({values}(,\s*{values})*\)"
 
-        constraints = f"({ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})|({selector})"
+        constraints = f"({alpha_array}|{numeric_array}|{ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})|({selector})"
         self.constraints_anchored = f"^{constraints}$"
 
         re.compile(constraints)

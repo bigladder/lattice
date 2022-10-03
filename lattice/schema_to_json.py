@@ -50,8 +50,9 @@ class DataGroup:
                 elements['properties'][e]['notes'] = element['Notes']
             if 'Required' in element:
                 req = element['Required']
-                if isinstance(req, bool) and req == True:
-                    required.append(e)
+                if isinstance(req, bool):
+                    if req == True:
+                        required.append(e)
                 elif req.startswith('if'):
                     self._construct_requirement_if_then(elements, dependencies, req[3:], e)
         if required:
@@ -124,6 +125,8 @@ class DataGroup:
         :param entry_name:      Data Element name
         '''
         m = re.findall(DataGroup.array_type, parent_dict['Data Type'])
+        if entry_name not in target_dict['properties']:
+            target_dict['properties'][entry_name] = dict()
         target_property_entry = target_dict['properties'][entry_name]
         if m: # Data Element is an array
             # 1. 'type' entry
