@@ -290,7 +290,9 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
                     handle.write(err.strip())
                     handle.write("\n")
 
-def process_templates(input_dir, output_dir):
+def process_templates(input_dir, output_dir, schema_dir=None):
+  if schema_dir is None:
+    schema_dir = input_dir
   for file in sorted(os.listdir(input_dir)):
     path = os.path.join(input_dir,file)
     if os.path.isdir(path):
@@ -299,5 +301,5 @@ def process_templates(input_dir, output_dir):
         os.mkdir(new_output_dir)
       process_templates(path, new_output_dir)
     elif '.md.j2' in file:
-      process_template(os.path.join(input_dir,file), os.path.join(output_dir,file[:-3]), schema_dir=input_dir)
+      process_template(os.path.join(input_dir,file), os.path.join(output_dir,file[:-3]), schema_dir=schema_dir)
 
