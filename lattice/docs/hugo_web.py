@@ -20,6 +20,9 @@ def setup_hugo_structure(output_dir):
   # Setup Hugo Config
   dump(make_hugo_config("Test"),os.path.join(output_dir_path,"config.yaml"))
 
+  # npm package.json
+  dump(make_npm_package_json(),os.path.join(output_dir_path,"package.json"))
+
   # Create directories
   hugo_dirs = ["assets", "content", "layouts"]
   content_dirs = ["about","specifications","schema","examples"]
@@ -116,3 +119,16 @@ def prepend_file_content(file_path, new_content):
 
 def make_examples_html():
   pass
+
+def make_npm_package_json():
+  return {
+    "name": "lattice",
+    "version": "0.0.1",
+    "description": "",
+    "dependencies": {},
+    "devDependencies": {
+      "autoprefixer": "^10.4.0",
+      "postcss": "^8.3.7",
+      "postcss-cli": "^9.0.2"
+    }
+  }

@@ -73,6 +73,7 @@ def task_file_validation():
   '''Validate input file against JSON schema'''
   return {
     'file_dep': [os.path.join(SOURCE_PATH, "schema_to_json.py")],
+    'task_dep': ['json_translation'],
     'actions': [
       (lattice.validate_json_file, [os.path.join(EXAMPLES_PATH, "fan_spec", "Fan-Continuous.RS0003.a205.json"), os.path.join(BUILD_PATH, "fan_spec", "RS0003.schema.json")])
     ],
@@ -105,6 +106,7 @@ def task_web_doc_generation():
       ]),
       f"cd {WEB_DIR} && hugo mod init lookup_table",
       f"cd {WEB_DIR} && hugo mod get github.com/google/docsy@v0.4.0",
+      f"cd {WEB_DIR} && npm install",
       f"cd {WEB_DIR} && hugo --minify",
     ],
     'clean': True
