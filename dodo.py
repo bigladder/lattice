@@ -105,6 +105,7 @@ def task_web_doc_generation():
       ]),
       f"cd {WEB_DIR} && hugo mod init lookup_table",
       f"cd {WEB_DIR} && hugo mod get github.com/google/docsy@v0.4.0",
+      f"cd {WEB_DIR} && hugo --minify",
     ],
     'clean': True
   }
