@@ -36,6 +36,7 @@ def setup_hugo_structure(output_dir):
 
 def make_hugo_config(title):
   return {
+    "baseURL": "https://bigladder.github.io/lattice/",
     "title": title,
     "module": {
       "hugoVersion": {

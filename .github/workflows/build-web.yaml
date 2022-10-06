@@ -6,6 +6,7 @@ jobs:
   build:
     name: Build
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.9"]
@@ -36,6 +37,8 @@ jobs:
           virtualenvs-in-project: true
       - name: Install dependencies
         run: poetry install
+      - name: Install Pandoc
+        run: sudo apt install pandoc
       - name: Build web
         run: |
           source $VENV
