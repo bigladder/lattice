@@ -1,9 +1,0 @@
-build/
-*.egg*/
-.doit.*
-.pytest_cache/
-.vscode/
-__pycache__/
-
-# Generated package files
-lattice/meta.schema.json
