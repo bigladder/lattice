@@ -3,7 +3,7 @@ Markdown grid-table creation utilities
 """
 import copy
 import io
-
+import stringcase
 
 def flatten(list_of_lists):
     """
@@ -194,7 +194,7 @@ def remove_blank_columns(doa, columns, sizes):
     return new_columns, new_sizes
 
 
-def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blank_columns=True):
+def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blank_columns=False):
     """
     - doa: (Dict String (Array String)), dictionary with string keys to arrays of string
     - columns: (Array String), order of keys to write table out as
@@ -241,7 +241,7 @@ def write_table(dat, columns, caption, preferred_sizes=None):
         handle.write(make_table_from_dict_of_arrays(
             dat, columns=columns, preferred_sizes=preferred_sizes))
         if caption is not None:
-            handle.write(f"\nTable: {caption}\n")
+            handle.write(f"\nTable: {caption} {{#tbl:{stringcase.snakecase(caption)}}}\n")
         the_str = handle.getvalue()
     return the_str
 
