@@ -1,0 +1,30 @@
+{{ if .File }}
+{{ $gh_repo := ($.Param "github_repo") -}}
+{{ $gh_branch := (default "main" ($.Param "github_branch")) -}}
+{{ $gh_content_path := ($.Param "github_content") -}}
+{{ $gh_schema_path := ($.Param "github_schema") -}}
+<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+{{ $gh_content_path := printf "%s/%s" $gh_branch $gh_content_path -}}
+{{ $gh_schema_path := printf "%s/%s" $gh_branch $gh_schema_path -}}
+
+
+{{ $viewSchemaURL := printf "%s/tree/%s" $gh_repo $gh_schema_path -}}
+{{ $viewContentURL := printf "%s/tree/%s" $gh_repo $gh_content_path -}}
+{{ $editSchemaURL := printf "%s/edit/%s" $gh_repo $gh_schema_path -}}
+{{ $editContentURL := printf "%s/edit/%s" $gh_repo $gh_content_path -}}
+{{ $issuesURL := printf "%s/issues/new" $gh_repo -}}
+
+<a href="{{ $issuesURL }}" class="td-page-meta--issue" target="_blank" rel="noopener"><i class="fas fa-tasks fa-fw"></i> Provide feedback</a>
+<a><i class="fab fa-markdown"></i> Page Content:</a>
+<a href="{{ $viewContentURL }}" class="td-page-meta--view" target="_blank" rel="noopener"><i class="fa fa-file-alt fa-fw"></i> View source</a>
+<a href="{{ $editContentURL }}" class="td-page-meta--edit" target="_blank" rel="noopener"><i class="fa fa-edit fa-fw"></i> Suggest changes</a>
+
+<a><i class="fas fa-sitemap fa-fw"></i> Schema Content:</a>
+<a href="{{ $viewSchemaURL }}" class="td-page-meta--view" target="_blank" rel="noopener"><i class="fa fa-file-alt fa-fw"></i> View source</a>
+<a href="{{ $editSchemaURL }}" class="td-page-meta--edit" target="_blank" rel="noopener"><i class="fa fa-edit fa-fw"></i> Suggest changes</a>
+
+{{ with .CurrentSection.AlternativeOutputFormats.Get "print" -}}
+  <a id="print" href="{{ .Permalink | safeURL }}"><i class="fa fa-print fa-fw"></i> Print view</a>
+{{ end }}
+</div>
+{{ end -}}

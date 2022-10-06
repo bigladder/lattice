@@ -286,7 +286,7 @@ def write_data_model(instance, make_headers=False, base_level=1):
       for enum, enumerators in struct[table_type].items():
         table_title = enum
         if make_headers:
-            output_file.writelines(write_header(table_title, base_level))
+            output_file.writelines(write_header(table_title, base_level + 1))
             caption = None
         else:
             caption = table_title
@@ -300,7 +300,7 @@ def write_data_model(instance, make_headers=False, base_level=1):
       for dg, data_elements in struct[table_type].items():
         table_title = dg
         if make_headers:
-            output_file.writelines(write_header(table_title, base_level))
+            output_file.writelines(write_header(table_title, base_level + 1))
             caption = None
         else:
             caption = table_title

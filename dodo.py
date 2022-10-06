@@ -28,6 +28,7 @@ EXAMPLE_TEMPLATES = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2')
 
 OUTPUT_MD = lattice.file_io.collect_files(EXAMPLES_PATH, 'md.j2', output_dir=BUILD_PATH, new_extension="")
 
+DOIT_CONFIG = {"default_tasks": ["file_validation", "markdown_generation"]}
 
 def task_generate_meta_schemas():
   '''Generate JSON meta schemas'''
@@ -78,7 +79,7 @@ def task_file_validation():
     'clean': []
   }
 
-def task_doc_generation():
+def task_markdown_generation():
   '''Generate markdown documentation from templates'''
   return {
     'task_dep': ['meta_validation'],
@@ -86,6 +87,24 @@ def task_doc_generation():
     'file_dep': META_SCHEMAS + EXAMPLE_SCHEMAS + EXAMPLE_TEMPLATES,
     'actions': [
       (lattice.process_templates, [EXAMPLES_PATH, BUILD_PATH])
+    ],
+    'clean': True
+  }
+
+def task_web_doc_generation():
+  '''Generate markdown documentation from templates'''
+  OUTPUT_DIR = os.path.join(BUILD_PATH, "lookup_table")
+  WEB_DIR = os.path.join(OUTPUT_DIR, "web")
+  return {
+    'task_dep': ['meta_validation'],
+    'actions': [
+      (lattice.make_web_docs,
+      [os.path.join(EXAMPLES_PATH, "lookup_table"),
+      os.path.join(EXAMPLES_PATH, "lookup_table", "lookup_table.md.j2"),
+      os.path.join(BUILD_PATH, "lookup_table")
+      ]),
+      f"cd {WEB_DIR} && hugo mod init lookup_table",
+      f"cd {WEB_DIR} && hugo mod get github.com/google/docsy@v0.4.0",
     ],
     'clean': True
   }

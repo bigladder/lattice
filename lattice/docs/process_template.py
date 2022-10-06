@@ -244,13 +244,10 @@ def make_add_data_model(schema_dir, error_log):
     return add_data_model
 
 
-def process_template(main_template, output_path, template_dir='.', schema_dir=None, log_file=None):
+def process_template(template_path, output_path, schema_dir=None, log_file=None):
     """
-    - main_template: string, path to the main template file. Note: should be a
-      path relative to template_dir, not a full path.
+    - template_path: string, path to the main template file.
     - output_path: string, the output path to write the template to
-    - template_dir: string, the directory where the templates (that
-      main_template refers to) lives.
     - schema_dir: string, a custom path to the schema files (*.schema.yaml) to work from
     - log_file: string or None, if a string, the path to an error file to write
     RETURN: None
@@ -259,6 +256,7 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
     - render that template
     - write the contents to output_path
     """
+    template_dir = os.path.abspath(os.path.join(template_path, os.pardir))
     env = Environment(
         loader=FileSystemLoader(template_dir),
         autoescape=select_autoescape(['html', 'xml']),
@@ -270,7 +268,7 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
     if log_file is not None:
         errs = []
     try:
-        temp = env.get_template(main_template)
+        temp = env.get_template(os.path.basename(template_path))
         with open(output_path, encoding='utf-8', mode='w') as handle:
             handle.write(
                     temp.render(
@@ -278,8 +276,8 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
                         add_yaml_table=make_add_yaml_table(),
                         add_data_model=make_add_data_model(schema_dir, errs)))
     except TemplateNotFound as exc:
-        print(f"Could not find main template {main_template}")
-        print(f"main_template = {main_template}")
+        print(f"Could not find main template {template_path}")
+        print(f"template_path = {template_path}")
         print(f"output_path = {output_path}")
         print(f"template_dir = {template_dir}")
         print("Exception:")

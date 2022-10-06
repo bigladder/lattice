@@ -2,6 +2,7 @@ import os
 import json
 import cbor2
 import yaml
+import shutil
 
 def get_extension(file):
     return os.path.splitext(file)[1]
@@ -40,6 +41,15 @@ def dump(content, output_file_path):
 
     else:
         raise Exception(f"Unsupported output \"{ext}\".")
+
+def dump_to_string(content, output_type='json'):
+    if (output_type == 'json'):
+        return json.dump(content, indent=4)
+    elif (output_type == 'yaml') or (output_type == 'yml'):
+        return yaml.dump(content, sort_keys=False)
+    else:
+        raise Exception(f"Unsupported output \"{output_type}\".")
+
 
 def translate(input, output):
     dump(load(input),output)
@@ -90,4 +100,10 @@ def collect_files(input_dir, pattern, output_dir=None, new_name=None, new_extens
         file_list.append(os.path.join(output_dir,file_name))
   return file_list
 
+def make_dir(dir_path):
+  if not os.path.exists(dir_path):
+      os.mkdir(dir_path)
 
+def remove_dir(dir_path):
+    if os.path.exists(dir_path) and os.path.isdir(dir_path):
+        shutil.rmtree(dir_path)
