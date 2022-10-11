@@ -10,7 +10,7 @@ Schema:
 Root:
   Object Type: "Data Group"
   Data Elements:
-    meta_data:
+    metadata:
       Description: "Metadata"
       Data Type: "{Metadata}"
       Required: True

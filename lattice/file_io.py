@@ -107,3 +107,9 @@ def make_dir(dir_path):
 def remove_dir(dir_path):
     if os.path.exists(dir_path) and os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
+
+def check_dir(dir_path, dir_description="Directory"):
+    if not os.path.exists(dir_path):
+      raise Exception(f"{dir_description}, \"{dir_path}\", does not exist.")
+    elif not os.path.isdir(dir_path):
+      raise Exception(f"{dir_description}, \"{dir_path}\", is not a directory.")

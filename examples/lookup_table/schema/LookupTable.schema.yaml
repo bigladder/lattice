@@ -3,7 +3,7 @@ Schema:
   Title: Lookup Table
   Description: Schema Lookup Tables using data group templates
   Version: "0.1.0"
-  Root Data Group: LookupTable
+  Root Data Group: LookupTableDrive
 
 LookupTable:
   Object Type: "Data Group Template"
@@ -13,7 +13,7 @@ LookupTable:
       Required: True
     lookup_variables:
       Required: True
-      
+
 GridVariables:
   Object Type: "Data Group Template"
   Name: Grid Variables

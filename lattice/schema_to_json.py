@@ -1,13 +1,8 @@
-from . import meta_schema
-from .file_io import load, dump, get_extension
+from .file_io import load, dump
 
-import json
-import yaml
 import os
-from collections import OrderedDict
 import re
 import jsonschema
-import cbor2
 import posixpath
 
 # -------------------------------------------------------------------------------------------------
@@ -66,7 +61,7 @@ class DataGroup:
     def _construct_requirement_if_then(self,
                                        conditionals_list : dict,
                                        dependencies_list : dict,
-                                       requirement_str : str, 
+                                       requirement_str : str,
                                        requirement : str):
         '''
         Construct paired if-then json entries for conditional requirements.
@@ -81,7 +76,7 @@ class DataGroup:
         selector_dict = {'properties' : {collector : dict()}}
         requirement_list = re.split(separator, requirement_str)
         dependent_req = r'(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?'
-        
+
         for req in requirement_list:
             m = re.match(dependent_req, req)
             if m:
@@ -146,7 +141,7 @@ class DataGroup:
             self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
         else:
             # If the type is oneOf a set
-            m = re.match(DataGroup.alternative_type, parent_dict['Data Type']) 
+            m = re.match(DataGroup.alternative_type, parent_dict['Data Type'])
             if m:
                 types = [t.strip() for t in m.group(1).split(',')]
                 selection_key, selections = parent_dict['Constraints'].split('(')
@@ -176,7 +171,7 @@ class DataGroup:
         :param target_dict_to_append:   This dictionary is modified in-situ with an if key and
                                         associated then key
         :param selector:                Constraints key
-        :param selection:               Item from constraints values list. 
+        :param selection:               Item from constraints values list.
         :param entry_name:              Data Element for which the Data Type must match the
                                         Constraint
         '''
@@ -331,7 +326,7 @@ class JSON_translator:
         if 'Root Data Group' in schema_section:
             self._schema['$ref'] = self._schema_name + '.schema.json#/definitions/' + schema_section['Root Data Group']
         # Create a dictionary of available external objects for reference
-        refs = {'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'), 
+        refs = {'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'),
                 f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml')}
         if 'References' in schema_section:
             for ref in schema_section['References']:
@@ -368,20 +363,15 @@ class JSON_translator:
 # -------------------------------------------------------------------------------------------------
 class JSONSchemaValidator:
     def __init__(self, schema_path):
-        with open(schema_path) as meta_schema_file:
+        with open(schema_path) as schema_file:
             uri_path = os.path.abspath(os.path.dirname(schema_path))
             if os.sep != posixpath.sep:
                 uri_path = posixpath.sep + uri_path
-            resolver = jsonschema.RefResolver(f'file://{uri_path}/', meta_schema_file)
-            self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
+            resolver = jsonschema.RefResolver(f'file://{uri_path}/', schema_file)
+            self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
     def validate(self, instance_path):
-        if instance_path.endswith('.json'):
-            with open(os.path.join(instance_path), 'r') as input_file:
-                instance = json.load(input_file)
-        if instance_path.endswith('.cbor'):
-            with open(os.path.join(instance_path), 'rb') as fp:
-                instance = cbor2.decoder.load(fp)
+        instance = load(instance_path)
         errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
         file_name =  os.path.basename(instance_path)
         if len(errors) == 0:
@@ -395,31 +385,18 @@ class JSONSchemaValidator:
             raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
 
 # -------------------------------------------------------------------------------------------------
-def generate_json_schema(input_path_to_file, output_dir):
+def generate_json_schema(input_path_to_file, output_path):
     '''Create JSON schema from YAML source schema.'''
-    if not os.path.isdir(output_dir):
-        os.mkdir(output_dir)
     if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
         j = JSON_translator()
-        core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
-        dump(core_instance, os.path.join(output_dir, 'core.schema.json'))
-
         schema_instance = j.load_source_schema(input_path_to_file)
-        file_name_root = os.path.splitext(os.path.split(input_path_to_file)[1])[0]
-        dump(schema_instance, os.path.join(output_dir, file_name_root + '.json'))
+        dump(schema_instance, output_path)
 
-# -------------------------------------------------------------------------------------------------
-def generate_json_schemas(input_dir, output_dir):
-    '''Create JSON schemas from YAML source schemas in a directory.'''
-    for file in sorted(os.listdir(input_dir)):
-        path = os.path.join(input_dir,file)
-        if os.path.isdir(path):
-            new_output_dir = os.path.join(output_dir, file)
-            if not os.path.exists(new_output_dir):
-                os.mkdir(new_output_dir)
-            generate_json_schemas(path, new_output_dir)
-        else:
-            generate_json_schema(path, output_dir)
+def generate_core_json_schema(output_path):
+    '''Create JSON schema from core YAML schema'''
+    j = JSON_translator()
+    core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
+    dump(core_instance, output_path)
 
 # -------------------------------------------------------------------------------------------------
 def search_for_reference(schema_path : str, subdict : dict) -> bool:
@@ -447,7 +424,7 @@ def search_for_reference(schema_path : str, subdict : dict) -> bool:
                 for entry in [item for item in subdict[key] if isinstance(item, dict)]:
                     subbed = search_for_reference(schema_path, entry)
     return subbed
-    
+
 # -------------------------------------------------------------------------------------------------
 def flatten_json_schema(input_schema, output_dir):
     '''Generate a flattened schema from a schema with references.'''
@@ -459,7 +436,7 @@ def flatten_json_schema(input_schema, output_dir):
     dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
 
 # -------------------------------------------------------------------------------------------------
-def validate_json_file(input_file, input_schema):
+def validate_file(input_file, input_schema):
     v = JSONSchemaValidator(input_schema)
     v.validate(input_file)
 

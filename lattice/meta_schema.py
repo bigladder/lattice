@@ -7,7 +7,7 @@ import sys
 import re
 import copy
 
-from .file_io import load, dump
+from .file_io import load, dump, get_file_basename
 from .schema_to_json import JSON_translator
 
 
@@ -168,9 +168,11 @@ def generate_meta_schema(output_path, common_schema_path=None):
         common_schema = load(common_schema_path)
         schema_dir = os.path.dirname(common_schema_path)
         dependent_schema = [load(schema_file) for schema_file in [os.path.join(schema_dir, f) for f in os.listdir(schema_dir) if f.endswith('.yaml')]]
+        meta_schema_file_name = f"{get_file_basename(common_schema_path, depth=2)}.meta.schema.json"
     else:
         common_schema = None
         dependent_schema = []
+        meta_schema_file_name = "meta.schema.json"
 
     schematypes = SchemaTypes(core_schema, common_schema)
 
@@ -189,7 +191,7 @@ def generate_meta_schema(output_path, common_schema_path=None):
     meta_schema["definitions"]["DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored] = meta_schema["definitions"]["DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop("**GENERATED**")
     meta_schema["patternProperties"][schematypes.data_group_names_anchored] = meta_schema["patternProperties"].pop("**GENERATED**")
 
-    # Replace generated patterns from schema instance 
+    # Replace generated patterns from schema instance
 
     if common_schema:
         if 'Schema' in common_schema:
@@ -211,7 +213,7 @@ def generate_meta_schema(output_path, common_schema_path=None):
             combined_schema = common_schema.copy()
             for d in dependent_schema:
                 combined_schema.update(d)
-            
+
             for template_data_group in [template_key for template_key in combined_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
                 meta_schema["definitions"][f"{template_data_group}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 
@@ -253,6 +255,12 @@ def generate_meta_schema(output_path, common_schema_path=None):
             meta_schema["patternProperties"][f"^{data_group_type}$"] = {"$ref": f"meta.schema.json#/definitions/DataGroupTemplate"}
 
     dump(meta_schema, output_path)
+
+    with open(output_path, 'r') as file:
+      content = file.read()
+    with open(output_path, 'w') as file:
+      file.writelines(content.replace("meta.schema.json", meta_schema_file_name))
+
     return schematypes
 
 
