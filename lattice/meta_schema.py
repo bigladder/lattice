@@ -160,21 +160,21 @@ class SchemaTypes:
 core_meta_schema_path = os.path.join(os.path.dirname(__file__),'meta.schema.yaml')
 core_schema_path = os.path.join(os.path.dirname(__file__),'core.schema.yaml')
 
-def generate_meta_schema(output_path, common_schema_path=None):
+def generate_meta_schema(output_path, schema=None):
     ''' '''
     core_schema = load(core_schema_path)
 
-    if common_schema_path is not None:
-        common_schema = load(common_schema_path)
-        schema_dir = os.path.dirname(common_schema_path)
-        dependent_schema = [load(schema_file) for schema_file in [os.path.join(schema_dir, f) for f in os.listdir(schema_dir) if f.endswith('.yaml')]]
-        meta_schema_file_name = f"{get_file_basename(common_schema_path, depth=2)}.meta.schema.json"
+    referenced_schema = []
+    if schema is not None:
+        source_schema = load(schema)
+        schema_dir = os.path.dirname(schema)
+        if 'References' in source_schema:
+            referenced_schema = [load(schema_file) for schema_file in [os.path.join(schema_dir, f'{ref}.yaml') for ref in source_schema['References']]]
+        meta_schema_file_name = f"{get_file_basename(schema, depth=2)}.meta.schema.json"
     else:
-        common_schema = None
-        dependent_schema = []
-        meta_schema_file_name = "meta.schema.json"
+        source_schema = None
 
-    schematypes = SchemaTypes(core_schema, common_schema)
+    schematypes = SchemaTypes(core_schema, source_schema)
 
     meta_schema = load(core_meta_schema_path)
 
@@ -193,28 +193,26 @@ def generate_meta_schema(output_path, common_schema_path=None):
 
     # Replace generated patterns from schema instance
 
-    if common_schema:
-        if 'Schema' in common_schema:
-            if 'Title' in common_schema['Schema']:
-                meta_schema["title"] = f"{common_schema['Schema']['Title']} Meta-schema"
+    if source_schema:
+        if 'Schema' in source_schema:
+            if 'Title' in source_schema['Schema']:
+                meta_schema["title"] = f"{source_schema['Schema']['Title']} Meta-schema"
             # Special Unit Systems
-            if 'Unit Systems' in common_schema['Schema']:
+            if 'Unit Systems' in source_schema['Schema']:
                 # Unit system definitions
-                for unit_system in common_schema['Schema']["Unit Systems"]:
-                    meta_schema["definitions"][unit_system] = {"type": "string", "enum": common_schema['Schema']["Unit Systems"][unit_system]}
+                for unit_system in source_schema['Schema']["Unit Systems"]:
+                    meta_schema["definitions"][unit_system] = {"type": "string", "enum": source_schema['Schema']["Unit Systems"][unit_system]}
                     meta_schema["definitions"]["DataElementAttributes"]["properties"]["Units"]["anyOf"].append({"$ref":f"meta.schema.json#/definitions/{unit_system}"})
-        # Special Data Groups
-        for data_group_type in [key for key in common_schema if common_schema[key]['Object Type'] == 'Data Group Template']:
+        # Special Data Groups (gather from referenced Schema as well)
+        combined_schema = source_schema.copy()
+        for d in referenced_schema:
+            combined_schema.update(d)
+        for data_group_type in [key for key in combined_schema if combined_schema[key]['Object Type'] == 'Data Group Template']:
             # Data Element Attributes
-            data_group = common_schema[data_group_type]
+            data_group = source_schema[data_group_type]
             data_group_type_name = data_group["Name"]
-
-            # Combine all relevant data model schema to make sure templated Data Groups in those files validate
-            combined_schema = common_schema.copy()
-            for d in dependent_schema:
-                combined_schema.update(d)
-
-            for template_data_group in [template_key for template_key in combined_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
+         
+            for template_data_group in [template_key for template_key in source_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
                 meta_schema["definitions"][f"{template_data_group}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 
                 if "Unit System" in data_group:
@@ -273,22 +271,22 @@ def get_types(schema):
         types[schema[object]["Object Type"]].append(object)
     return types
 
-# def generate_meta_schemas(input_dir, output_dir):
-#     for file in sorted(os.listdir(input_dir)):
-#         path = os.path.join(input_dir,file)
-#         if os.path.isdir(path):
-#             new_output_dir = os.path.join(output_dir, file)
-#             if not os.path.exists(new_output_dir):
-#                 os.mkdir(new_output_dir)
-#             generate_meta_schemas(path, new_output_dir)
-#         elif '.schema.yaml' in file:
-#             generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), os.path.join(input_dir,file))
+def generate_meta_schemas(input_dir, output_dir):
+    for file in sorted(os.listdir(input_dir)):
+        path = os.path.join(input_dir,file)
+        if os.path.isdir(path):
+            new_output_dir = os.path.join(output_dir, file)
+            if not os.path.exists(new_output_dir):
+                os.mkdir(new_output_dir)
+            generate_meta_schemas(path, new_output_dir)
+        elif '.schema.yaml' in file:
+            generate_meta_schema(os.path.join(output_dir, f'{file[:-12]}.meta.schema.json'), os.path.join(input_dir,file))
 
-def generate_meta_schemas(output_schema_list, root_schema_list):
-    for output_schema, root_schema in zip(output_schema_list, root_schema_list):
-        if not os.path.isdir(os.path.dirname(output_schema)):
-            os.makedirs(os.path.dirname(output_schema))
-        generate_meta_schema(output_schema, root_schema)
+# def generate_meta_schemas(output_schema_list, root_schema_list):
+#     for output_schema, root_schema in zip(output_schema_list, root_schema_list):
+#         if not os.path.isdir(os.path.dirname(output_schema)):
+#             os.makedirs(os.path.dirname(output_schema))
+#         generate_meta_schema(output_schema, root_schema)
 
 
 if __name__ == '__main__':
