@@ -7,7 +7,7 @@
 {{ $logo_anchor := .Param "logo_anchor" | default "smart" }}
 {{/* Height can be one of: auto, min, med, max, full. */}}
 {{ $height := .Param "height" | default "max" }}
-{{ $byline := .Param "byline" | default "" }}
+{{ $description := .Param "description" | default "" }}
 {{ with $promo_image }}
 {{ $promo_image_big := (.Fill (printf "1920x1080 %s" $image_anchor)) }}
 {{ $promo_image_small := (.Fill (printf "960x540 %s" $image_anchor)) }}
@@ -36,8 +36,8 @@
               <a class="btn btn-lg btn-primary mr-3 mb-4" href="{{ relref . "specifications" }}">
                 Specification <i class="fas fa-arrow-alt-circle-right ml-2"></i>
               </a>
-              {{ if $byline }}
-              <p class="lead mt-5">{{ $byline }}</p>
+              {{ if $description }}
+              <p class="lead mt-5">{{ $description }}</p>
               {{ end }}
               <a class="btn btn-link text-blue" href="#td-block-1" aria-label="{{ T "ui_read_more"}}"><i class="fa-solid fa-circle-chevron-down" style="font-size: 400%"></i></a>
             </div>

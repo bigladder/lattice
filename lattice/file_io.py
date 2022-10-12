@@ -56,6 +56,7 @@ def translate(input, output):
 def make_dir(dir_path):
   if not os.path.exists(dir_path):
       os.mkdir(dir_path)
+  return dir_path
 
 def remove_dir(dir_path):
     if os.path.exists(dir_path) and os.path.isdir(dir_path):

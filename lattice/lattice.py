@@ -1,16 +1,12 @@
 import os
 import re
 from fnmatch import fnmatch
-import subprocess
-import shutil
-
-import git
 
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, generate_core_json_schema, validate_file
-from .docs import hugo_web
+from .docs import HugoWeb, DocumentFile
 
 class SchemaFile:
   def __init__(self, path):
@@ -24,6 +20,7 @@ class SchemaFile:
       raise Exception(f"Required \"Schema\" object not found in schema file, \"{self.path}\".")
 
     self.schema_type = self.file_base_name # Overwritten if it is actually specified
+    self.data_model_type = None
     self.root_data_group = None
     if "Root Data Group" in self.content["Schema"]:
       self.root_data_group = self.content["Schema"]["Root Data Group"]
@@ -74,15 +71,6 @@ class SchemaFile:
   def set_schema_patterns(self, patterns):
     self.schema_patterns = patterns
 
-class DocumentFile:
-  def __init__(self, path):
-    self.path = os.path.abspath(path)
-    self.relative_path = os.path.relpath(path)
-    self.file_base_name = get_file_basename(path, depth=2)
-
-  def set_markdown_output_path(self, path):
-    self.markdown_output_path = os.path.abspath(path)
-
 class Lattice:
   def __init__(self, root_directory=".", name=None, build_directory=None, build_output_directory_name=".lattice/", build_validation=True):
     # Check if directories exists
@@ -123,14 +111,6 @@ class Lattice:
       self.generate_json_schemas()
       self.validate_example_files()
 
-  def get_git_info(self):
-    self.git_repo = git.Repo(self.root_directory, search_parent_directories=True)
-    self.git_remote_url = os.path.splitext(self.git_repo.remotes[0].url)[0]
-    git_url_parts = self.git_remote_url.split('/')
-    self.git_repo_name = git_url_parts[-1]
-    self.git_repo_owner = git_url_parts[-2]
-    self.git_repo_host = os.path.splitext(git_url_parts[-3])[0]
-    self.git_branch_name = self.git_repo.active_branch.name
 
   def collect_schemas(self):
     # Make sure root directory has minimum content (i.e., schema directory, or at least one schema file)
@@ -242,72 +222,8 @@ class Lattice:
       process_template(template.path, template.markdown_output_path, self.schema_directory_path)
 
   def generate_web_documentation(self):
-    self.get_git_info()
     make_dir(self.doc_output_dir)
     make_dir(self.web_docs_directory_path)
-    web_content_path = os.path.join(self.web_docs_directory_path,"content")
 
-    hugo_configuration = {
-      "name": self.name,
-      "base_url": fr"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/",
-      "git_repo": self.git_remote_url,
-      "git_branch": self.git_branch_name,
-      }
+    HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
 
-    hugo_web.setup_hugo_structure(self.web_docs_directory_path, config=hugo_configuration)
-
-    main_menu_page_number = 1
-    web_docs_config_directory_path = os.path.join(self.doc_templates_directory_path,"web")
-    web_about_path = os.path.join(web_content_path,"about")
-    if os.path.exists(web_docs_config_directory_path):
-      for file_name in os.listdir(web_docs_config_directory_path):
-        file_path = os.path.join(web_docs_config_directory_path, file_name)
-        if "landing" in file_name:
-          with open(file_path,'r') as landing_file:
-            content = landing_file.read()
-          landing_build_path = os.path.join(web_content_path,"_index.pdc")
-          with open(landing_build_path,'w') as output_file:
-            front_matter = {"title": self.name, "type": "landing", "byline": "A standardized modern data model for characterizing fan performance"}
-            output_file.writelines(f"{hugo_web.make_front_matter(front_matter)}{content}")
-        if "about" in file_name:
-          with open(file_path,'r') as about_file:
-            content = about_file.read()
-          about_build_path = os.path.join(web_about_path,"_index.pdc")
-          hugo_web.make_new_menu_page(about_build_path,"About",main_menu_page_number,content=content)
-          main_menu_page_number += 1
-        if "featured-background" in file_name:
-          background_image_path = file_path
-          shutil.copy(background_image_path, web_content_path)
-          shutil.copy(background_image_path, web_about_path)
-
-
-    hugo_web.make_new_menu_page(os.path.join(web_content_path,"specifications","_index.pdc"),"Specifications",main_menu_page_number,content="This data model contains the following specifications:")
-    main_menu_page_number += 1
-
-    order = 1
-    for template in self.doc_templates:
-      output_path = os.path.join(web_content_path,"specifications",f"{get_file_basename(template.path, depth=2)}.pdc")
-      hugo_web.make_specification_html(template.path, output_path, self.schema_directory_path, template.relative_path, order)
-      order += 1
-
-    hugo_web.make_new_menu_page(os.path.join(web_content_path,"schema","_index.pdc"),"Schema",main_menu_page_number)
-    main_menu_page_number += 1
-
-
-    hugo_web.make_new_menu_page(os.path.join(web_content_path,"examples","_index.pdc"),"Examples",main_menu_page_number)
-
-
-    if not os.path.exists(os.path.join(self.web_docs_directory_path,"go.mod")):
-      manage_process(subprocess.run(["hugo", "mod", "init", self.name],cwd=self.web_docs_directory_path))
-
-    if not os.path.exists(os.path.join(self.web_docs_directory_path,"go.sum")):
-      manage_process(subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"],cwd=self.web_docs_directory_path))
-
-    if not os.path.exists(os.path.join(self.web_docs_directory_path,"package-lock.json")):
-      manage_process(subprocess.run(["npm", "install"],cwd=self.web_docs_directory_path))
-
-    manage_process(subprocess.run(["hugo", "--minify"],cwd=self.web_docs_directory_path))
-
-def manage_process(process):
-  if process.returncode:
-    raise Exception(process.stderr)

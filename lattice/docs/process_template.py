@@ -11,7 +11,6 @@ import yaml
 
 from .schema_table import load_structure_from_object, data_types_table, string_types_table, enumerators_table, data_groups_table, write_data_model
 from .grid_table import write_table
-from ..file_io import get_file_basename
 
 def make_args_string(args_dict):
     """
