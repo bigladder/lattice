@@ -1,4 +1,325 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>fan_spec – Specifications</title><link>https://bigladder.github.io/lattice/specifications/</link><description>Recent content in Specifications on fan_spec</description><generator>Hugo -- gohugo.io</generator><atom:link href="https://bigladder.github.io/lattice/specifications/index.xml" rel="self" type="application/rss+xml"/><item><title>Specifications: RS0003</title><link>https://bigladder.github.io/lattice/specifications/rs0003/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0003/</guid><description>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>ASHRAE 205 Fan Representation Specification – Specifications</title><link>https://bigladder.github.io/lattice/specifications/</link><description>Recent content in Specifications on ASHRAE 205 Fan Representation Specification</description><generator>Hugo -- gohugo.io</generator><atom:link href="https://bigladder.github.io/lattice/specifications/index.xml" rel="self" type="application/rss+xml"/><item><title>Specifications: ASHRAE205</title><link>https://bigladder.github.io/lattice/specifications/ashrae205/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/ashrae205/</guid><description>
+&lt;h1 id="ashrae205">ASHRAE205&lt;/h1>
+&lt;h2 id="enumerations">Enumerations&lt;/h2>
+&lt;h3 id="schematype">SchemaType&lt;/h3>
+&lt;table style="width:67%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 26%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0001&lt;/code>&lt;/td>
+&lt;td>Liquid-Cooled Chiller&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>RS0002&lt;/code>&lt;/td>
+&lt;td>Unitary Cooling Air-Conditioning Equipment&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0003&lt;/code>&lt;/td>
+&lt;td>Fan Assembly&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>RS0004&lt;/code>&lt;/td>
+&lt;td>Air-to-Air Direct Expansion Refrigerant Coil System&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0005&lt;/code>&lt;/td>
+&lt;td>Motor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>RS0006&lt;/code>&lt;/td>
+&lt;td>Electronic Motor Drive&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0007&lt;/code>&lt;/td>
+&lt;td>Mechanical Drive&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="compressortype">CompressorType&lt;/h3>
+&lt;table style="width:67%;">
+&lt;colgroup>
+&lt;col style="width: 25%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>RECIPROCATING&lt;/code>&lt;/td>
+&lt;td>Reciprocating compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>SCREW&lt;/code>&lt;/td>
+&lt;td>Screw compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>CENTRIFUGAL&lt;/code>&lt;/td>
+&lt;td>Centrifugal compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>ROTARY&lt;/code>&lt;/td>
+&lt;td>Rotary compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>SCROLL&lt;/code>&lt;/td>
+&lt;td>Scroll compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="compressorspeedcontroltype">CompressorSpeedControlType&lt;/h3>
+&lt;table style="width:65%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>DISCRETE&lt;/code>&lt;/td>
+&lt;td>Compressor loading is controlled by cycling between one or more discrete stages&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>CONTINUOUS&lt;/code>&lt;/td>
+&lt;td>Compressor loading is controlled by continuously varying the speed of the compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="condensertype">CondenserType&lt;/h3>
+&lt;table style="width:65%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>AIR&lt;/code>&lt;/td>
+&lt;td>Air-cooled condenser&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>LIQUID&lt;/code>&lt;/td>
+&lt;td>Liquid-cooled condenser&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>EVAPORATIVE&lt;/code>&lt;/td>
+&lt;td>Evaporative condenser&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="liquidconstituent">LiquidConstituent&lt;/h3>
+&lt;table style="width:71%;">
+&lt;colgroup>
+&lt;col style="width: 29%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>WATER&lt;/code>&lt;/td>
+&lt;td>Water&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>PROPYLENE_GLYCOL&lt;/code>&lt;/td>
+&lt;td>Propylene glycol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>ETHYLENE_GLYCOL&lt;/code>&lt;/td>
+&lt;td>Ethylene glycol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>SODIUM_CHLORIDE&lt;/code>&lt;/td>
+&lt;td>Sodium chloride&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>CALCIUM_CHLORIDE&lt;/code>&lt;/td>
+&lt;td>Calcium chloride&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>ETHANOL&lt;/code>&lt;/td>
+&lt;td>Ethanol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>METHANOL&lt;/code>&lt;/td>
+&lt;td>Methanol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="concentrationtype">ConcentrationType&lt;/h3>
+&lt;table style="width:65%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>BY_VOLUME&lt;/code>&lt;/td>
+&lt;td>Concentration is defined as a fraction of total liquid mixture volume&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>BY_MASS&lt;/code>&lt;/td>
+&lt;td>Concentration is defined as a fraction of total liquid mixture mass&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="data-groups">Data Groups&lt;/h2>
+&lt;h3 id="liquidmixture">LiquidMixture&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>liquid_components&lt;/code>&lt;/td>
+&lt;td>An array of all liquid components within the liquid mixture&lt;/td>
+&lt;td>&lt;code>[{LiquidComponent}]&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Array may contain a single component&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>concentration_type&lt;/code>&lt;/td>
+&lt;td>Defines whether concentration is defined on a volume or mass basis&lt;/td>
+&lt;td>&lt;code>&amp;lt;ConcentrationType&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="liquidcomponent">LiquidComponent&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 13%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>liquid_constituent&lt;/code>&lt;/td>
+&lt;td>Substance of this component of the mixture&lt;/td>
+&lt;td>&lt;code>&amp;lt;LiquidConstituent&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>concentration&lt;/code>&lt;/td>
+&lt;td>Concentration of this component of the mixture&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item><item><title>Specifications: RS0003</title><link>https://bigladder.github.io/lattice/specifications/rs0003/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0003/</guid><description>
 &lt;h1 id="rs0003">RS0003&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="operationspeedcontroltype">OperationSpeedControlType&lt;/h3>
@@ -808,248 +1129,69 @@
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
-&lt;/table></description></item><item><title>Specifications: ASHRAE205</title><link>https://bigladder.github.io/lattice/specifications/ashrae205/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/ashrae205/</guid><description>
-&lt;h1 id="ashrae205">ASHRAE205&lt;/h1>
+&lt;/table></description></item><item><title>Specifications: RS0005</title><link>https://bigladder.github.io/lattice/specifications/rs0005/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0005/</guid><description>
+&lt;h1 id="rs0005">RS0005&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
-&lt;h3 id="schematype">SchemaType&lt;/h3>
-&lt;table style="width:67%;">
-&lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 26%" />
-&lt;col style="width: 16%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>RS0001&lt;/code>&lt;/td>
-&lt;td>Liquid-Cooled Chiller&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>RS0002&lt;/code>&lt;/td>
-&lt;td>Unitary Cooling Air-Conditioning Equipment&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>RS0003&lt;/code>&lt;/td>
-&lt;td>Fan Assembly&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>RS0004&lt;/code>&lt;/td>
-&lt;td>Air-to-Air Direct Expansion Refrigerant Coil System&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>RS0005&lt;/code>&lt;/td>
-&lt;td>Motor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>RS0006&lt;/code>&lt;/td>
-&lt;td>Electronic Motor Drive&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>RS0007&lt;/code>&lt;/td>
-&lt;td>Mechanical Drive&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="compressortype">CompressorType&lt;/h3>
-&lt;table style="width:67%;">
-&lt;colgroup>
-&lt;col style="width: 25%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 16%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>RECIPROCATING&lt;/code>&lt;/td>
-&lt;td>Reciprocating compressor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>SCREW&lt;/code>&lt;/td>
-&lt;td>Screw compressor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>CENTRIFUGAL&lt;/code>&lt;/td>
-&lt;td>Centrifugal compressor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>ROTARY&lt;/code>&lt;/td>
-&lt;td>Rotary compressor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>SCROLL&lt;/code>&lt;/td>
-&lt;td>Scroll compressor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="compressorspeedcontroltype">CompressorSpeedControlType&lt;/h3>
-&lt;table style="width:65%;">
-&lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 16%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>DISCRETE&lt;/code>&lt;/td>
-&lt;td>Compressor loading is controlled by cycling between one or more discrete stages&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>CONTINUOUS&lt;/code>&lt;/td>
-&lt;td>Compressor loading is controlled by continuously varying the speed of the compressor&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="condensertype">CondenserType&lt;/h3>
-&lt;table style="width:65%;">
-&lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 16%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>AIR&lt;/code>&lt;/td>
-&lt;td>Air-cooled condenser&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>LIQUID&lt;/code>&lt;/td>
-&lt;td>Liquid-cooled condenser&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>EVAPORATIVE&lt;/code>&lt;/td>
-&lt;td>Evaporative condenser&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="liquidconstituent">LiquidConstituent&lt;/h3>
-&lt;table style="width:71%;">
-&lt;colgroup>
-&lt;col style="width: 29%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 16%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>WATER&lt;/code>&lt;/td>
-&lt;td>Water&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>PROPYLENE_GLYCOL&lt;/code>&lt;/td>
-&lt;td>Propylene glycol&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>ETHYLENE_GLYCOL&lt;/code>&lt;/td>
-&lt;td>Ethylene glycol&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>SODIUM_CHLORIDE&lt;/code>&lt;/td>
-&lt;td>Sodium chloride&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>CALCIUM_CHLORIDE&lt;/code>&lt;/td>
-&lt;td>Calcium chloride&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>ETHANOL&lt;/code>&lt;/td>
-&lt;td>Ethanol&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>METHANOL&lt;/code>&lt;/td>
-&lt;td>Methanol&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="concentrationtype">ConcentrationType&lt;/h3>
-&lt;table style="width:65%;">
-&lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 16%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>BY_VOLUME&lt;/code>&lt;/td>
-&lt;td>Concentration is defined as a fraction of total liquid mixture volume&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>BY_MASS&lt;/code>&lt;/td>
-&lt;td>Concentration is defined as a fraction of total liquid mixture mass&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
+&lt;p>None.&lt;/p>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
-&lt;h3 id="liquidmixture">LiquidMixture&lt;/h3>
+&lt;h3 id="rs0005-1">RS0005&lt;/h3>
 &lt;table>
 &lt;colgroup>
-&lt;col style="width: 19%" />
 &lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>metadata&lt;/code>&lt;/td>
+&lt;td>Metadata data group&lt;/td>
+&lt;td>&lt;code>{Metadata}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>schema=RS0005&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>description&lt;/code>&lt;/td>
+&lt;td>Data group describing product and rating information&lt;/td>
+&lt;td>&lt;code>{Description}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance&lt;/code>&lt;/td>
+&lt;td>Data group containing performance information&lt;/td>
+&lt;td>&lt;code>{Performance}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="description">Description&lt;/h3>
+&lt;table>
+&lt;colgroup>
 &lt;col style="width: 20%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
 &lt;col style="width: 10%" />
 &lt;col style="width: 15%" />
 &lt;col style="width: 8%" />
@@ -1068,35 +1210,87 @@
 &lt;/thead>
 &lt;tbody>
 &lt;tr class="odd">
-&lt;td>&lt;code>liquid_components&lt;/code>&lt;/td>
-&lt;td>An array of all liquid components within the liquid mixture&lt;/td>
-&lt;td>&lt;code>[{LiquidComponent}]&lt;/code>&lt;/td>
+&lt;td>&lt;code>product_information&lt;/code>&lt;/td>
+&lt;td>Data group describing product information&lt;/td>
+&lt;td>&lt;code>{ProductInformation}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Array may contain a single component&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>concentration_type&lt;/code>&lt;/td>
-&lt;td>Defines whether concentration is defined on a volume or mass basis&lt;/td>
-&lt;td>&lt;code>&amp;lt;ConcentrationType&amp;gt;&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;h3 id="liquidcomponent">LiquidComponent&lt;/h3>
+&lt;h3 id="productinformation">ProductInformation&lt;/h3>
 &lt;table>
 &lt;colgroup>
-&lt;col style="width: 19%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 15%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>manufacturer&lt;/code>&lt;/td>
+&lt;td>Manufacturer name&lt;/td>
+&lt;td>&lt;code>String&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>model_number&lt;/code>&lt;/td>
+&lt;td>Model number&lt;/td>
+&lt;td>&lt;code>Pattern&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>nominal_voltage&lt;/code>&lt;/td>
+&lt;td>Nominal voltage&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>V&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>nominal_frequency&lt;/code>&lt;/td>
+&lt;td>Nominal frequency&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>Hz&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performance">Performance&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 19%" />
+&lt;col style="width: 17%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 13%" />
+&lt;col style="width: 14%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1111,22 +1305,181 @@
 &lt;/thead>
 &lt;tbody>
 &lt;tr class="odd">
-&lt;td>&lt;code>liquid_constituent&lt;/code>&lt;/td>
-&lt;td>Substance of this component of the mixture&lt;/td>
-&lt;td>&lt;code>&amp;lt;LiquidConstituent&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;code>maximum_power&lt;/code>&lt;/td>
+&lt;td>Maximum operational input power to the motor&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Operational limit set to prevent overheating or overcurrent, not the rated name plate power&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>standby_power&lt;/code>&lt;/td>
+&lt;td>Power draw when motor is not operating&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>number_of_poles&lt;/code>&lt;/td>
+&lt;td>Number of poles&lt;/td>
+&lt;td>&lt;code>Integer&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>&amp;gt;0, %2&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>drive_representation&lt;/code>&lt;/td>
+&lt;td>The corresponding Standard 205 drive representation&lt;/td>
+&lt;td>&lt;code>{RS0006}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
+&lt;td>Data group describing motor performance when operating&lt;/td>
+&lt;td>&lt;code>{PerformanceMap}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power&lt;/p>&lt;/li>
+&lt;li>&lt;p>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performancemapmotor">PerformanceMapMotor&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing grid variables for motor performance&lt;/td>
+&lt;td>&lt;code>{GridVariablesMotor}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
-&lt;td>&lt;code>concentration&lt;/code>&lt;/td>
-&lt;td>Concentration of this component of the mixture&lt;/td>
-&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing lookup variables for motor performance&lt;/td>
+&lt;td>&lt;code>{LookupVariables}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="gridvariablesmotor">GridVariablesMotor&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>shaft_power&lt;/code>&lt;/td>
+&lt;td>Delivered rotational shaft power&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>shaft_rotational_speed&lt;/code>&lt;/td>
+&lt;td>Rotational speed of shaft&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>rev/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="lookupvariablesmotor">LookupVariablesMotor&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>efficiency&lt;/code>&lt;/td>
+&lt;td>Efficiency of motor&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
 &lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Defined as the ratio of mechanical shaft power to electrical input power of the motor&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>power_factor&lt;/code>&lt;/td>
+&lt;td>Power factor of the motor&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table></description></item><item><title>Specifications: RS0006</title><link>https://bigladder.github.io/lattice/specifications/rs0006/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0006/</guid><description>
@@ -1818,359 +2171,6 @@
 &lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>Defined as the ratio of output shaft power to input shaft power&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table></description></item><item><title>Specifications: RS0005</title><link>https://bigladder.github.io/lattice/specifications/rs0005/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0005/</guid><description>
-&lt;h1 id="rs0005">RS0005&lt;/h1>
-&lt;h2 id="enumerations">Enumerations&lt;/h2>
-&lt;p>None.&lt;/p>
-&lt;h2 id="data-groups">Data Groups&lt;/h2>
-&lt;h3 id="rs0005-1">RS0005&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 11%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>metadata&lt;/code>&lt;/td>
-&lt;td>Metadata data group&lt;/td>
-&lt;td>&lt;code>{Metadata}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;code>schema=RS0005&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>description&lt;/code>&lt;/td>
-&lt;td>Data group describing product and rating information&lt;/td>
-&lt;td>&lt;code>{Description}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>performance&lt;/code>&lt;/td>
-&lt;td>Data group containing performance information&lt;/td>
-&lt;td>&lt;code>{Performance}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="description">Description&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 20%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>product_information&lt;/code>&lt;/td>
-&lt;td>Data group describing product information&lt;/td>
-&lt;td>&lt;code>{ProductInformation}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 20%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 15%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>manufacturer&lt;/code>&lt;/td>
-&lt;td>Manufacturer name&lt;/td>
-&lt;td>&lt;code>String&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>model_number&lt;/code>&lt;/td>
-&lt;td>Model number&lt;/td>
-&lt;td>&lt;code>Pattern&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>nominal_voltage&lt;/code>&lt;/td>
-&lt;td>Nominal voltage&lt;/td>
-&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
-&lt;td>V&lt;/td>
-&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>nominal_frequency&lt;/code>&lt;/td>
-&lt;td>Nominal frequency&lt;/td>
-&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
-&lt;td>Hz&lt;/td>
-&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="performance">Performance&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 20%" />
-&lt;col style="width: 14%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 14%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>maximum_power&lt;/code>&lt;/td>
-&lt;td>Maximum operational input power to the motor&lt;/td>
-&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
-&lt;td>W&lt;/td>
-&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Operational limit set to prevent overheating or overcurrent, not the rated name plate power&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>standby_power&lt;/code>&lt;/td>
-&lt;td>Power draw when motor is not operating&lt;/td>
-&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
-&lt;td>W&lt;/td>
-&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>number_of_poles&lt;/code>&lt;/td>
-&lt;td>Number of poles&lt;/td>
-&lt;td>&lt;code>Integer&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;code>&amp;gt;0, %2&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>drive_representation&lt;/code>&lt;/td>
-&lt;td>The corresponding Standard 205 drive representation&lt;/td>
-&lt;td>&lt;code>{RS0006}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="odd">
-&lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
-&lt;td>Data group describing motor performance when operating&lt;/td>
-&lt;td>&lt;code>{PerformanceMap}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;ul>
-&lt;li>&lt;p>If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power&lt;/p>&lt;/li>
-&lt;li>&lt;p>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data&lt;/p>&lt;/li>
-&lt;/ul>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="performancemapmotor">PerformanceMapMotor&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 18%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
-&lt;td>Data group describing grid variables for motor performance&lt;/td>
-&lt;td>&lt;code>{GridVariablesMotor}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
-&lt;td>Data group describing lookup variables for motor performance&lt;/td>
-&lt;td>&lt;code>{LookupVariables}&lt;/code>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="gridvariablesmotor">GridVariablesMotor&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>shaft_power&lt;/code>&lt;/td>
-&lt;td>Delivered rotational shaft power&lt;/td>
-&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
-&lt;td>W&lt;/td>
-&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>shaft_rotational_speed&lt;/code>&lt;/td>
-&lt;td>Rotational speed of shaft&lt;/td>
-&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
-&lt;td>rev/s&lt;/td>
-&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;h3 id="lookupvariablesmotor">LookupVariablesMotor&lt;/h3>
-&lt;table>
-&lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 11%" />
-&lt;/colgroup>
-&lt;thead>
-&lt;tr class="header">
-&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
-&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr class="odd">
-&lt;td>&lt;code>efficiency&lt;/code>&lt;/td>
-&lt;td>Efficiency of motor&lt;/td>
-&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
-&lt;td>-&lt;/td>
-&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Defined as the ratio of mechanical shaft power to electrical input power of the motor&lt;/td>
-&lt;/tr>
-&lt;tr class="even">
-&lt;td>&lt;code>power_factor&lt;/code>&lt;/td>
-&lt;td>Power factor of the motor&lt;/td>
-&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
-&lt;td>-&lt;/td>
-&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
-&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table></description></item></channel></rss>
