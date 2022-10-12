@@ -208,7 +208,7 @@ class Lattice:
     if self.doc_templates_directory_path is not None:
       for file_name in os.listdir(self.doc_templates_directory_path):
         file_path = os.path.join(self.doc_templates_directory_path, file_name)
-        if os.path.isfile(file_path):
+        if os.path.isfile(file_path) and ".md" in file_name:
           self.doc_templates.append(DocumentFile(file_path))
     self.doc_output_dir = os.path.join(self.build_directory,"docs")
     if len(self.doc_templates) > 0:
