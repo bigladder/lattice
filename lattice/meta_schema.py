@@ -40,22 +40,6 @@ def meta_validate_file(file_path, meta_schema_path):
   meta_schema = MetaSchema(meta_schema_path)
   meta_schema.validate(file_path)
 
-def meta_validate_dir(dir_path, meta_schema_dir_path, errors=[]):
-  for file in sorted(os.listdir(dir_path)):
-    path = os.path.join(dir_path,file)
-    if os.path.isdir(path):
-      meta_validate_dir(path, os.path.join(meta_schema_dir_path, file), errors)
-    else:
-      if '.schema.yaml' in file:
-        try:
-          meta_schema_path = os.path.join(meta_schema_dir_path, 'meta.schema.json')
-          meta_validate_file(os.path.join(dir_path,file), meta_schema_path)
-        except Exception as e:
-          errors.append(e)
-  if len(errors) > 0:
-    error_str = '\n\n'.join([f"{e}" for e in errors])
-    raise Exception(f"{error_str}")
-
 # Generate Meta Schema
 
 class SchemaTypes:
@@ -272,32 +256,3 @@ def get_types(schema):
             types[schema[object]["Object Type"]] = []
         types[schema[object]["Object Type"]].append(object)
     return types
-
-# def generate_meta_schemas(input_dir, output_dir):
-#     for file in sorted(os.listdir(input_dir)):
-#         path = os.path.join(input_dir,file)
-#         if os.path.isdir(path):
-#             new_output_dir = os.path.join(output_dir, file)
-#             if not os.path.exists(new_output_dir):
-#                 os.mkdir(new_output_dir)
-#             generate_meta_schemas(path, new_output_dir)
-#         elif '.schema.yaml' in file:
-#             generate_meta_schema(os.path.join(output_dir,'meta.schema.json'), os.path.join(input_dir,file))
-
-def generate_meta_schemas(output_schema_list, root_schema_list):
-    for output_schema, root_schema in zip(output_schema_list, root_schema_list):
-        if not os.path.isdir(os.path.dirname(output_schema)):
-            os.makedirs(os.path.dirname(output_schema))
-        generate_meta_schema(output_schema, root_schema)
-
-
-if __name__ == '__main__':
-  if len(sys.argv) != 2:
-    exit(1)
-  source = sys.argv[1]
-  if not os.path.exists(source):
-    exit(1)
-  elif os.path.isfile(source):
-    meta_validate_file(source)
-  else: # is directory
-    meta_validate_dir(source)

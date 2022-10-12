@@ -289,17 +289,3 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
                 for err in errs:
                     handle.write(err.strip())
                     handle.write("\n")
-
-def process_templates(input_dir, output_dir, schema_dir=None):
-  if schema_dir is None:
-    schema_dir = input_dir
-  for file in sorted(os.listdir(input_dir)):
-    path = os.path.join(input_dir,file)
-    if os.path.isdir(path):
-      new_output_dir = os.path.join(output_dir, file)
-      if not os.path.exists(new_output_dir):
-        os.mkdir(new_output_dir)
-      process_templates(path, new_output_dir)
-    elif '.md.j2' in file:
-      process_template(os.path.join(input_dir,file), os.path.join(output_dir,file[:-3]), schema_dir=schema_dir)
-

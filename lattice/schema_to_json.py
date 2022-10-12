@@ -439,8 +439,3 @@ def flatten_json_schema(input_schema, output_dir):
 def validate_file(input_file, input_schema):
     v = JSONSchemaValidator(input_schema)
     v.validate(input_file)
-
-import sys
-
-if __name__ == '__main__':
-    flatten_json_schema(sys.argv[1], sys.argv[2])
