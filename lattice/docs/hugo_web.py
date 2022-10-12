@@ -30,7 +30,7 @@ class HugoWeb:
     self.docs_config_directory = os.path.join(self.docs_source_directory,"web")
     if schema_directory is None:
       self.source_schema_directory_path = os.path.abspath(os.path.join(self.docs_source_directory,os.pardir,"schema"))
-    self.title = os.path.relpath(docs_source_directory)
+    self.title = os.path.relpath(self.docs_source_directory)
     self.description = ""
     self.author = ""
     self.has_logo = False
@@ -251,7 +251,7 @@ class HugoWeb:
     dump(self.make_npm_package_json(),os.path.join(self.build_directory,"package.json"))
 
     if not os.path.exists(os.path.join(self.build_directory,"go.mod")):
-      subprocess.run(["hugo", "mod", "init", self.title],cwd=self.build_directory,check=True)
+      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory)],cwd=self.build_directory,check=True)
 
     if not os.path.exists(os.path.join(self.build_directory,"go.sum")):
       subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"],cwd=self.build_directory,check=True)
