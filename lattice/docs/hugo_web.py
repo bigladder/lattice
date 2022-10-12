@@ -1,24 +1,11 @@
 import os
-from ..file_io import dump, dump_to_string, make_dir, remove_dir
+from ..file_io import dump, dump_to_string, get_file_basename, make_dir, get_extension
 from distutils.dir_util import copy_tree
 from .process_template import process_template
 
-def make_web_docs(schema_dir_path, template, output_dir="."):
-  setup_hugo_structure(output_dir)
-
-  make_new_menu_page(os.path.join(output_dir,"web","content","about","_index.pdc"),"About",1)
-  make_specification_html(template, os.path.join(output_dir,"web","content","specifications","_index.pdc"),schema_dir_path)
-  make_new_menu_page(os.path.join(output_dir,"web","content","schema","_index.pdc"),"Schema",3)
-  make_new_menu_page(os.path.join(output_dir,"web","content","examples","_index.pdc"),"Examples",4)
-  return
-
-def setup_hugo_structure(output_dir):
-  output_dir_path = os.path.join(output_dir,"web")
-  remove_dir(output_dir_path)
-  make_dir(output_dir_path)
-
+def setup_hugo_structure(output_dir_path, config={"name": "Test"}):
   # Setup Hugo Config
-  dump(make_hugo_config("Test"),os.path.join(output_dir_path,"config.yaml"))
+  dump(make_hugo_config(config),os.path.join(output_dir_path,"config.yaml"))
 
   # npm package.json
   dump(make_npm_package_json(),os.path.join(output_dir_path,"package.json"))
@@ -31,13 +18,13 @@ def setup_hugo_structure(output_dir):
     make_dir(os.path.join(output_dir_path,hugo_dir))
 
   # Copy layouts
-  copy_tree(os.path.join(os.path.dirname(__file__),"hugo_layouts"),os.path.join(output_dir,"web","layouts"))
+  copy_tree(os.path.join(os.path.dirname(__file__),"hugo_layouts"),os.path.join(output_dir_path,"layouts"))
 
 
-def make_hugo_config(title):
+def make_hugo_config(config):
   return {
-    "baseURL": "https://bigladder.github.io/lattice/",
-    "title": title,
+    "baseURL": config["base_url"],
+    "title": config["name"],
     "module": {
       "hugoVersion": {
         "extended": True,
@@ -55,7 +42,8 @@ def make_hugo_config(title):
       ]
     },
     "params": {
-      "github_repo": "https://github.com/bigladder/lattice",
+      "github_repo": config["git_repo"],
+      "github_branch": config["git_branch"],
       "ui": {
         "breadcrumb_disable": True
       }
@@ -76,17 +64,23 @@ def make_hugo_config(title):
     }
   }
 
-def make_front_matter(title, rank=1, schema_path=None, content_path=None):
+def make_front_matter(front_matter):
+  return f"---\n{dump_to_string(front_matter,'yaml')}---\n\n"
+
+def make_new_menu_page(output_file_path, title, order=1, content="", schema_path=None, content_type=None, content_path=None):
   front_matter = {
     "title": title,
     "linkTitle": title,
     "weight": 1,
     "menu": {
       "main": {
-        "weight": rank
+        "weight": order
       }
     }
   }
+
+  if content_type is not None:
+    front_matter["type"] = content_type
 
   if schema_path is not None:
     front_matter["github_schema"] = schema_path
@@ -94,23 +88,40 @@ def make_front_matter(title, rank=1, schema_path=None, content_path=None):
   if content_path is not None:
     front_matter["github_content"] = content_path
 
-  return f"---\n{dump_to_string(front_matter,'yaml')}---\n\n"
-
-
-def make_new_menu_page(output_file_path, title, rank=1, content="", schema_path=None, content_path=None):
   with open(output_file_path,'w') as output_file:
-    output_file.writelines(f"{make_front_matter(title, rank, schema_path, content_path)}{content}")
+    output_file.writelines(f"{make_front_matter(front_matter)}{content}")
 
-def make_specification_html(template_path, output_path, schema_dir_path):
-  # Process template
-  process_template(template_path, output_path, schema_dir=schema_dir_path)
+def make_specification_html(template_path, output_path, schema_dir_path, template_relative_path=None, order=1):
+
+  if get_extension(template_path) == ".j2":
+    # Process template
+    process_template(template_path, output_path, schema_dir=schema_dir_path)
+
+  else:
+    copy_tree(template_path, output_path)
+
+  title = get_file_basename(template_path, depth=2)
 
   # Run Pandoc
 
-  # Append metadata
+  # Append front matter
+  front_matter = {
+    "title": title,
+    "linkTitle": title,
+    "weight": order
+  }
+
+  if template_relative_path is None:
+    template_relative_path = template_path
+
+  front_matter["github_schema"] = schema_dir_path
+
+  front_matter["github_content"] = template_relative_path
+
   with open(output_path,'r') as original_file:
     content = original_file.read()
-  make_new_menu_page(output_path, "Specification", rank=2, content=content, schema_path="", content_path=template_path)
+  with open(output_path,'w') as output_file:
+    output_file.writelines(f"{make_front_matter(front_matter)}{content}")
 
 def prepend_file_content(file_path, new_content):
   with open(file_path,'r') as original_file:

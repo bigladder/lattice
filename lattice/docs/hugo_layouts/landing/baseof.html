@@ -1,0 +1,41 @@
+<!doctype html>
+<html itemscope itemtype="http://schema.org/WebPage" lang="{{ .Site.Language.Lang }}" class="no-js">
+  <head>
+    {{ partial "head.html" . }}
+  </head>
+  <body class="td-{{ .Kind }}{{ with .Page.Params.body_class }} {{ . }}{{ end }}">
+    <header>
+      {{ partial "navbar.html" . }}
+    </header>
+    <div class="container-fluid td-default td-outer">
+      <main role="main" class="td-main">
+        {{ partial "cover.html" . }}
+        <a id="td-block-1" class="td-offset-anchor"></a>
+        <section class="row td-box td-box--primary position-relative td-box--gradient td-box--height-auto">
+          <div class="container text-center td-arrow-down">
+            <div class="h4 mb-0">
+              {{ block "main" . }}{{ end }}
+            </div>
+          </div>
+        </section>
+        <a id="td-block-2" class="td-offset-anchor"></a>
+        <section class="row td-box td-box--gray td-box--gradient td-box--height-auto">
+          <div class="container text-center">
+            <div class="mb-4 h1">
+              <i class="fab fa-github"></i>
+            </div>
+            <h4 class="h3">
+              Contributions welcome!
+            </h4>
+            <div class="mb-0">
+              <p><a href="{{ .Param "github_repo" }}/issues">Comments</a> and <a href="{{ .Param "github_repo" }}/pulls">suggestions</a> are collected on an ongoing basis via <strong>GitHub</strong>.</p>
+              <p><a href="{{ .Param "github_repo" }}">{{ T "ui_read_more" }} …</a></p>
+            </div>
+          </div>
+        </section>
+      </main>
+      {{ partial "footer.html" . }}
+    </div>
+    {{ partialCached "scripts.html" . }}
+  </body>
+</html>

@@ -19,7 +19,7 @@ for example_dir in os.listdir(EXAMPLES_PATH):
 BASE_META_SCHEMA_PATH = os.path.join(SOURCE_PATH, "meta.schema.yaml")
 CORE_SCHEMA_PATH = os.path.join(SOURCE_PATH, "core.schema.yaml")
 
-DOIT_CONFIG = {"default_tasks": ["validate_example_files"]}
+DOIT_CONFIG = {"default_tasks": ["validate_example_files", "generate_markdown"]}
 
 def task_generate_meta_schemas():
   '''Generate JSON meta schemas'''
@@ -43,7 +43,7 @@ def task_validate_schemas():
   for example in examples:
     yield {
       'name': example.name,
-      'task_dep': ['generate_meta_schemas'],
+      'task_dep': [f"generate_meta_schemas:{example.name}"],
       'file_dep': [schema.path for schema in example.schemas] +
                   [schema.meta_schema_path for schema in example.schemas] +
                   [BASE_META_SCHEMA_PATH,
@@ -59,7 +59,7 @@ def task_generate_json_schemas():
   for example in examples:
     yield {
       'name': example.name,
-      'task_dep': ['validate_schemas'],
+      'task_dep': [f"validate_schemas:{example.name}"],
       'file_dep': [schema.path for schema in example.schemas] +
                   [schema.meta_schema_path for schema in example.schemas] +
                   [CORE_SCHEMA_PATH,
@@ -78,7 +78,7 @@ def task_validate_example_files():
     yield {
       'name': example.name,
       'file_dep': [schema.json_schema_path for schema in example.schemas] + example.examples + [os.path.join(SOURCE_PATH, "schema_to_json.py")],
-      'task_dep': ['generate_json_schemas'],
+      'task_dep': [f"generate_json_schemas:{example.name}"],
       'actions': [
         (example.validate_example_files, [])
       ]
@@ -91,7 +91,7 @@ def task_generate_markdown():
       'name': example.name,
       'targets': [template.markdown_output_path for template in example.doc_templates],
       'file_dep': [schema.path for schema in example.schemas],
-      'task_dep': ['validate_schemas'],
+      'task_dep': [f"validate_schemas:{example.name}"],
       'actions': [
         (example.generate_markdown_documents, [])
       ],
@@ -103,7 +103,8 @@ def task_generate_web_docs():
   for example in examples:
     yield {
       'name': example.name,
-      'task_dep': ['validate_schemas'],
+      'task_dep': [f"validate_schemas:{example.name}"],
+      'targets': [os.path.join(example.web_docs_directory_path,"public")],
       'actions': [
         (example.generate_web_documentation, [])
       ],

@@ -42,9 +42,9 @@ jobs:
       - name: Build web
         run: |
           source $VENV
-          poetry run doit web_doc_generation
+          poetry run doit generate_web_docs
       - name: Deploy to GitHub pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/lookup_table/web/public
+          publish_dir: ./build/fan_spec/docs/web/public
