@@ -1,1 +1,2176 @@
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Test – Specification</title><link>https://bigladder.github.io/lattice/specifications/</link><description>Recent content in Specification on Test</description><generator>Hugo -- gohugo.io</generator><atom:link href="https://bigladder.github.io/lattice/specifications/index.xml" rel="self" type="application/rss+xml"/></channel></rss>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>fan_spec – Specifications</title><link>https://bigladder.github.io/lattice/specifications/</link><description>Recent content in Specifications on fan_spec</description><generator>Hugo -- gohugo.io</generator><atom:link href="https://bigladder.github.io/lattice/specifications/index.xml" rel="self" type="application/rss+xml"/><item><title>Specifications: RS0003</title><link>https://bigladder.github.io/lattice/specifications/rs0003/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0003/</guid><description>
+&lt;h1 id="rs0003">RS0003&lt;/h1>
+&lt;h2 id="enumerations">Enumerations&lt;/h2>
+&lt;h3 id="operationspeedcontroltype">OperationSpeedControlType&lt;/h3>
+&lt;table style="width:68%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 19%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>DISCRETE&lt;/code>&lt;/td>
+&lt;td>Fan assemblies that operate at one or more defined speeds dictated by a tap or dip switch&lt;/td>
+&lt;td>Performance map data is provided at individual impeller speeds&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>CONTINUOUS&lt;/code>&lt;/td>
+&lt;td>Fan assemblies that operate within a continuous range of speeds&lt;/td>
+&lt;td>Performance map data is provided over a range of impeller speeds&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="installationspeedcontroltype">InstallationSpeedControlType&lt;/h3>
+&lt;table style="width:74%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 25%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>FIXED&lt;/code>&lt;/td>
+&lt;td>Fan speed does not change after installation&lt;/td>
+&lt;td>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> Examples include dip-switch/tap selection and pulley adjustments&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>VARIABLE&lt;/code>&lt;/td>
+&lt;td>Fan speed can change depending on operation after installation&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="impellertype">ImpellerType&lt;/h3>
+&lt;table style="width:86%;">
+&lt;colgroup>
+&lt;col style="width: 44%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>CENTRIFUGAL_FORWARD_CURVED&lt;/code>&lt;/td>
+&lt;td>Forward curved fan impeller&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>CENTRIFUGAL_BACKWARD_CURVED&lt;/code>&lt;/td>
+&lt;td>Backward curved or inclined fan impeller&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>CENTRIFUGAL_AIR_FOIL&lt;/code>&lt;/td>
+&lt;td>Air foil impeller with shaped blades&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>AXIAL&lt;/code>&lt;/td>
+&lt;td>Fan impeller with shaft parallel to air flow stream for high static applications&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>PROPELLER&lt;/code>&lt;/td>
+&lt;td>Fan impeller with shaft parallel to air flow stream for low static pressure applications&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="componenttype">ComponentType&lt;/h3>
+&lt;table style="width:88%;">
+&lt;colgroup>
+&lt;col style="width: 44%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 18%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>COIL&lt;/code>&lt;/td>
+&lt;td>Finned coil in cross-flow arrangement&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>FURNACE&lt;/code>&lt;/td>
+&lt;td>Fuel-fired heating section&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>FILTER&lt;/code>&lt;/td>
+&lt;td>Air filters&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>HEAT_EXCHANGER&lt;/code>&lt;/td>
+&lt;td>Heat exchanger&lt;/td>
+&lt;td>e.g., air-to-air heat exchanger&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>ELECTRIC_RESISTANCE_ELEMENT&lt;/code>&lt;/td>
+&lt;td>Electric resistance heater elements&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>DIRECT_EVAPORATIVE&lt;/code>&lt;/td>
+&lt;td>Wetted evaporative cooling media&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>OTHER&lt;/code>&lt;/td>
+&lt;td>Additional components in air stream&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="data-groups">Data Groups&lt;/h2>
+&lt;h3 id="rs0003-1">RS0003&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 14%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 23%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>metadata&lt;/code>&lt;/td>
+&lt;td>Metadata data group&lt;/td>
+&lt;td>&lt;code>{Metadata}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>data_model=ASHRAE_205, schema=RS0003&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>description&lt;/code>&lt;/td>
+&lt;td>Data group describing product and rating information&lt;/td>
+&lt;td>&lt;code>{Description}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance&lt;/code>&lt;/td>
+&lt;td>Data group containing performance information&lt;/td>
+&lt;td>&lt;code>{Performance}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="description">Description&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>product_information&lt;/code>&lt;/td>
+&lt;td>Data group describing product information&lt;/td>
+&lt;td>&lt;code>{ProductInformation}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="productinformation">ProductInformation&lt;/h3>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 14%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>manufacturer&lt;/code>&lt;/td>
+&lt;td>Assembly/unit manufacturer name&lt;/td>
+&lt;td>&lt;code>String&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>model_number&lt;/code>&lt;/td>
+&lt;td>Assembly/unit model number&lt;/td>
+&lt;td>&lt;code>Pattern&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>impeller_type&lt;/code>&lt;/td>
+&lt;td>Type of impeller in fan assembly&lt;/td>
+&lt;td>&lt;code>&amp;lt;ImpellerType&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>number_of_impellers&lt;/code>&lt;/td>
+&lt;td>Number of impellers included in the fan assembly&lt;/td>
+&lt;td>&lt;code>Integer&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performance">Performance&lt;/h3>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 21%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 5%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 17%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>nominal_standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
+&lt;td>Nominal or rated air flow rate at standard air conditions&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Used for calculating component wet pressure difference&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>is_enclosed&lt;/code>&lt;/td>
+&lt;td>Fan assembly is enclosed&lt;/td>
+&lt;td>&lt;code>Boolean&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>True if the performance data reflects the static pressure difference across the enclosure&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>assembly_components&lt;/code>&lt;/td>
+&lt;td>An array of components included in the fan assembly air stream, not including any fans&lt;/td>
+&lt;td>&lt;code>[{AssemblyComponent}]&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>if is_enclosed=True&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>heat_loss_fraction&lt;/code>&lt;/td>
+&lt;td>Fraction of efficiency losses transferred into the air stream&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Used to determine amount of heat from the motor added to the air stream&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>maximum_impeller_rotational_speed&lt;/code>&lt;/td>
+&lt;td>Maximum impeller rotational speed&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>rev/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>minimum_impeller_rotational_speed&lt;/code>&lt;/td>
+&lt;td>Minimum impeller rotational speed&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>rev/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>If no minimum, use zero&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>stability_curve&lt;/code>&lt;/td>
+&lt;td>The system curve defining the stability area for system selection&lt;/td>
+&lt;td>&lt;code>{SystemCurve}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> Application software may use this curve to indicate to application software users when a selected fan is operating in an unstable region where surging or stalling is likely to occur&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>operation_speed_control_type&lt;/code>&lt;/td>
+&lt;td>Type of performance map&lt;/td>
+&lt;td>&lt;code>{OperationSpeedControlType}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Determines which performance map data group is used for &lt;code>performance_map&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>installation_speed_control_type&lt;/code>&lt;/td>
+&lt;td>Type of fan impeller speed control&lt;/td>
+&lt;td>&lt;code>{InstallationSpeedControlType}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>DISCRETE&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>FIXED&lt;/code>, impeller speed shall be restricted to a single discrete speed&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>DISCRETE&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>VARIABLE&lt;/code>, impeller speed shall be restricted to a set of two or more discrete speeds&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>CONTINUOUS&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>FIXED&lt;/code>, impeller speed shall be restricted to a single speed (which may be interpolated from &lt;code>impeller_speed&lt;/code> values provided in the performance map)&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>CONTINUOUS&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>VARIABLE&lt;/code>, impeller speed shall be unrestricted within operational limits&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>motor_representation&lt;/code>&lt;/td>
+&lt;td>The corresponding Standard 205 motor representation&lt;/td>
+&lt;td>&lt;code>{RS0005}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>If the fan assembly is packaged with a motor, a motor representation shall be provided&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>mechanical_drive_representation&lt;/code>&lt;/td>
+&lt;td>The corresponding Standard 205 mechanical drive representation&lt;/td>
+&lt;td>&lt;code>{RS0007}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>If the fan assembly is packaged with a mechanical drive, a mechanical drive representation shall be provided&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
+&lt;td>Data group describing fan assembly performance when operating&lt;/td>
+&lt;td>&lt;code>({PerformanceMapContinuous}, {PerformanceMapDiscrete})&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>operation_speed_control_type(CONTINUOUS, DISCRETE)&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="assemblycomponent">AssemblyComponent&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 7%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 6%" />
+&lt;col style="width: 30%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>component_type&lt;/code>&lt;/td>
+&lt;td>Type of component&lt;/td>
+&lt;td>&lt;code>&amp;lt;ComponentType&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>component_description&lt;/code>&lt;/td>
+&lt;td>Informative description of the component&lt;/td>
+&lt;td>&lt;code>String&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>component_id&lt;/code>&lt;/td>
+&lt;td>Identifier of the corresponding Standard 205 representation&lt;/td>
+&lt;td>&lt;code>UUID&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Optionally provided if the component has a Standard 205 representation&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>wet_pressure_difference&lt;/code>&lt;/td>
+&lt;td>Additional static pressure difference if the component is wet (e.g., because of condensate collection or wetting evaporative media)&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>Pa&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>Corresponds to additional pressure difference at &lt;code>nominal_standard_air_volumetric_flow_rate&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>If unknown, a value of 75 Pa shall be used&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="systemcurve">SystemCurve&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 29%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 7%" />
+&lt;col style="width: 9%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
+&lt;td>Volumetric air flow rate through an air distribution system at standard air conditions&lt;/td>
+&lt;td>&lt;code>[Numeric][2..]&lt;/code>&lt;/td>
+&lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>static_pressure_difference&lt;/code>&lt;/td>
+&lt;td>Static pressure difference of an air distribution system&lt;/td>
+&lt;td>&lt;code>[Numeric][2..]&lt;/code>&lt;/td>
+&lt;td>Pa&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performancemapcontinuous">PerformanceMapContinuous&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 26%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 9%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing grid variables for continuous fan performance&lt;/td>
+&lt;td>&lt;code>{GridVariablesContinuous}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing lookup variables for continuous fan performance&lt;/td>
+&lt;td>&lt;code>{LookupVariablesContinuous}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="gridvariablescontinuous">GridVariablesContinuous&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 26%" />
+&lt;col style="width: 12%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 12%" />
+&lt;col style="width: 6%" />
+&lt;col style="width: 19%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
+&lt;td>Volumetric air flow rate through fan assembly at standard air conditions&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>static_pressure_difference&lt;/code>&lt;/td>
+&lt;td>External static pressure across fan assembly at dry coil conditions&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>Pa&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Any static pressure deduction (or addition) for wet coil is specified by &lt;code>wet_pressure_difference&lt;/code> in ‘assembly_components’ data group&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="lookupvariablescontinuous">LookupVariablesContinuous&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 24%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>impeller_rotational_speed&lt;/code>&lt;/td>
+&lt;td>Rotational speed of fan impeller&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>rev/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>shaft_power&lt;/code>&lt;/td>
+&lt;td>Mechanical shaft power input to fan assembly&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performancemapdiscrete">PerformanceMapDiscrete&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 24%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 9%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing grid variables for discrete fan performance&lt;/td>
+&lt;td>&lt;code>{GridVariablesDiscrete}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing lookup variables for discrete fan performance&lt;/td>
+&lt;td>&lt;code>{LookupVariablesDiscrete}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="gridvariablesdiscrete">GridVariablesDiscrete&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 22%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 7%" />
+&lt;col style="width: 20%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>speed_number&lt;/code>&lt;/td>
+&lt;td>Number indicating discrete speed of fan impeller in rank order (with 1 being the lowest speed)&lt;/td>
+&lt;td>&lt;code>[Integer][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Data shall be provided for all allowable discrete speeds or settings&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>static_pressure_difference&lt;/code>&lt;/td>
+&lt;td>External static pressure across fan assembly at dry coil conditions&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>Pa&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Any static pressure deduction (or addition) for wet coil is specified by &lt;code>wet_pressure_difference&lt;/code> in ‘assembly_components’ data group&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="lookupvariablesdiscrete">LookupVariablesDiscrete&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 28%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 18%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 7%" />
+&lt;col style="width: 9%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
+&lt;td>Volumetric air flow rate through fan assembly at standard air conditions&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>shaft_power&lt;/code>&lt;/td>
+&lt;td>Mechanical shaft power input to fan assembly&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>impeller_rotational_speed&lt;/code>&lt;/td>
+&lt;td>Rotational speed of fan impeller&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>rev/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item><item><title>Specifications: ASHRAE205</title><link>https://bigladder.github.io/lattice/specifications/ashrae205/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/ashrae205/</guid><description>
+&lt;h1 id="ashrae205">ASHRAE205&lt;/h1>
+&lt;h2 id="enumerations">Enumerations&lt;/h2>
+&lt;h3 id="schematype">SchemaType&lt;/h3>
+&lt;table style="width:67%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 26%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0001&lt;/code>&lt;/td>
+&lt;td>Liquid-Cooled Chiller&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>RS0002&lt;/code>&lt;/td>
+&lt;td>Unitary Cooling Air-Conditioning Equipment&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0003&lt;/code>&lt;/td>
+&lt;td>Fan Assembly&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>RS0004&lt;/code>&lt;/td>
+&lt;td>Air-to-Air Direct Expansion Refrigerant Coil System&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0005&lt;/code>&lt;/td>
+&lt;td>Motor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>RS0006&lt;/code>&lt;/td>
+&lt;td>Electronic Motor Drive&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>RS0007&lt;/code>&lt;/td>
+&lt;td>Mechanical Drive&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="compressortype">CompressorType&lt;/h3>
+&lt;table style="width:67%;">
+&lt;colgroup>
+&lt;col style="width: 25%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>RECIPROCATING&lt;/code>&lt;/td>
+&lt;td>Reciprocating compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>SCREW&lt;/code>&lt;/td>
+&lt;td>Screw compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>CENTRIFUGAL&lt;/code>&lt;/td>
+&lt;td>Centrifugal compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>ROTARY&lt;/code>&lt;/td>
+&lt;td>Rotary compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>SCROLL&lt;/code>&lt;/td>
+&lt;td>Scroll compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="compressorspeedcontroltype">CompressorSpeedControlType&lt;/h3>
+&lt;table style="width:65%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>DISCRETE&lt;/code>&lt;/td>
+&lt;td>Compressor loading is controlled by cycling between one or more discrete stages&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>CONTINUOUS&lt;/code>&lt;/td>
+&lt;td>Compressor loading is controlled by continuously varying the speed of the compressor&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="condensertype">CondenserType&lt;/h3>
+&lt;table style="width:65%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>AIR&lt;/code>&lt;/td>
+&lt;td>Air-cooled condenser&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>LIQUID&lt;/code>&lt;/td>
+&lt;td>Liquid-cooled condenser&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>EVAPORATIVE&lt;/code>&lt;/td>
+&lt;td>Evaporative condenser&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="liquidconstituent">LiquidConstituent&lt;/h3>
+&lt;table style="width:71%;">
+&lt;colgroup>
+&lt;col style="width: 29%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>WATER&lt;/code>&lt;/td>
+&lt;td>Water&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>PROPYLENE_GLYCOL&lt;/code>&lt;/td>
+&lt;td>Propylene glycol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>ETHYLENE_GLYCOL&lt;/code>&lt;/td>
+&lt;td>Ethylene glycol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>SODIUM_CHLORIDE&lt;/code>&lt;/td>
+&lt;td>Sodium chloride&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>CALCIUM_CHLORIDE&lt;/code>&lt;/td>
+&lt;td>Calcium chloride&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>ETHANOL&lt;/code>&lt;/td>
+&lt;td>Ethanol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>METHANOL&lt;/code>&lt;/td>
+&lt;td>Methanol&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="concentrationtype">ConcentrationType&lt;/h3>
+&lt;table style="width:65%;">
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>BY_VOLUME&lt;/code>&lt;/td>
+&lt;td>Concentration is defined as a fraction of total liquid mixture volume&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>BY_MASS&lt;/code>&lt;/td>
+&lt;td>Concentration is defined as a fraction of total liquid mixture mass&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="data-groups">Data Groups&lt;/h2>
+&lt;h3 id="liquidmixture">LiquidMixture&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>liquid_components&lt;/code>&lt;/td>
+&lt;td>An array of all liquid components within the liquid mixture&lt;/td>
+&lt;td>&lt;code>[{LiquidComponent}]&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Array may contain a single component&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>concentration_type&lt;/code>&lt;/td>
+&lt;td>Defines whether concentration is defined on a volume or mass basis&lt;/td>
+&lt;td>&lt;code>&amp;lt;ConcentrationType&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="liquidcomponent">LiquidComponent&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 13%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>liquid_constituent&lt;/code>&lt;/td>
+&lt;td>Substance of this component of the mixture&lt;/td>
+&lt;td>&lt;code>&amp;lt;LiquidConstituent&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>concentration&lt;/code>&lt;/td>
+&lt;td>Concentration of this component of the mixture&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item><item><title>Specifications: RS0006</title><link>https://bigladder.github.io/lattice/specifications/rs0006/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0006/</guid><description>
+&lt;h1 id="rs0006">RS0006&lt;/h1>
+&lt;h2 id="enumerations">Enumerations&lt;/h2>
+&lt;h3 id="coolingmethod">CoolingMethod&lt;/h3>
+&lt;table style="width:79%;">
+&lt;colgroup>
+&lt;col style="width: 34%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 19%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>PASSIVE_COOLED&lt;/code>&lt;/td>
+&lt;td>Drive is cooled using natural air convection within the surrounding environment&lt;/td>
+&lt;td>All drive efficiency losses are assumed to be added as heat to the surrounding environment&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>ACTIVE_AIR_COOLED&lt;/code>&lt;/td>
+&lt;td>Drive is cooled using forced air convection within the surrounding environment&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>Electrical power required for the active cooling system shall be included in the efficiency of the drive&lt;/p>&lt;/li>
+&lt;li>&lt;p>All drive efficiency losses are assumed to be added as heat to the surrounding environment&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>ACTIVE_LIQUID_COOLED&lt;/code>&lt;/td>
+&lt;td>Drive is cooled using forced liquid convection, transferring heat to the liquid&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>Any liquid pumping power shall be modeled external to the drive by the application software&lt;/p>&lt;/li>
+&lt;li>&lt;p>All drive efficiency losses are assumed to be added as heat to the liquid stream&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="data-groups">Data Groups&lt;/h2>
+&lt;h3 id="rs0006-1">RS0006&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>metadata&lt;/code>&lt;/td>
+&lt;td>Metadata data group&lt;/td>
+&lt;td>&lt;code>{Metadata}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>schema=RS0006&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>description&lt;/code>&lt;/td>
+&lt;td>Data group describing product and rating information&lt;/td>
+&lt;td>&lt;code>{Description}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance&lt;/code>&lt;/td>
+&lt;td>Data group containing performance information&lt;/td>
+&lt;td>&lt;code>{Performance}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="description">Description&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>product_information&lt;/code>&lt;/td>
+&lt;td>Data group describing product information&lt;/td>
+&lt;td>&lt;code>{ProductInformation}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="productinformation">ProductInformation&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 16%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>manufacturer&lt;/code>&lt;/td>
+&lt;td>Manufacturer name&lt;/td>
+&lt;td>&lt;code>String&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>model_number&lt;/code>&lt;/td>
+&lt;td>Model number&lt;/td>
+&lt;td>&lt;code>Pattern&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performance">Performance&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 18%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>maximum_power&lt;/code>&lt;/td>
+&lt;td>Maximum power draw of the drive&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>standby_power&lt;/code>&lt;/td>
+&lt;td>Power draw when the motor is not operating&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>cooling_method&lt;/code>&lt;/td>
+&lt;td>Method used to cool the drive&lt;/td>
+&lt;td>&lt;code>&amp;lt;CoolingMethod&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
+&lt;td>Data group describing drive performance when operating&lt;/td>
+&lt;td>&lt;code>{PerformanceMap}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performancemapdrive">PerformanceMapDrive&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing grid variables for drive performance&lt;/td>
+&lt;td>&lt;code>{GridVariablesDrive}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing lookup variables for drive performance&lt;/td>
+&lt;td>&lt;code>{LookupVariables}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="gridvariablesdrive">GridVariablesDrive&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>output_power&lt;/code>&lt;/td>
+&lt;td>Power delivered to the motor&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>output_frequency&lt;/code>&lt;/td>
+&lt;td>Frequency delivered to the motor&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>Hz&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="lookupvariablesdrive">LookupVariablesDrive&lt;/h3>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 13%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>efficiency&lt;/code>&lt;/td>
+&lt;td>Efficiency of drive&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)&lt;/p>&lt;/li>
+&lt;li>&lt;p>Input power shall include any power required to provide active air cooling for the drive&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item><item><title>Specifications: RS0007</title><link>https://bigladder.github.io/lattice/specifications/rs0007/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0007/</guid><description>
+&lt;h1 id="rs0007">RS0007&lt;/h1>
+&lt;h2 id="enumerations">Enumerations&lt;/h2>
+&lt;h3 id="drivetype">DriveType&lt;/h3>
+&lt;table style="width:71%;">
+&lt;colgroup>
+&lt;col style="width: 29%" />
+&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Enumerator&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>V_BELT&lt;/code>&lt;/td>
+&lt;td>V-Belt&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>COGGED_BELT&lt;/code>&lt;/td>
+&lt;td>Cogged Belt&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>SYNCHRONOUS_BELT&lt;/code>&lt;/td>
+&lt;td>Synchronous Belt&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>GEAR&lt;/code>&lt;/td>
+&lt;td>Gear&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>CHAIN&lt;/code>&lt;/td>
+&lt;td>Chain&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2 id="data-groups">Data Groups&lt;/h2>
+&lt;h3 id="rs0007-1">RS0007&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>metadata&lt;/code>&lt;/td>
+&lt;td>Metadata data group&lt;/td>
+&lt;td>&lt;code>{Metadata}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>schema=RS0007&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>description&lt;/code>&lt;/td>
+&lt;td>Data group describing product and rating information&lt;/td>
+&lt;td>&lt;code>{Description}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance&lt;/code>&lt;/td>
+&lt;td>Data group containing performance information&lt;/td>
+&lt;td>&lt;code>{Performance}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="description">Description&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>product_information&lt;/code>&lt;/td>
+&lt;td>Data group describing product information&lt;/td>
+&lt;td>&lt;code>{ProductInformation}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="productinformation">ProductInformation&lt;/h3>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 15%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>manufacturer&lt;/code>&lt;/td>
+&lt;td>Manufacturer name&lt;/td>
+&lt;td>&lt;code>String&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>model_number&lt;/code>&lt;/td>
+&lt;td>Model number&lt;/td>
+&lt;td>&lt;code>Pattern&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>drive_type&lt;/code>&lt;/td>
+&lt;td>Type of mechanical drive&lt;/td>
+&lt;td>&lt;code>&amp;lt;DriveType&amp;gt;&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performance">Performance&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 18%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>speed_ratio&lt;/code>&lt;/td>
+&lt;td>Ratio of input shaft speed to output shaft speed&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>&amp;gt;0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
+&lt;td>Data group describing drive performance when operating&lt;/td>
+&lt;td>&lt;code>{PerformanceMap}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performancemapmechdrive">PerformanceMapMechDrive&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 17%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 24%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing grid variables for drive performance&lt;/td>
+&lt;td>&lt;code>{GridVariablesMechDrive}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing lookup variables for drive performance&lt;/td>
+&lt;td>&lt;code>{LookupVariables}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="gridvariablesmechdrive">GridVariablesMechDrive&lt;/h3>
+&lt;table style="width:100%;">
+&lt;colgroup>
+&lt;col style="width: 16%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>output_power&lt;/code>&lt;/td>
+&lt;td>Output shaft power&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="lookupvariablesmechdrive">LookupVariablesMechDrive&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 13%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 22%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>efficiency&lt;/code>&lt;/td>
+&lt;td>Efficiency of drive&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Defined as the ratio of output shaft power to input shaft power&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item><item><title>Specifications: RS0005</title><link>https://bigladder.github.io/lattice/specifications/rs0005/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0005/</guid><description>
+&lt;h1 id="rs0005">RS0005&lt;/h1>
+&lt;h2 id="enumerations">Enumerations&lt;/h2>
+&lt;p>None.&lt;/p>
+&lt;h2 id="data-groups">Data Groups&lt;/h2>
+&lt;h3 id="rs0005-1">RS0005&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>metadata&lt;/code>&lt;/td>
+&lt;td>Metadata data group&lt;/td>
+&lt;td>&lt;code>{Metadata}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>schema=RS0005&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>description&lt;/code>&lt;/td>
+&lt;td>Data group describing product and rating information&lt;/td>
+&lt;td>&lt;code>{Description}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance&lt;/code>&lt;/td>
+&lt;td>Data group containing performance information&lt;/td>
+&lt;td>&lt;code>{Performance}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="description">Description&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>product_information&lt;/code>&lt;/td>
+&lt;td>Data group describing product information&lt;/td>
+&lt;td>&lt;code>{ProductInformation}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="productinformation">ProductInformation&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 11%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 15%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>manufacturer&lt;/code>&lt;/td>
+&lt;td>Manufacturer name&lt;/td>
+&lt;td>&lt;code>String&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>model_number&lt;/code>&lt;/td>
+&lt;td>Model number&lt;/td>
+&lt;td>&lt;code>Pattern&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>nominal_voltage&lt;/code>&lt;/td>
+&lt;td>Nominal voltage&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>V&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>nominal_frequency&lt;/code>&lt;/td>
+&lt;td>Nominal frequency&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>Hz&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performance">Performance&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 20%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 14%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>maximum_power&lt;/code>&lt;/td>
+&lt;td>Maximum operational input power to the motor&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Operational limit set to prevent overheating or overcurrent, not the rated name plate power&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>standby_power&lt;/code>&lt;/td>
+&lt;td>Power draw when motor is not operating&lt;/td>
+&lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>number_of_poles&lt;/code>&lt;/td>
+&lt;td>Number of poles&lt;/td>
+&lt;td>&lt;code>Integer&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;code>&amp;gt;0, %2&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>drive_representation&lt;/code>&lt;/td>
+&lt;td>The corresponding Standard 205 drive representation&lt;/td>
+&lt;td>&lt;code>{RS0006}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="odd">
+&lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
+&lt;td>Data group describing motor performance when operating&lt;/td>
+&lt;td>&lt;code>{PerformanceMap}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;ul>
+&lt;li>&lt;p>If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power&lt;/p>&lt;/li>
+&lt;li>&lt;p>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data&lt;/p>&lt;/li>
+&lt;/ul>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="performancemapmotor">PerformanceMapMotor&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing grid variables for motor performance&lt;/td>
+&lt;td>&lt;code>{GridVariablesMotor}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
+&lt;td>Data group describing lookup variables for motor performance&lt;/td>
+&lt;td>&lt;code>{LookupVariables}&lt;/code>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="gridvariablesmotor">GridVariablesMotor&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 23%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>shaft_power&lt;/code>&lt;/td>
+&lt;td>Delivered rotational shaft power&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>W&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>shaft_rotational_speed&lt;/code>&lt;/td>
+&lt;td>Rotational speed of shaft&lt;/td>
+&lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
+&lt;td>rev/s&lt;/td>
+&lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h3 id="lookupvariablesmotor">LookupVariablesMotor&lt;/h3>
+&lt;table>
+&lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 11%" />
+&lt;/colgroup>
+&lt;thead>
+&lt;tr class="header">
+&lt;th>&lt;strong>Name&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Description&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Data Type&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Units&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Constraints&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Req&lt;/strong>&lt;/th>
+&lt;th>&lt;strong>Notes&lt;/strong>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr class="odd">
+&lt;td>&lt;code>efficiency&lt;/code>&lt;/td>
+&lt;td>Efficiency of motor&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>Defined as the ratio of mechanical shaft power to electrical input power of the motor&lt;/td>
+&lt;/tr>
+&lt;tr class="even">
+&lt;td>&lt;code>power_factor&lt;/code>&lt;/td>
+&lt;td>Power factor of the motor&lt;/td>
+&lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
+&lt;td>-&lt;/td>
+&lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
+&lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
+&lt;td>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table></description></item></channel></rss>
