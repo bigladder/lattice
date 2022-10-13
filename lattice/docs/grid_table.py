@@ -27,6 +27,9 @@ def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
     RETURN: (Array String), the lines
     """
     verbose = False
+    if len(text) > 0:
+        if text[0] in ['+','-','*']:
+            text = '\\' + text
     if "\n" in text:
         return flatten([
             wrap_text_to_lines(t, width, bold, left_space, right_space)
