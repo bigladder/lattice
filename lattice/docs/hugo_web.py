@@ -137,7 +137,7 @@ class HugoWeb:
       copy_tree(favicons_path, os.path.join(self.static_directory_path,"favicons"))
 
     # Specifications
-    self.make_main_menu_page(self.specifications_directory_path,"Specifications",content="This data model contains the following specifications:")
+    self.make_main_menu_page(self.specifications_directory_path,"Specifications",content="This data model contains the following specifications:",content_path=os.path.relpath(self.docs_source_directory),schema_path=os.path.relpath(self.source_schema_directory_path))
 
     self.make_specification_pages()
 
@@ -284,7 +284,7 @@ class HugoWeb:
       },
       "params": {
         "copyright": self.author,
-        "github_repo": self.git_repo,
+        "github_repo": self.git_remote_url,
         "github_branch": self.git_branch_name,
         "ui": {
           "navbar_logo": self.has_logo,
