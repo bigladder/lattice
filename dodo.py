@@ -90,7 +90,7 @@ def task_generate_markdown():
     yield {
       'name': example.name,
       'targets': [template.markdown_output_path for template in example.doc_templates],
-      'file_dep': [schema.path for schema in example.schemas],
+      'file_dep': [schema.path for schema in example.schemas] + [template.path for template in example.doc_templates],
       'task_dep': [f"validate_schemas:{example.name}"],
       'actions': [
         (example.generate_markdown_documents, [])
@@ -104,6 +104,7 @@ def task_generate_web_docs():
     yield {
       'name': example.name,
       'task_dep': [f"validate_schemas:{example.name}"],
+      'file_dep': [schema.path for schema in example.schemas] + [template.path for template in example.doc_templates],
       'targets': [os.path.join(example.web_docs_directory_path,"public")],
       'actions': [
         (example.generate_web_documentation, [])
