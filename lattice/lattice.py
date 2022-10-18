@@ -6,6 +6,7 @@ from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, generate_core_json_schema, validate_file
+from .docs import HugoWeb, DocumentFile
 
 class SchemaFile:
   def __init__(self, path):
@@ -19,6 +20,7 @@ class SchemaFile:
       raise Exception(f"Required \"Schema\" object not found in schema file, \"{self.path}\".")
 
     self.schema_type = self.file_base_name # Overwritten if it is actually specified
+    self.data_model_type = None
     self.root_data_group = None
     if "Root Data Group" in self.content["Schema"]:
       self.root_data_group = self.content["Schema"]["Root Data Group"]
@@ -69,14 +71,6 @@ class SchemaFile:
   def set_schema_patterns(self, patterns):
     self.schema_patterns = patterns
 
-class DocumentFile:
-  def __init__(self, path):
-    self.path = os.path.abspath(path)
-    self.file_base_name = get_file_basename(path, depth=2)
-
-  def set_markdown_output_path(self, path):
-    self.markdown_output_path = os.path.abspath(path)
-
 class Lattice:
   def __init__(self, root_directory=".", name=None, build_directory=None, build_output_directory_name=".lattice/", build_validation=True):
     # Check if directories exists
@@ -109,11 +103,14 @@ class Lattice:
 
     self.collect_doc_templates()
 
+    self.web_docs_directory_path = os.path.join(self.doc_output_dir,"web")
+
     if build_validation:
       self.generate_meta_schemas()
       self.validate_schemas()
       self.generate_json_schemas()
       self.validate_example_files()
+
 
   def collect_schemas(self):
     # Make sure root directory has minimum content (i.e., schema directory, or at least one schema file)
@@ -211,10 +208,10 @@ class Lattice:
     if self.doc_templates_directory_path is not None:
       for file_name in os.listdir(self.doc_templates_directory_path):
         file_path = os.path.join(self.doc_templates_directory_path, file_name)
-        if os.path.isfile(file_path):
+        if os.path.isfile(file_path) and ".md" in file_name:
           self.doc_templates.append(DocumentFile(file_path))
+    self.doc_output_dir = os.path.join(self.build_directory,"docs")
     if len(self.doc_templates) > 0:
-      self.doc_output_dir = os.path.join(self.build_directory,"docs")
       make_dir(self.doc_output_dir)
       for template in self.doc_templates:
         markdown_path = os.path.join(self.doc_output_dir,f"{get_file_basename(template.path, depth=1)}")
@@ -225,8 +222,8 @@ class Lattice:
       process_template(template.path, template.markdown_output_path, self.schema_directory_path)
 
   def generate_web_documentation(self):
-    self.web_docs_directory_path = os.path.join(self.doc_output_dir,"web")
+    make_dir(self.doc_output_dir)
     make_dir(self.web_docs_directory_path)
 
-    # Confirm hugo and pandoc are installed
+    HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
 

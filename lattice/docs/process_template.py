@@ -11,7 +11,6 @@ import yaml
 
 from .schema_table import load_structure_from_object, data_types_table, string_types_table, enumerators_table, data_groups_table, write_data_model
 from .grid_table import write_table
-from ..file_io import get_file_basename
 
 def make_args_string(args_dict):
     """
@@ -289,17 +288,3 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
                 for err in errs:
                     handle.write(err.strip())
                     handle.write("\n")
-
-def process_templates(input_dir, output_dir, schema_dir=None):
-  if schema_dir is None:
-    schema_dir = input_dir
-  for file in sorted(os.listdir(input_dir)):
-    path = os.path.join(input_dir,file)
-    if os.path.isdir(path):
-      new_output_dir = os.path.join(output_dir, file)
-      if not os.path.exists(new_output_dir):
-        os.mkdir(new_output_dir)
-      process_templates(path, new_output_dir)
-    elif '.md.j2' in file:
-      process_template(os.path.join(input_dir,file), os.path.join(output_dir,file[:-3]), schema_dir=schema_dir)
-
