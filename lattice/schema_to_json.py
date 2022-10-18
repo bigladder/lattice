@@ -434,6 +434,7 @@ def flatten_json_schema(input_schema, output_dir):
         pass
     file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
     dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
+    return schema
 
 # -------------------------------------------------------------------------------------------------
 def validate_file(input_file, input_schema):
