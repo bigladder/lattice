@@ -1,6 +1,7 @@
 import os
 import re
 from fnmatch import fnmatch
+import warnings
 
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
@@ -242,5 +243,5 @@ class Lattice:
     if self.doc_templates_directory_path:
         HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
     else:
-        pass # Warning ?
+        warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 
