@@ -426,17 +426,65 @@ def search_for_reference(schema_path : str, subdict : dict) -> bool:
     return subbed
 
 # -------------------------------------------------------------------------------------------------
-def flatten_json_schema(input_schema, output_dir):
+def flatten_json_schema(input_schema, output_path):
     '''Generate a flattened schema from a schema with references.'''
     schema_path = os.path.abspath(os.path.dirname(input_schema))
     schema = load(input_schema)
     while search_for_reference(schema_path, schema):
         pass
     file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
-    dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
-    return schema
+    dump(schema, output_path)
+    #return schema
+
+# -------------------------------------------------------------------------------------------------
+def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None):
+    if not lineage:
+        lineage = list()
+    for key in schema:
+        if key == 'scopedType' and schema[key] == scope_key:
+            scopes_dict['.'.join(lineage)] = schema['scope'] # key is a dot-separated path
+        elif isinstance(schema[key], dict):
+            get_scope_locations(schema[key], scopes_dict, scope_key, lineage + [key])
+        elif isinstance(schema[key], list):
+            for entry in [item for item in schema[key] if isinstance(item, dict)]:
+                get_scope_locations(entry, scopes_dict, scope_key, lineage + [key])
+
+# -------------------------------------------------------------------------------------------------
+def get_reference_value(data_dict: dict, lineage: list) -> str:
+    test_reference = data_dict
+    for adr in lineage:
+        if test_reference.get(adr):
+            if isinstance(test_reference[adr], list):
+                for item in test_reference[adr]:
+                    return get_reference_value(item, lineage[1:])
+            else:
+                test_reference = test_reference[adr]
+        else:
+            return None
+    return test_reference
+
+# -------------------------------------------------------------------------------------------------
+def postvalidate_references(input_file, input_schema):
+    id_scopes = dict()
+    reference_scopes = dict()
+    get_scope_locations(load(input_schema), scope_key='ID', scopes_dict=id_scopes)
+    get_scope_locations(load(input_schema), scope_key='Reference', scopes_dict=reference_scopes)
+    data = load(input_file)
+    ids = list()
+    for id_loc in [id for id in id_scopes if id.startswith('properties')]:
+        lineage = [level for level in id_loc.split('.') if level not in ['properties', 'items']]
+        ids.append(get_reference_value(data, lineage))
+    for ref in [r for r in reference_scopes if r.startswith('properties')]:
+        lineage = [level for level in ref.split('.') if level not in ['properties', 'items']]
+        reference_scope = get_reference_value(data, lineage)
+        if reference_scope != None and reference_scope not in ids:
+            raise Exception(f'Scope mismatch in {input_file}; {reference_scope} not in ID scope list {ids}.')
 
 # -------------------------------------------------------------------------------------------------
 def validate_file(input_file, input_schema):
     v = JSONSchemaValidator(input_schema)
     v.validate(input_file)
+
+# -------------------------------------------------------------------------------------------------
+def postvalidate_file(input_file, input_schema):
+    postvalidate_references(input_file, input_schema) 
