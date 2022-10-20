@@ -239,5 +239,8 @@ class Lattice:
     make_dir(self.doc_output_dir)
     make_dir(self.web_docs_directory_path)
 
-    HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
+    if self.doc_templates_directory_path:
+        HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
+    else:
+        pass # Warning ?
 
