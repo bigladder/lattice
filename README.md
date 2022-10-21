@@ -11,7 +11,7 @@ A toolkit that provides support for a schema-based building data model framework
 Installing the Toolkit
 --------------------
 
-We are currently supporting python 3.6 - 3.9.
+We are currently supporting python 3.7 - 3.10.
 
 To install and use the Lattice project, you must have a supported version of Python. We also use the [poetry](https://python-poetry.org/) tool to manage Lattice's dependencies. Follow the [instructions](https://python-poetry.org/docs/#installation) to install poetry on your specific platform.
 
