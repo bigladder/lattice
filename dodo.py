@@ -90,7 +90,7 @@ def task_generate_markdown():
     yield {
       'name': example.name,
       'targets': [template.markdown_output_path for template in example.doc_templates],
-      'file_dep': [schema.path for schema in example.schemas] + [template.path for template in example.doc_templates],
+      'file_dep': [schema.path for schema in example.schemas] + [template.path for template in example.doc_templates] + [os.path.join(SOURCE_PATH, "docs", "grid_table.py")],
       'task_dep': [f"validate_schemas:{example.name}"],
       'actions': [
         (example.generate_markdown_documents, [])
