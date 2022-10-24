@@ -65,7 +65,7 @@ def task_generate_json_schemas():
                   [CORE_SCHEMA_PATH,
                    BASE_META_SCHEMA_PATH,
                    os.path.join(SOURCE_PATH, "schema_to_json.py")],
-      'targets': [schema.json_schema_path for schema in example.schemas] + [schema.flat_schema_path for schema in example.schemas] + [example.core_json_schema_path],
+      'targets': [schema.json_schema_path for schema in example.schemas] + [example.core_json_schema_path],
       'actions': [
         (example.generate_json_schemas, [])
       ],

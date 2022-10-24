@@ -392,6 +392,7 @@ def generate_json_schema(input_path_to_file, output_path):
         schema_instance = j.load_source_schema(input_path_to_file)
         dump(schema_instance, output_path)
 
+# -------------------------------------------------------------------------------------------------
 def generate_core_json_schema(output_path):
     '''Create JSON schema from core YAML schema'''
     j = JSON_translator()
@@ -399,14 +400,14 @@ def generate_core_json_schema(output_path):
     dump(core_instance, output_path)
 
 # -------------------------------------------------------------------------------------------------
-def search_for_reference(schema_path : str, subdict : dict) -> bool:
+def search_for_reference(referenced_schemas: dict, schema_path: str, subdict: dict) -> bool:
     '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
     subbed = False
     if '$ref' in subdict.keys():
         subbed = True
         # parse the ref and locate the sub-dict
         source_file, ref_loc = subdict['$ref'].split('#')
-        ref = load(os.path.join(schema_path, source_file))
+        ref = referenced_schemas[os.path.splitext(source_file)[0]]
         key_tree = ref_loc.lstrip('/').split('/')
         sub_d = ref[key_tree[0]]
         for k in key_tree[1:]:
@@ -415,26 +416,30 @@ def search_for_reference(schema_path : str, subdict : dict) -> bool:
         subdict.update(sub_d)
         subdict.pop('$ref')
         # re-search the substituted dictionary
-        subbed = search_for_reference(schema_path, subdict)
+        subbed = search_for_reference(referenced_schemas, schema_path, subdict)
     else:
         for key in subdict:
             if isinstance(subdict[key], dict):
-                subbed = search_for_reference(schema_path, subdict[key])
+                subbed = search_for_reference(referenced_schemas, schema_path, subdict[key])
             if isinstance(subdict[key], list):
                 for entry in [item for item in subdict[key] if isinstance(item, dict)]:
-                    subbed = search_for_reference(schema_path, entry)
+                    subbed = search_for_reference(referenced_schemas, schema_path, entry)
     return subbed
 
 # -------------------------------------------------------------------------------------------------
-def flatten_json_schema(input_schema, output_path):
-    '''Generate a flattened schema from a schema with references.'''
-    schema_path = os.path.abspath(os.path.dirname(input_schema))
-    schema = load(input_schema)
-    while search_for_reference(schema_path, schema):
-        pass
-    file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
-    dump(schema, output_path)
-    #return schema
+def generate_flat_json_schema(source_schema_input_path, json_schema_output_path):
+    '''Create reference-resolved JSON schema from YAML source schema.'''
+    if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
+        schema_dir = os.path.abspath(os.path.dirname(source_schema_input_path))
+        json_schema_output_dir = os.path.abspath(os.path.dirname(json_schema_output_path))
+        j = JSON_translator()
+        main_schema_instance = j.load_source_schema(source_schema_input_path)
+        schema_ref_map = {'core.schema' : load(os.path.join(json_schema_output_dir, 'core.schema.json'))}
+        for ref_source in os.listdir(schema_dir):
+            schema_ref_map[os.path.splitext(ref_source)[0]] = j.load_source_schema(os.path.join(schema_dir, ref_source))
+        while search_for_reference(schema_ref_map, schema_dir, main_schema_instance):
+            pass
+        dump(main_schema_instance, json_schema_output_path)
 
 # -------------------------------------------------------------------------------------------------
 def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None):
