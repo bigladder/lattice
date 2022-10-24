@@ -210,7 +210,7 @@ TimeIntervals:
       Description: Beginning of data
       Data Type: Timestamp
       Required: False
-      Notes: Used to determine the “previous” timestamp for the first value in a time
+      Notes: Used to determine the "previous" timestamp for the first value in a time
         series where the time series is not instantaneous
     regular_interval:
       Description: Duration of regular intervals
