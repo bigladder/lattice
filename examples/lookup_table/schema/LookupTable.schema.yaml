@@ -3,41 +3,46 @@ Schema:
   Title: Lookup Table
   Description: Schema Lookup Tables using data group templates
   Version: "0.1.0"
-  Root Data Group: LookupTable
-  Data Group Templates:
-    LookupTable:
-      Object Type Name: Lookup Table
-      Required Data Elements:
-        grid_variables:
-          Required: True
-        lookup_variables:
-          Required: True
-    GridVariables:
-      Object Type Name: Grid Variables
-      Required Data Types:
-        - "[Numeric][1..]"
-        - "[Integer][1..]"
-      Data Elements Required: True
-    LookupVariables:
-      Object Type Name: Lookup Variables
-      Required Data Types:
-        - "[Numeric/Null][1..]"
-        - "[Integer/Null][1..]"
-      Data Elements Required: True
+  Root Data Group: LookupTableDrive
 
 LookupTable:
+  Object Type: "Data Group Template"
+  Name: Lookup Table
+  Required Data Elements:
+    grid_variables:
+      Required: True
+    lookup_variables:
+      Required: True
+
+GridVariables:
+  Object Type: "Data Group Template"
+  Name: Grid Variables
+  Required Data Types:
+    - "[Numeric][1..]"
+    - "[Integer][1..]"
+  Data Elements Required: True
+
+LookupVariables:
+  Object Type: "Data Group Template"
+  Name: Lookup Variables
+  Required Data Types:
+    - "[Numeric/Null][1..]"
+    - "[Integer/Null][1..]"
+  Data Elements Required: True
+
+LookupTableDrive:
   Object Type: "Lookup Table"
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariables}"
+      Data Type: "{GridVariablesDrive}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
       Data Type: "{LookupVariables}"
       Required: True
 
-GridVariables:
+GridVariablesDrive:
   Object Type: "Grid Variables"
   Data Elements:
     output_power:
@@ -47,7 +52,7 @@ GridVariables:
       Units: "W"
       Required: True
 
-LookupVariables:
+LookupVariablesDrive:
   Object Type: "Lookup Variables"
   Data Elements:
     efficiency:

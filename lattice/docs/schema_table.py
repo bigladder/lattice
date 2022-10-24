@@ -78,7 +78,7 @@ def data_elements_dict_from_data_groups(data_groups):
                 if new_obj['Units'] == '-':
                     new_obj['Units'] = r'\-'
                 else:
-                    new_obj['Units'] = new_obj['Units'].replace('-',r'$\cdot$')
+                    new_obj['Units'] = new_obj['Units'].replace('-',r'·')
                     new_obj['Units'] = re.sub(r'(\d+)',r'^\1^',new_obj['Units'])
             compress_notes(new_obj)
             data_elements.append(new_obj)
@@ -136,6 +136,8 @@ def load_structure_from_object(instance):
             new_obj = instance[obj]
             compress_notes(new_obj)
             enumerations[obj] = new_obj
+        elif object_type == "Data Group Template":
+            new_obj = instance[obj]
         elif "Data Elements" in instance[obj]:
             data_groups[obj] = instance[obj]
         elif object_type == "Meta":
@@ -253,32 +255,56 @@ def data_groups_table(data_elements, caption=None, add_training_ws=True):
             add_training_ws=add_training_ws,
             defaults={"Notes": "", "Req": "", "Units": "", "Constraints": ""})
 
-def write_data_model(instance, base_level=1):
+def write_data_model(instance, make_headers=False, base_level=1):
   struct = load_structure_from_object(instance)
   output = None
   with io.StringIO() as output_file:
     # Data Types
-    if len(struct['data_types']) > 0:
-      output_file.writelines(write_header("Data Types", base_level))
-      output_file.writelines(data_types_table(struct['data_types']))
+    table_type = 'data_types'
+    if len(struct[table_type]) > 0:
+      table_title = "Data Types"
+      if make_headers:
+        output_file.writelines(write_header(table_title, base_level))
+        caption = None
+      else:
+        caption = table_title
+      output_file.writelines(data_types_table(struct[table_type], caption=caption))
     # String Types
-    if len(struct['string_types']) > 0:
-      output_file.writelines(write_header("String Types", base_level))
-      output_file.writelines(string_types_table(struct['string_types']))
+    table_type = 'string_types'
+    if len(struct[table_type]) > 0:
+      table_title = "String Types"
+      if make_headers:
+        output_file.writelines(write_header(table_title, base_level))
+        caption = None
+      else:
+        caption = table_title
+      output_file.writelines(string_types_table(struct[table_type], caption=caption))
     # Enumerations
     output_file.writelines(write_header("Enumerations", base_level))
-    if len(struct['enumerations']) > 0:
-      for enum, enumerators in struct['enumerations'].items():
-        output_file.writelines(write_header(enum, base_level+1))
-        output_file.writelines(enumerators_table(enumerators))
+    table_type = 'enumerations'
+    if len(struct[table_type]) > 0:
+      for enum, enumerators in struct[table_type].items():
+        table_title = enum
+        if make_headers:
+            output_file.writelines(write_header(table_title, base_level + 1))
+            caption = None
+        else:
+            caption = table_title
+        output_file.writelines(enumerators_table(enumerators, caption=caption))
     else:
       output_file.writelines(["None.","\n"*2])
     # Data Groups
     output_file.writelines(write_header("Data Groups", base_level))
-    if len(struct['data_groups']) > 0:
-      for dg, data_elements in struct['data_groups'].items():
-        output_file.writelines(write_header(dg, base_level+1))
-        output_file.writelines(data_groups_table(data_elements))
+    table_type = 'data_groups'
+    if len(struct[table_type]) > 0:
+      for dg, data_elements in struct[table_type].items():
+        table_title = dg
+        if make_headers:
+            output_file.writelines(write_header(table_title, base_level + 1))
+            caption = None
+        else:
+            caption = table_title
+        output_file.writelines(data_groups_table(data_elements, caption=caption))
     else:
       output_file.writelines(["None.","\n"*2])
     output = output_file.getvalue()

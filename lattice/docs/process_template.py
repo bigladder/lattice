@@ -11,7 +11,6 @@ import yaml
 
 from .schema_table import load_structure_from_object, data_types_table, string_types_table, enumerators_table, data_groups_table, write_data_model
 from .grid_table import write_table
-from ..file_io import get_file_basename
 
 def make_args_string(args_dict):
     """
@@ -195,6 +194,8 @@ def make_add_schema_table(schema_dir=None, error_log=None):
                         f"Unhandled table type \"{table_name}\"!",
                         args_str),
                     error_log)
+        if caption is None:
+            caption = table_name
         return render_header(header_level_and_content) + gen_table(
                 target,
                 caption=caption,
@@ -233,22 +234,19 @@ def make_add_data_model(schema_dir, error_log):
         RETURN: string, returns a string representation of the given data models
     """
     schema_dir = determine_schema_dir(schema_dir)
-    def add_data_model(source, base_level=1):
+    def add_data_model(source, make_headers=True, base_level=1):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_data_model(data, base_level)
+        return write_data_model(data, make_headers, base_level)
     return add_data_model
 
 
-def process_template(main_template, output_path, template_dir='.', schema_dir=None, log_file=None):
+def process_template(template_path, output_path, schema_dir=None, log_file=None):
     """
-    - main_template: string, path to the main template file. Note: should be a
-      path relative to template_dir, not a full path.
+    - template_path: string, path to the main template file.
     - output_path: string, the output path to write the template to
-    - template_dir: string, the directory where the templates (that
-      main_template refers to) lives.
     - schema_dir: string, a custom path to the schema files (*.schema.yaml) to work from
     - log_file: string or None, if a string, the path to an error file to write
     RETURN: None
@@ -257,6 +255,7 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
     - render that template
     - write the contents to output_path
     """
+    template_dir = os.path.abspath(os.path.join(template_path, os.pardir))
     env = Environment(
         loader=FileSystemLoader(template_dir),
         autoescape=select_autoescape(['html', 'xml']),
@@ -268,7 +267,7 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
     if log_file is not None:
         errs = []
     try:
-        temp = env.get_template(main_template)
+        temp = env.get_template(os.path.basename(template_path))
         with open(output_path, encoding='utf-8', mode='w') as handle:
             handle.write(
                     temp.render(
@@ -276,8 +275,8 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
                         add_yaml_table=make_add_yaml_table(),
                         add_data_model=make_add_data_model(schema_dir, errs)))
     except TemplateNotFound as exc:
-        print(f"Could not find main template {main_template}")
-        print(f"main_template = {main_template}")
+        print(f"Could not find main template {template_path}")
+        print(f"template_path = {template_path}")
         print(f"output_path = {output_path}")
         print(f"template_dir = {template_dir}")
         print("Exception:")
@@ -289,15 +288,3 @@ def process_template(main_template, output_path, template_dir='.', schema_dir=No
                 for err in errs:
                     handle.write(err.strip())
                     handle.write("\n")
-
-def process_templates(input_dir, output_dir):
-  for file in sorted(os.listdir(input_dir)):
-    path = os.path.join(input_dir,file)
-    if os.path.isdir(path):
-      new_output_dir = os.path.join(output_dir, file)
-      if not os.path.exists(new_output_dir):
-        os.mkdir(new_output_dir)
-      process_templates(path, new_output_dir)
-    elif '.md.j2' in file:
-      process_template(os.path.join(input_dir,file), os.path.join(output_dir,file[:-3]), schema_dir=input_dir)
-
