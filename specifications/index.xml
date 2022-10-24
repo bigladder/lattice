@@ -2,11 +2,11 @@
 &lt;h1 id="ashrae205">ASHRAE205&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="schematype">SchemaType&lt;/h3>
-&lt;table style="width:67%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 26%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 65%" />
+&lt;col style="width: 14%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -54,10 +54,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="compressortype">CompressorType&lt;/h3>
-&lt;table style="width:67%;">
+&lt;table style="width:79%;">
 &lt;colgroup>
 &lt;col style="width: 25%" />
-&lt;col style="width: 25%" />
+&lt;col style="width: 37%" />
 &lt;col style="width: 16%" />
 &lt;/colgroup>
 &lt;thead>
@@ -96,11 +96,11 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="compressorspeedcontroltype">CompressorSpeedControlType&lt;/h3>
-&lt;table style="width:65%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
 &lt;col style="width: 16%" />
+&lt;col style="width: 71%" />
+&lt;col style="width: 11%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -123,10 +123,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="condensertype">CondenserType&lt;/h3>
-&lt;table style="width:65%;">
+&lt;table style="width:76%;">
 &lt;colgroup>
 &lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
+&lt;col style="width: 36%" />
 &lt;col style="width: 16%" />
 &lt;/colgroup>
 &lt;thead>
@@ -155,10 +155,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="liquidconstituent">LiquidConstituent&lt;/h3>
-&lt;table style="width:71%;">
+&lt;table style="width:72%;">
 &lt;colgroup>
 &lt;col style="width: 29%" />
-&lt;col style="width: 25%" />
+&lt;col style="width: 26%" />
 &lt;col style="width: 16%" />
 &lt;/colgroup>
 &lt;thead>
@@ -207,11 +207,11 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="concentrationtype">ConcentrationType&lt;/h3>
-&lt;table style="width:65%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
 &lt;col style="width: 16%" />
+&lt;col style="width: 71%" />
+&lt;col style="width: 11%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -323,11 +323,11 @@
 &lt;h1 id="rs0003">RS0003&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="operationspeedcontroltype">OperationSpeedControlType&lt;/h3>
-&lt;table style="width:68%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 19%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 48%" />
+&lt;col style="width: 34%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -350,11 +350,11 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="installationspeedcontroltype">InstallationSpeedControlType&lt;/h3>
-&lt;table style="width:74%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 25%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 31%" />
+&lt;col style="width: 52%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -377,11 +377,11 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="impellertype">ImpellerType&lt;/h3>
-&lt;table style="width:86%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 44%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 31%" />
+&lt;col style="width: 57%" />
+&lt;col style="width: 11%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -419,11 +419,11 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="componenttype">ComponentType&lt;/h3>
-&lt;table style="width:88%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 44%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 18%" />
+&lt;col style="width: 30%" />
+&lt;col style="width: 37%" />
+&lt;col style="width: 32%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -558,15 +558,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 20%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 18%" />
 &lt;col style="width: 15%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 8%" />
+&lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 13%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1036,7 +1036,7 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablesdiscrete">GridVariablesDiscrete&lt;/h3>
-&lt;table>
+&lt;table style="width:100%;">
 &lt;colgroup>
 &lt;col style="width: 22%" />
 &lt;col style="width: 13%" />
@@ -1135,13 +1135,13 @@
 &lt;p>None.&lt;/p>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0005-1">RS0005&lt;/h3>
-&lt;table>
+&lt;table style="width:100%;">
 &lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 11%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
@@ -1223,13 +1223,13 @@
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
 &lt;table>
 &lt;colgroup>
-&lt;col style="width: 20%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 10%" />
 &lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 14%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1400,8 +1400,8 @@
 &lt;h3 id="gridvariablesmotor">GridVariablesMotor&lt;/h3>
 &lt;table>
 &lt;colgroup>
-&lt;col style="width: 23%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 22%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 16%" />
 &lt;col style="width: 10%" />
 &lt;col style="width: 15%" />
@@ -1486,11 +1486,11 @@
 &lt;h1 id="rs0006">RS0006&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="coolingmethod">CoolingMethod&lt;/h3>
-&lt;table style="width:79%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 34%" />
-&lt;col style="width: 25%" />
-&lt;col style="width: 19%" />
+&lt;col style="width: 22%" />
+&lt;col style="width: 37%" />
+&lt;col style="width: 39%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1525,13 +1525,13 @@
 &lt;/table>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0006-1">RS0006&lt;/h3>
-&lt;table>
+&lt;table style="width:100%;">
 &lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 11%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
@@ -1613,13 +1613,13 @@
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
 &lt;table>
 &lt;colgroup>
+&lt;col style="width: 15%" />
+&lt;col style="width: 18%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 10%" />
 &lt;col style="width: 16%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 17%" />
 &lt;col style="width: 9%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 15%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1656,12 +1656,12 @@
 &lt;h3 id="performance">Performance&lt;/h3>
 &lt;table>
 &lt;colgroup>
+&lt;col style="width: 17%" />
 &lt;col style="width: 18%" />
-&lt;col style="width: 16%" />
 &lt;col style="width: 18%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
 &lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
@@ -1760,8 +1760,8 @@
 &lt;h3 id="gridvariablesdrive">GridVariablesDrive&lt;/h3>
 &lt;table>
 &lt;colgroup>
-&lt;col style="width: 19%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 18%" />
+&lt;col style="width: 17%" />
 &lt;col style="width: 17%" />
 &lt;col style="width: 10%" />
 &lt;col style="width: 16%" />
@@ -1840,10 +1840,10 @@
 &lt;h1 id="rs0007">RS0007&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="drivetype">DriveType&lt;/h3>
-&lt;table style="width:71%;">
+&lt;table style="width:72%;">
 &lt;colgroup>
 &lt;col style="width: 29%" />
-&lt;col style="width: 25%" />
+&lt;col style="width: 26%" />
 &lt;col style="width: 16%" />
 &lt;/colgroup>
 &lt;thead>
@@ -1883,13 +1883,13 @@
 &lt;/table>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0007-1">RS0007&lt;/h3>
-&lt;table>
+&lt;table style="width:100%;">
 &lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 11%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
@@ -1969,12 +1969,12 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table>
 &lt;colgroup>
 &lt;col style="width: 15%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 18%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 11%" />
+&lt;col style="width: 10%" />
 &lt;col style="width: 16%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 15%" />
@@ -2023,12 +2023,12 @@
 &lt;h3 id="performance">Performance&lt;/h3>
 &lt;table>
 &lt;colgroup>
-&lt;col style="width: 18%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 19%" />
 &lt;col style="width: 18%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
 &lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
@@ -2107,10 +2107,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablesmechdrive">GridVariablesMechDrive&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table>
 &lt;colgroup>
-&lt;col style="width: 16%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
 &lt;col style="width: 17%" />
 &lt;col style="width: 11%" />
 &lt;col style="width: 16%" />
