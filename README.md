@@ -11,16 +11,16 @@ A toolkit that provides support for a schema-based building data model framework
 Installing the Toolkit
 --------------------
 
-To install and use the Lattice project, you must have a supported version of Python. We also use the [poetry](https://python-poetry.org/) tool to manage Lattice's dependencies. Follow the [instructions](https://python-poetry.org/docs/#installation) to install poetry on your specific platform.
+To install and use the Lattice project, you must have a supported version of Python. 
 
-To initialize dependencies in your poetry virtual environment, simply type
+To install, simply use 
 
-`poetry install`
+`pip install .`
 
-from the main Lattice directory. To test the schema-building process, type
+from the main Lattice directory. To test the schema-building process, you may add 
 
+`poetry run pip install doit` and
 `poetry run doit`.
-
 
 Example Usage
 -------------
@@ -30,5 +30,8 @@ _lattice_ is Python package defining the Lattice class. To use the schema-buildi
 **docs** (optional): contains markdown templates that are used to render model documentation;
 **examples** (optional): data corresponding to data model.
 
-The repository's *examples* directory contains sample data models exemplifying different model options, such as Data Group Templates or scoped references.
+The repository's *examples* directory contains sample data models exemplifying different model options, such as Data Group Templates or scoped references. Resources with further examples include:
+
+* https://github.com/IBPSA-USA/climate-information.git
+* https://github.com/open205/schema-205.git
 
