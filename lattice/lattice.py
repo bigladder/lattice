@@ -6,7 +6,7 @@ import warnings
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
 from .meta_schema import generate_meta_schema, meta_validate_file
-from .schema_to_json import generate_flat_json_schema, generate_json_schema, generate_core_json_schema, validate_file, postvalidate_file
+from .schema_to_json import generate_flat_json_schema, generate_json_schema, validate_file, postvalidate_file
 from .docs import HugoWeb, DocumentFile
 
 class SchemaFile:
@@ -156,7 +156,6 @@ class Lattice:
       schema.set_json_schema_path(json_schema_path)
 
   def generate_json_schemas(self):
-    generate_core_json_schema(os.path.join(self.json_schema_directory, "core.schema.json"))
     for schema in self.schemas:
       generate_flat_json_schema(schema.path, schema.json_schema_path)
 

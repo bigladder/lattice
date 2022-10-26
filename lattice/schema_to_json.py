@@ -393,11 +393,11 @@ def generate_json_schema(input_path_to_file, output_path):
         dump(schema_instance, output_path)
 
 # -------------------------------------------------------------------------------------------------
-def generate_core_json_schema(output_path):
+def generate_core_json_schema():
     '''Create JSON schema from core YAML schema'''
     j = JSON_translator()
     core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
-    dump(core_instance, output_path)
+    return core_instance
 
 # -------------------------------------------------------------------------------------------------
 def search_for_reference(referenced_schemas: dict, schema_path: str, subdict: dict) -> bool:
@@ -434,7 +434,7 @@ def generate_flat_json_schema(source_schema_input_path, json_schema_output_path)
         json_schema_output_dir = os.path.abspath(os.path.dirname(json_schema_output_path))
         j = JSON_translator()
         main_schema_instance = j.load_source_schema(source_schema_input_path)
-        schema_ref_map = {'core.schema' : load(os.path.join(json_schema_output_dir, 'core.schema.json'))}
+        schema_ref_map = {'core.schema' : generate_core_json_schema()}
         for ref_source in os.listdir(schema_dir):
             schema_ref_map[os.path.splitext(ref_source)[0]] = j.load_source_schema(os.path.join(schema_dir, ref_source))
         while search_for_reference(schema_ref_map, schema_dir, main_schema_instance):
