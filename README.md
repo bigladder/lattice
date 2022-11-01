@@ -5,7 +5,7 @@
 Lattice
 ===========
 
-A toolkit that provides support for a schema-based building data model framework, currently under development as ASHRAE Standard 232P. Lattice performs data model validation, intermediate schema generation, and data file validation for YAML data models compliant with ASHRAE 232P and ASHRAE 205.
+A Python package that provides support for a schema-based building data model framework, currently under development as ASHRAE Standard 232P. Lattice performs data model validation, intermediate schema generation, and data file validation for YAML data models compliant with ASHRAE 232P and ASHRAE 205.
 
 
 Installing the Toolkit
