@@ -6,7 +6,7 @@ import warnings
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
 from .meta_schema import generate_meta_schema, meta_validate_file
-from .schema_to_json import generate_flat_json_schema, generate_json_schema, validate_file, postvalidate_file
+from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import HugoWeb, DocumentFile
 
 class SchemaFile:

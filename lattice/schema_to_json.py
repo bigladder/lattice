@@ -385,14 +385,6 @@ class JSONSchemaValidator:
             raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
 
 # -------------------------------------------------------------------------------------------------
-def generate_json_schema(input_path_to_file, output_path):
-    '''Create JSON schema from YAML source schema.'''
-    if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
-        j = JSON_translator()
-        schema_instance = j.load_source_schema(input_path_to_file)
-        dump(schema_instance, output_path)
-
-# -------------------------------------------------------------------------------------------------
 def generate_core_json_schema():
     '''Create JSON schema from core YAML schema'''
     j = JSON_translator()
@@ -427,7 +419,7 @@ def search_for_reference(referenced_schemas: dict, schema_path: str, subdict: di
     return subbed
 
 # -------------------------------------------------------------------------------------------------
-def generate_flat_json_schema(source_schema_input_path, json_schema_output_path):
+def generate_json_schema(source_schema_input_path, json_schema_output_path):
     '''Create reference-resolved JSON schema from YAML source schema.'''
     if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
         schema_dir = os.path.abspath(os.path.dirname(source_schema_input_path))
