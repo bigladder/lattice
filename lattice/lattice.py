@@ -157,7 +157,7 @@ class Lattice:
 
   def generate_json_schemas(self):
     for schema in self.schemas:
-      generate_flat_json_schema(schema.path, schema.json_schema_path)
+      generate_json_schema(schema.path, schema.json_schema_path)
 
   def validate_file(self, input_path, schema_type=None):
     instance = load(input_path)
