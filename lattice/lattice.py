@@ -1,11 +1,12 @@
 import os
 import re
 from fnmatch import fnmatch
+import warnings
 
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
 from .meta_schema import generate_meta_schema, meta_validate_file
-from .schema_to_json import generate_json_schema, generate_core_json_schema, validate_file
+from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import HugoWeb, DocumentFile
 
 class SchemaFile:
@@ -70,6 +71,7 @@ class SchemaFile:
 
   def set_schema_patterns(self, patterns):
     self.schema_patterns = patterns
+
 
 class Lattice:
   def __init__(self, root_directory=".", name=None, build_directory=None, build_output_directory_name=".lattice/", build_validation=True):
@@ -154,7 +156,6 @@ class Lattice:
       schema.set_json_schema_path(json_schema_path)
 
   def generate_json_schemas(self):
-    generate_core_json_schema(os.path.join(self.json_schema_directory, "core.schema.json"))
     for schema in self.schemas:
       generate_json_schema(schema.path, schema.json_schema_path)
 
@@ -170,11 +171,13 @@ class Lattice:
         raise Exception(f"Multiple schemas defined, and no schema type provide. Unable to validate file, \"{input_path}\".")
       else:
         validate_file(input_path, self.schemas[0].json_schema_path)
+        postvalidate_file(input_path, self.schemas[0].json_schema_path)
     else:
       # Find corresponding schema
       for schema in self.schemas:
         if schema.schema_type == schema_type:
           validate_file(input_path, schema.json_schema_path)
+          postvalidate_file(input_path, schema.json_schema_path)
           break
 
   def collect_example_files(self):
@@ -225,5 +228,8 @@ class Lattice:
     make_dir(self.doc_output_dir)
     make_dir(self.web_docs_directory_path)
 
-    HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
+    if self.doc_templates_directory_path:
+        HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
+    else:
+        warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 

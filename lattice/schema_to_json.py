@@ -385,28 +385,21 @@ class JSONSchemaValidator:
             raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
 
 # -------------------------------------------------------------------------------------------------
-def generate_json_schema(input_path_to_file, output_path):
-    '''Create JSON schema from YAML source schema.'''
-    if os.path.isfile(input_path_to_file) and '.schema.yaml' in input_path_to_file:
-        j = JSON_translator()
-        schema_instance = j.load_source_schema(input_path_to_file)
-        dump(schema_instance, output_path)
-
-def generate_core_json_schema(output_path):
+def generate_core_json_schema():
     '''Create JSON schema from core YAML schema'''
     j = JSON_translator()
     core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
-    dump(core_instance, output_path)
+    return core_instance
 
 # -------------------------------------------------------------------------------------------------
-def search_for_reference(schema_path : str, subdict : dict) -> bool:
+def search_for_reference(referenced_schemas: dict, schema_path: str, subdict: dict) -> bool:
     '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
     subbed = False
     if '$ref' in subdict.keys():
         subbed = True
         # parse the ref and locate the sub-dict
         source_file, ref_loc = subdict['$ref'].split('#')
-        ref = load(os.path.join(schema_path, source_file))
+        ref = referenced_schemas[os.path.splitext(source_file)[0]]
         key_tree = ref_loc.lstrip('/').split('/')
         sub_d = ref[key_tree[0]]
         for k in key_tree[1:]:
@@ -415,27 +408,80 @@ def search_for_reference(schema_path : str, subdict : dict) -> bool:
         subdict.update(sub_d)
         subdict.pop('$ref')
         # re-search the substituted dictionary
-        subbed = search_for_reference(schema_path, subdict)
+        subbed = search_for_reference(referenced_schemas, schema_path, subdict)
     else:
         for key in subdict:
             if isinstance(subdict[key], dict):
-                subbed = search_for_reference(schema_path, subdict[key])
+                subbed = search_for_reference(referenced_schemas, schema_path, subdict[key])
             if isinstance(subdict[key], list):
                 for entry in [item for item in subdict[key] if isinstance(item, dict)]:
-                    subbed = search_for_reference(schema_path, entry)
+                    subbed = search_for_reference(referenced_schemas, schema_path, entry)
     return subbed
 
 # -------------------------------------------------------------------------------------------------
-def flatten_json_schema(input_schema, output_dir):
-    '''Generate a flattened schema from a schema with references.'''
-    schema_path = os.path.abspath(os.path.dirname(input_schema))
-    schema = load(input_schema)
-    while search_for_reference(schema_path, schema):
-        pass
-    file_name_root = os.path.splitext(os.path.basename(input_schema))[0]
-    dump(schema, os.path.join(output_dir, file_name_root + '_flat.json'))
+def generate_json_schema(source_schema_input_path, json_schema_output_path):
+    '''Create reference-resolved JSON schema from YAML source schema.'''
+    if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
+        schema_dir = os.path.abspath(os.path.dirname(source_schema_input_path))
+        json_schema_output_dir = os.path.abspath(os.path.dirname(json_schema_output_path))
+        j = JSON_translator()
+        main_schema_instance = j.load_source_schema(source_schema_input_path)
+        schema_ref_map = {'core.schema' : generate_core_json_schema()}
+        for ref_source in os.listdir(schema_dir):
+            schema_ref_map[os.path.splitext(ref_source)[0]] = j.load_source_schema(os.path.join(schema_dir, ref_source))
+        while search_for_reference(schema_ref_map, schema_dir, main_schema_instance):
+            pass
+        dump(main_schema_instance, json_schema_output_path)
+
+# -------------------------------------------------------------------------------------------------
+def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None):
+    if not lineage:
+        lineage = list()
+    for key in schema:
+        if key == 'scopedType' and schema[key] == scope_key:
+            scopes_dict['.'.join(lineage)] = schema['scope'] # key is a dot-separated path
+        elif isinstance(schema[key], dict):
+            get_scope_locations(schema[key], scopes_dict, scope_key, lineage + [key])
+        elif isinstance(schema[key], list):
+            for entry in [item for item in schema[key] if isinstance(item, dict)]:
+                get_scope_locations(entry, scopes_dict, scope_key, lineage + [key])
+
+# -------------------------------------------------------------------------------------------------
+def get_reference_value(data_dict: dict, lineage: list) -> str:
+    test_reference = data_dict
+    for adr in lineage:
+        if test_reference.get(adr):
+            if isinstance(test_reference[adr], list):
+                for item in test_reference[adr]:
+                    return get_reference_value(item, lineage[1:])
+            else:
+                test_reference = test_reference[adr]
+        else:
+            return None
+    return test_reference
+
+# -------------------------------------------------------------------------------------------------
+def postvalidate_references(input_file, input_schema):
+    id_scopes = dict()
+    reference_scopes = dict()
+    get_scope_locations(load(input_schema), scope_key='ID', scopes_dict=id_scopes)
+    get_scope_locations(load(input_schema), scope_key='Reference', scopes_dict=reference_scopes)
+    data = load(input_file)
+    ids = list()
+    for id_loc in [id for id in id_scopes if id.startswith('properties')]:
+        lineage = [level for level in id_loc.split('.') if level not in ['properties', 'items']]
+        ids.append(get_reference_value(data, lineage))
+    for ref in [r for r in reference_scopes if r.startswith('properties')]:
+        lineage = [level for level in ref.split('.') if level not in ['properties', 'items']]
+        reference_scope = get_reference_value(data, lineage)
+        if reference_scope != None and reference_scope not in ids:
+            raise Exception(f'Scope mismatch in {input_file}; {reference_scope} not in ID scope list {ids}.')
 
 # -------------------------------------------------------------------------------------------------
 def validate_file(input_file, input_schema):
     v = JSONSchemaValidator(input_schema)
     v.validate(input_file)
+
+# -------------------------------------------------------------------------------------------------
+def postvalidate_file(input_file, input_schema):
+    postvalidate_references(input_file, input_schema) 
