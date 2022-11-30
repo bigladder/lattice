@@ -74,7 +74,7 @@ class SchemaFile:
 
 
 class Lattice:
-  def __init__(self, root_directory=".", name=None, build_directory=None, build_output_directory_name=".lattice/", build_validation=True):
+  def __init__(self, root_directory=".", build_directory=None, build_output_directory_name=".lattice/", build_validation=True):
     # Check if directories exists
     check_dir(root_directory, "Root directory")
     if build_directory is None:
@@ -83,11 +83,6 @@ class Lattice:
       check_dir(build_directory, "Build directory")
 
     self.root_directory = root_directory
-
-    if name is None:
-      self.name = os.path.basename(self.root_directory)
-    else:
-      self.name = name
 
     if build_output_directory_name is None:
       self.build_directory = build_directory
