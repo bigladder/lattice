@@ -72,7 +72,10 @@ class HugoWeb:
     self.git_repo_name = git_url_parts[-1]
     self.git_repo_owner = git_url_parts[-2]
     self.git_repo_host = os.path.splitext(git_url_parts[-3])[0]
-    self.git_branch_name = self.git_repo.active_branch.name
+    if self.git_repo.head.is_detached:
+      self.git_ref_name = "main"
+    else:
+      self.git_ref_name = self.git_repo.head.ref.name
     self.base_url = fr"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/"
 
   def make_pages(self):
@@ -285,7 +288,7 @@ class HugoWeb:
       "params": {
         "copyright": self.author,
         "github_repo": self.git_remote_url,
-        "github_branch": self.git_branch_name,
+        "github_branch": self.git_ref_name,
         "ui": {
           "navbar_logo": self.has_logo,
           "breadcrumb_disable": True
