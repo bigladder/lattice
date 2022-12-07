@@ -145,7 +145,8 @@ class DataGroup:
             if m:
                 types = [t.strip() for t in m.group(1).split(',')]
                 selection_key, selections = parent_dict['Constraints'].split('(')
-                target_dict['allOf'] = list()
+                if target_dict.get('allOf') == None:
+                    target_dict['allOf'] = list()
                 for s, t in zip(selections.split(','), types):
                     target_dict['allOf'].append(dict())
                     self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
@@ -334,10 +335,9 @@ class JSON_translator:
         for ref_name in refs:
             try:
                 ext_dict = load(refs[ref_name])
-                # Only one of the references should contain Data Group Templates
-                for template_name in [ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template']:
-                    self._schema_object_types.append(template_name)
-                # Template data groups may exist in any of the references
+                # Append the expected object types for this schema set with any Data Group Templates
+                self._schema_object_types.extend([ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
+                # Populate the references map so the parser knows where to locate any object types it subsequently encounters
                 self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types]
                 for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
                     self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
