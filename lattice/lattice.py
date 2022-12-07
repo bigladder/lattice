@@ -36,8 +36,10 @@ class SchemaFile:
             if "Constraints" in self.content[self.root_data_group]["Data Elements"]["metadata"]:
               constraints = self.content[self.root_data_group]["Data Elements"]["metadata"]["Constraints"]
               data_element_pattern = "([a-z]+)(_([a-z]|[0-9])+)*"
-              enumeration_pattern = "[A-Z]([A-Z]|[a-z]|[0-9])*"
-              constraint_pattern = re.compile(f"^({data_element_pattern})=({enumeration_pattern})$")
+              enumerator_pattern = "([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*"
+              constraint_pattern = re.compile(f"^({data_element_pattern})=({enumerator_pattern})$")
+              if type(constraints) is not list:
+                constraints = [constraints]
               for constraint in constraints:
                 match = constraint_pattern.match(constraint)
                 if match:
@@ -173,7 +175,8 @@ class Lattice:
         if schema.schema_type == schema_type:
           validate_file(input_path, schema.json_schema_path)
           postvalidate_file(input_path, schema.json_schema_path)
-          break
+          return
+      raise Exception(f"Unable to find matching schema, \"{schema_type}\", for file, \"{input_path}\".")
 
   def collect_example_files(self):
     example_directory_path = os.path.join(self.root_directory,"examples")
