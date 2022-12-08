@@ -1,8 +1,12 @@
 [tool.poetry]
 name = "lattice"
-version = "0.1.0"
-description = ""
+version = "0.0.0" # Generated from git on CI
+description = "A framework for developing data models, including schema development and documentation."
 authors = ["Big Ladder Software"]
+license = "BSD-3"
+readme = "README.md"
+keywords = ["data-modeling", "schema", "lattice"]
+repository = "https://github.com/bigladder/lattice"
 
 [tool.poetry.dependencies]
 python = "^3.7"

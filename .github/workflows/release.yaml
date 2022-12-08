@@ -1,4 +1,4 @@
-name: Web Documentation
+name: Release
 
 on:
   release:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: Build
+    name: Build and Publish
     strategy:
       fail-fast: false
       matrix:
@@ -43,7 +43,13 @@ jobs:
         run: poetry install
       - name: Install Pandoc
         run: sudo apt install pandoc
-      - name: Build web
+      - name: Build and publish package
+        run: |
+          source $VENV
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry version $(git describe --tags --abbrev=0)
+          poetry publish --build
+      - name: Build web docs
         run: |
           source $VENV
           poetry run doit generate_web_docs
