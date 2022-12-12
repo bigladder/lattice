@@ -39,7 +39,10 @@ class DataGroup:
             if 'Description' in element:
                 elements['properties'][e] = {'description' : element['Description']}
             if 'Data Type' in element:
-                self._create_type_entry(group_subdict[e], elements, e)
+                try:
+                    self._create_type_entry(group_subdict[e], elements, e)
+                except RuntimeError as e:
+                    raise
             if 'Units' in element:
                 elements['properties'][e]['units'] = element['Units']
             if 'Notes' in element:
@@ -153,15 +156,14 @@ class DataGroup:
                     self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
                     self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
             elif parent_dict['Data Type'] in ['ID', 'Reference']:
-                if parent_dict.get('Constraints'):
+                try:
                     m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
                     if m:
                         target_property_entry['scopedType'] = parent_dict['Data Type']
                         target_property_entry['scope'] = m.group(1)
                         self._get_simple_type(parent_dict['Data Type'], target_property_entry)
-                else:
-                    #sys.exit(f'Input error: "Constraints" key does not exist for entry "{entry_name}".') # To avoid printing traceback
-                    raise RuntimeError(f'Input error: "Constraints" key does not exist for entry "{entry_name}".') # To include traceback
+                except KeyError:
+                    raise RuntimeError(f'"Constraints" key does not exist for Data Element "{entry_name}".') from None
             else:
                 # 1. 'type' entry
                 self._get_simple_type(parent_dict['Data Type'], target_property_entry)
@@ -319,7 +321,10 @@ class JSON_translator:
                     sch.update(self._process_enumeration(base_level_tag))
                 elif obj_type in self._schema_object_types:
                     dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
-                    sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
+                    try:
+                        sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
+                    except RuntimeError as e:
+                        raise RuntimeError(f'In file {input_file_path}: {e}') from e
         self._schema['definitions'] = sch
         return self._schema
 
