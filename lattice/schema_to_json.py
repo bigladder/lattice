@@ -4,6 +4,7 @@ import os
 import re
 import jsonschema
 import posixpath
+import sys
 
 # -------------------------------------------------------------------------------------------------
 class DataGroup:
@@ -152,11 +153,15 @@ class DataGroup:
                     self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
                     self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
             elif parent_dict['Data Type'] in ['ID', 'Reference']:
-                m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
-                if m:
-                    target_property_entry['scopedType'] = parent_dict['Data Type']
-                    target_property_entry['scope'] = m.group(1)
-                    self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                if parent_dict.get('Constraints'):
+                    m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
+                    if m:
+                        target_property_entry['scopedType'] = parent_dict['Data Type']
+                        target_property_entry['scope'] = m.group(1)
+                        self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                else:
+                    #sys.exit(f'Input error: "Constraints" key does not exist for entry "{entry_name}".') # To avoid printing traceback
+                    raise RuntimeError(f'Input error: "Constraints" key does not exist for entry "{entry_name}".') # To include traceback
             else:
                 # 1. 'type' entry
                 self._get_simple_type(parent_dict['Data Type'], target_property_entry)
