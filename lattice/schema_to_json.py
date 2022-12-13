@@ -142,6 +142,7 @@ class DataGroup:
             # 3. 'items' entry
             target_property_entry['items'] = dict()
             self._get_simple_type(m[0], target_property_entry['items'])
+            self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
             self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
         else:
             # If the type is oneOf a set
@@ -167,7 +168,8 @@ class DataGroup:
             else:
                 # 1. 'type' entry
                 self._get_simple_type(parent_dict['Data Type'], target_property_entry)
-                # 2. 'm[in/ax]imum' entry
+                # 2. string pattern or 'm[in/ax]imum' entry
+                self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry)
                 self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry)
 
 
@@ -216,6 +218,18 @@ class DataGroup:
         except KeyError:
             print('Type not processed:', type_str)
         return
+
+
+    def _get_pattern_constraints(self, constraints_str, target_dict):
+        '''
+        Process alpha/pattern Constraint into pattern field.
+
+        :param constraints_str:     Raw numerical limits and/or multiple information
+        :param target_dict:         json property node
+        '''
+        if constraints_str is not None and not isinstance(constraints_str, list):
+            if 'string' in target_dict['type']:  # String pattern match
+                target_dict['pattern'] = constraints_str.replace('"','')  # TODO: Find better way to remove quotes.
 
 
     def _get_numeric_constraints(self, constraints_str, target_dict):
