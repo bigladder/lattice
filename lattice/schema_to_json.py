@@ -227,7 +227,7 @@ class DataGroup:
         :param constraints_str:     Raw numerical limits and/or multiple information
         :param target_dict:         json property node
         '''
-        if constraints_str is not None and not isinstance(constraints_str, list):
+        if constraints_str is not None and 'type' in target_dict and isinstance(constraints_str, str):
             if 'string' in target_dict['type']:  # String pattern match
                 target_dict['pattern'] = constraints_str.replace('"','')  # TODO: Find better way to remove quotes.
 
