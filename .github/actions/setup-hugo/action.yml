@@ -1,17 +1,22 @@
 name: "Setup Hugo"
 description: "Setup Hugo, Pandoc, and Node for Docsy"
 inputs:
-  python-version:
-    description: Python version used to create the environment
+  os:
+    description: Operating system (macos, ubuntu, windows)
     required: true
 runs:
   using: composite
   steps:
-    - name: Setup Hugo
-      uses: michaeltlombardi/actions-hugo@b7e8a5bdba6e295171fdaa5a351cbb391f345554
+    - name: Setup Hugo (ubuntu and windows)
+      uses: peaceiris/actions-hugo@v2
       with:
-        hugo-version: '0.104.3'
+        hugo-version: '0.108.0'
         extended: true
+      if: ${{ contains(inputs.os, 'ubuntu') || contains(inputs.os, 'windows') }}
+    - name: Setup Hugo (macos)
+      run: brew install hugo
+      shell: bash
+      if: ${{ contains(inputs.os, 'macos') }}
     - name: Setup Node
       uses: actions/setup-node@v3
       with:
