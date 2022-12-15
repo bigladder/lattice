@@ -4,6 +4,7 @@ import os
 import re
 import jsonschema
 import posixpath
+import sys
 
 # -------------------------------------------------------------------------------------------------
 class DataGroup:
@@ -38,7 +39,10 @@ class DataGroup:
             if 'Description' in element:
                 elements['properties'][e] = {'description' : element['Description']}
             if 'Data Type' in element:
-                self._create_type_entry(group_subdict[e], elements, e)
+                try:
+                    self._create_type_entry(group_subdict[e], elements, e)
+                except RuntimeError as e:
+                    raise
             if 'Units' in element:
                 elements['properties'][e]['units'] = element['Units']
             if 'Notes' in element:
@@ -138,6 +142,7 @@ class DataGroup:
             # 3. 'items' entry
             target_property_entry['items'] = dict()
             self._get_simple_type(m[0], target_property_entry['items'])
+            self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
             self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
         else:
             # If the type is oneOf a set
@@ -145,21 +150,26 @@ class DataGroup:
             if m:
                 types = [t.strip() for t in m.group(1).split(',')]
                 selection_key, selections = parent_dict['Constraints'].split('(')
-                target_dict['allOf'] = list()
+                if target_dict.get('allOf') == None:
+                    target_dict['allOf'] = list()
                 for s, t in zip(selections.split(','), types):
                     target_dict['allOf'].append(dict())
                     self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
                     self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
             elif parent_dict['Data Type'] in ['ID', 'Reference']:
-                m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
-                if m:
-                    target_property_entry['scopedType'] = parent_dict['Data Type']
-                    target_property_entry['scope'] = m.group(1)
-                    self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                try:
+                    m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
+                    if m:
+                        target_property_entry['scopedType'] = parent_dict['Data Type']
+                        target_property_entry['scope'] = m.group(1)
+                        self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                except KeyError:
+                    raise RuntimeError(f'"Constraints" key does not exist for Data Element "{entry_name}".') from None
             else:
                 # 1. 'type' entry
                 self._get_simple_type(parent_dict['Data Type'], target_property_entry)
-                # 2. 'm[in/ax]imum' entry
+                # 2. string pattern or 'm[in/ax]imum' entry
+                self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry)
                 self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry)
 
 
@@ -208,6 +218,18 @@ class DataGroup:
         except KeyError:
             print('Type not processed:', type_str)
         return
+
+
+    def _get_pattern_constraints(self, constraints_str, target_dict):
+        '''
+        Process alpha/pattern Constraint into pattern field.
+
+        :param constraints_str:     Raw numerical limits and/or multiple information
+        :param target_dict:         json property node
+        '''
+        if constraints_str is not None and 'type' in target_dict and isinstance(constraints_str, str):
+            if 'string' in target_dict['type']:  # String pattern match
+                target_dict['pattern'] = constraints_str.replace('"','')  # TODO: Find better way to remove quotes.
 
 
     def _get_numeric_constraints(self, constraints_str, target_dict):
@@ -313,7 +335,10 @@ class JSON_translator:
                     sch.update(self._process_enumeration(base_level_tag))
                 elif obj_type in self._schema_object_types:
                     dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
-                    sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
+                    try:
+                        sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
+                    except RuntimeError as e:
+                        raise RuntimeError(f'In file {input_file_path}: {e}') from e
         self._schema['definitions'] = sch
         return self._schema
 
@@ -334,10 +359,9 @@ class JSON_translator:
         for ref_name in refs:
             try:
                 ext_dict = load(refs[ref_name])
-                # Only one of the references should contain Data Group Templates
-                for template_name in [ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template']:
-                    self._schema_object_types.append(template_name)
-                # Template data groups may exist in any of the references
+                # Append the expected object types for this schema set with any Data Group Templates
+                self._schema_object_types.extend([ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
+                # Populate the references map so the parser knows where to locate any object types it subsequently encounters
                 self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types]
                 for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
                     self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
