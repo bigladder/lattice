@@ -20,21 +20,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
-        with:
-          hugo-version: '0.104.3'
-          extended: true
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
       - name: Setup Python ${{ matrix.python-version }}
         uses: bigladder/github-actions/setup-python-poetry@main
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install Pandoc
-        run: sudo apt install pandoc
+      - name: Setup Hugo
+        uses: ./.github/actions/setup-hugo
       - name: Build and publish package
         run: |
           source $VENV

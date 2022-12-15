@@ -1,0 +1,22 @@
+name: "Setup Hugo"
+description: "Setup Hugo, Pandoc, and Node for Docsy"
+inputs:
+  python-version:
+    description: Python version used to create the environment
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup Hugo
+      uses: peaceiris/actions-hugo@v2
+      with:
+        hugo-version: '0.104.3'
+        extended: true
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+    - name: Setup Pandoc
+      uses: r-lib/actions/setup-pandoc@v2
+      with:
+        pandoc-version: '2.19.2'
