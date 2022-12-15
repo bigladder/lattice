@@ -1,5 +1,5 @@
 import os
-import git
+import pygit2
 from distutils.dir_util import copy_tree
 import subprocess
 import shutil
@@ -66,16 +66,16 @@ class HugoWeb:
     copy_tree(os.path.join(os.path.dirname(__file__),"hugo_layouts"),self.layouts_directory_path)
 
   def get_git_info(self):
-    self.git_repo = git.Repo(self.docs_source_directory, search_parent_directories=True)
+    self.git_repo = pygit2.Repository(pygit2.discover_repository(self.docs_source_directory))
     self.git_remote_url = os.path.splitext(self.git_repo.remotes[0].url)[0]
     git_url_parts = self.git_remote_url.split('/')
     self.git_repo_name = git_url_parts[-1]
     self.git_repo_owner = git_url_parts[-2]
     self.git_repo_host = os.path.splitext(git_url_parts[-3])[0]
-    if self.git_repo.head.is_detached:
+    if self.git_repo.head_is_detached:
       self.git_ref_name = "main"
     else:
-      self.git_ref_name = self.git_repo.head.ref.name
+      self.git_ref_name = self.git_repo.head.name
     self.base_url = fr"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/"
 
   def make_pages(self):
