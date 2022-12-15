@@ -7,11 +7,17 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup Hugo
-      uses: peaceiris/actions-hugo@v2
+    - name: Set up Go
+      uses: actions/setup-go@v3
       with:
-        hugo-version: '0.104.3'
-        extended: true
+        go-version: ">=1.18"
+
+      # Update Hugo Version in your production platform.
+      # Update hugo `version` in `.devcontainer/devcontainer.json` manually.
+    - name: Install Hugo
+      shell: bash
+      run: |
+        go install -tags extended github.com/gohugoio/hugo@v0.108.0
     - name: Setup Node
       uses: actions/setup-node@v3
       with:
