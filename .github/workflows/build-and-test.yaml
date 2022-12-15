@@ -29,8 +29,8 @@ jobs:
         run: |
           source $VENV
           poetry run doit
-      - name: Upload Build Content
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-content-${{ matrix.os }}-py${{ matrix.python-version }}
-          path: build
+      # - name: Upload Build Content
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: build-content-${{ matrix.os }}-py${{ matrix.python-version }}
+      #     path: build
