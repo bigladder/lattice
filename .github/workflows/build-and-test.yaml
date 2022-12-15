@@ -23,8 +23,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Setup Hugo
         uses: ./.github/actions/setup-hugo
-        with:
-          os: ${{ matrix.os }}
       - name: Build and test
         run: |
           source $VENV

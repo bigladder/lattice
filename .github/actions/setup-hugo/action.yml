@@ -1,26 +1,25 @@
 name: "Setup Hugo"
 description: "Setup Hugo, Pandoc, and Node for Docsy"
-inputs:
-  os:
-    description: Operating system (macos, ubuntu, windows)
-    required: true
 runs:
   using: composite
   steps:
-    - name: Setup Hugo (ubuntu)
+    - name: Setup Hugo (Linux)
       uses: peaceiris/actions-hugo@v2
       with:
         hugo-version: '0.108.0'
         extended: true
-      if: ${{ contains(inputs.os, 'ubuntu') }}
-    - name: Setup Hugo (macos)
+      if: runner.os == 'Linux'
+    - name: Setup Hugo (macOS)
       run: brew install hugo
       shell: bash
-      if: ${{ contains(inputs.os, 'macos') }}
-    - name: Setup Hugo (windows)
+      if: runner.os == 'macOS'
+    - name: Install Scoop (Windows)
+      if: runner.os == 'Windows'
+      uses: MinoruSekine/setup-scoop@main
+    - name: Setup Hugo (Windows)
       run: scoop install hugo-extended
       shell: bash
-      if: ${{ contains(inputs.os, 'windows') }}
+      if: runner.os == 'Windows'
     - name: Setup Node
       uses: actions/setup-node@v3
       with:
