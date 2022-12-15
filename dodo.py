@@ -19,8 +19,6 @@ for example_dir in os.listdir(EXAMPLES_PATH):
 BASE_META_SCHEMA_PATH = os.path.join(SOURCE_PATH, "meta.schema.yaml")
 CORE_SCHEMA_PATH = os.path.join(SOURCE_PATH, "core.schema.yaml")
 
-DOIT_CONFIG = {"default_tasks": ["validate_example_files", "generate_markdown"]}
-
 def task_generate_meta_schemas():
   '''Generate JSON meta schemas'''
   for example in examples:

@@ -6,7 +6,7 @@ import shutil
 
 from jinja2 import Environment, FileSystemLoader
 
-from ..file_io import dump, load, dump_to_string, get_file_basename, make_dir, get_extension
+from ..file_io import dump, load, dump_to_string, get_file_basename, make_dir, get_extension, check_executable
 from .process_template import process_template
 
 class DocumentFile:
@@ -245,6 +245,10 @@ class HugoWeb:
     self.make_page(output_path, front_matter, content)
 
   def build(self):
+    # Check for dependencies
+    check_executable("hugo", "https://gohugo.io/installation/")
+    check_executable("npm", "https://nodejs.org/en/download/")
+
     self.make_pages()
 
     # Setup Hugo Config
