@@ -258,7 +258,7 @@ class HugoWeb:
     dump(self.make_npm_package_json(),os.path.join(self.build_directory,"package.json"))
 
     if not os.path.exists(os.path.join(self.build_directory,"go.mod")):
-      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory)],cwd=self.build_directory,check=True)
+      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory).replace('\\','/')],cwd=self.build_directory,check=True)
 
     if not os.path.exists(os.path.join(self.build_directory,"go.sum")):
       subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"],cwd=self.build_directory,check=True)
