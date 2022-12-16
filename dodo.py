@@ -9,7 +9,7 @@ BUILD_PATH = "build"
 
 examples = []
 
-for example_dir in os.listdir(EXAMPLES_PATH):
+for example_dir in sorted(os.listdir(EXAMPLES_PATH)):
   example_dir_path = os.path.join(EXAMPLES_PATH, example_dir)
   if os.path.isdir(example_dir_path):
     build_dir_path = os.path.join(BUILD_PATH, example_dir)
@@ -107,7 +107,7 @@ def task_generate_web_docs():
     name = os.path.basename(example.root_directory)
     yield {
       'name': name,
-      'task_dep': [f"validate_schemas:{name}"],
+      'task_dep': [f"validate_schemas:{name}",f"generate_json_schemas:{name}",f"validate_example_files:{name}"],
       'file_dep': [schema.path for schema in example.schemas] + [template.path for template in example.doc_templates],
       'targets': [os.path.join(example.web_docs_directory_path,"public")],
       'actions': [
