@@ -3,6 +3,7 @@ import pygit2
 from distutils.dir_util import copy_tree
 import subprocess
 import shutil
+import platform
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -300,16 +301,20 @@ class HugoWeb:
     # npm package.json
     dump(self.make_npm_package_json(),os.path.join(self.build_directory,"package.json"))
 
+    shell = False
+    if platform.system() == "Windows":
+      shell = True
+
     if not os.path.exists(os.path.join(self.build_directory,"go.mod")):
-      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory).replace('\\','/')], cwd=self.build_directory, check=True, shell=True)
+      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory).replace('\\','/')], cwd=self.build_directory, check=True, shell=shell)
 
     if not os.path.exists(os.path.join(self.build_directory,"go.sum")):
-      subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"], cwd=self.build_directory, check=True, shell=True)
+      subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"], cwd=self.build_directory, check=True, shell=shell)
 
     if not os.path.exists(os.path.join(self.build_directory,"package-lock.json")):
-      subprocess.run(["npm", "install"], cwd=self.build_directory, check=True, shell=True)
+      subprocess.run(["npm", "install"], cwd=self.build_directory, check=True, shell=shell)
 
-    subprocess.run(["hugo", "--minify"], cwd=self.build_directory, check=True, shell=True)
+    subprocess.run(["hugo", "--minify"], cwd=self.build_directory, check=True, shell=shell)
 
   def make_hugo_config(self):
     return {
