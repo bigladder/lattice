@@ -121,7 +121,7 @@ class Lattice:
 
     # Collect list of schema files
     self.schemas = []
-    for file_name in os.listdir(self.schema_directory_path):
+    for file_name in sorted(os.listdir(self.schema_directory_path)):
       file_path = os.path.join(self.schema_directory_path, file_name)
       if fnmatch(file_path, "*.schema.yaml") or fnmatch(file_path, "*.schema.yml"):
         self.schemas.append(SchemaFile(file_path))
@@ -147,7 +147,6 @@ class Lattice:
   def setup_json_schemas(self):
     self.json_schema_directory = os.path.join(self.build_directory,"json_schema")
     make_dir(self.json_schema_directory)
-    self.core_json_schema_path = os.path.join(self.json_schema_directory,f"core.schema.json")
     for schema in self.schemas:
       json_schema_path = os.path.join(self.json_schema_directory,f"{schema.file_base_name}.schema.json")
       schema.set_json_schema_path(json_schema_path)
@@ -188,7 +187,7 @@ class Lattice:
     # Collect list of example files
     self.examples = []
     if self.example_directory_path is not None:
-      for file_name in os.listdir(self.example_directory_path):
+      for file_name in sorted(os.listdir(self.example_directory_path)):
         file_path = os.path.join(self.example_directory_path, file_name)
         if os.path.isfile(file_path):
           self.examples.append(os.path.abspath(file_path))
@@ -227,7 +226,7 @@ class Lattice:
     make_dir(self.web_docs_directory_path)
 
     if self.doc_templates_directory_path:
-        HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
+        HugoWeb(self).build()
     else:
         warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 

@@ -6,8 +6,9 @@ import shutil
 
 from jinja2 import Environment, FileSystemLoader
 
-from ..file_io import dump, load, dump_to_string, get_file_basename, make_dir, get_extension, check_executable
+from ..file_io import dump, load, dump_to_string, get_file_basename, make_dir, get_extension, check_executable, translate
 from .process_template import process_template
+from .grid_table import write_table
 
 class DocumentFile:
   def __init__(self, path):
@@ -24,12 +25,12 @@ class DocumentFile:
 
 
 class HugoWeb:
-  def __init__(self, docs_source_directory, build_directory, schema_directory=None):
-    self.build_directory = os.path.abspath(build_directory)
-    self.docs_source_directory = os.path.abspath(docs_source_directory)
+  def __init__(self, lattice):
+    self.lattice = lattice
+    self.build_directory = os.path.abspath(self.lattice.web_docs_directory_path)
+    self.docs_source_directory = os.path.abspath(self.lattice.doc_templates_directory_path)
     self.docs_config_directory = os.path.join(self.docs_source_directory,"web")
-    if schema_directory is None:
-      self.source_schema_directory_path = os.path.abspath(os.path.join(self.docs_source_directory,os.pardir,"schema"))
+    self.source_schema_directory_path = self.lattice.schema_directory_path
     self.title = os.path.relpath(self.docs_source_directory)
     self.description = ""
     self.author = ""
@@ -51,6 +52,8 @@ class HugoWeb:
     self.content_directory_path = make_dir(os.path.join(self.build_directory, "content"))
     self.layouts_directory_path = make_dir(os.path.join(self.build_directory, "layouts"))
     self.static_directory_path = make_dir(os.path.join(self.build_directory, "static"))
+    self.static_assets_directory_path = make_dir(os.path.join(self.static_directory_path, "assets"))
+
 
     # Asset directories
     self.icon_directory_path = make_dir(os.path.join(self.assets_directory_path, "icons"))
@@ -145,10 +148,10 @@ class HugoWeb:
     self.make_specification_pages()
 
     # Schema
-    self.make_main_menu_page(self.schema_directory_path,"Schema",content="Coming soon! Download the JSON Schema!")
+    self.make_schema_page()
 
     # Examples
-    self.make_main_menu_page(self.examples_directory_path,"Examples",content="Coming soon! Download valid examples!")
+    self.make_examples_page()
 
   def make_specification_pages(self):
     # Collect list of doc template files
@@ -178,6 +181,46 @@ class HugoWeb:
     for template in self.specification_templates:
       template.set_markdown_output_path(os.path.join(self.specifications_directory_path,f"{get_file_basename(template.path, depth=2)}.pdc"))
       self.make_specification_page(template.path, template.markdown_output_path, self.source_schema_directory_path, template.corresponding_schema_path)
+
+  def make_schema_page(self):
+    schema_files = {
+      "Schema": [],
+      "Description": []
+    }
+    schema_assets_directory = os.path.join(self.static_assets_directory_path,"schema")
+    make_dir(schema_assets_directory)
+    for schema in self.lattice.schemas:
+      content = load(schema.json_schema_path)
+      output_path = os.path.join(schema_assets_directory, get_file_basename(schema.json_schema_path))
+      shutil.copy(schema.json_schema_path, output_path)
+      schema_files["Schema"].append(f"[{content['title']}](/{self.git_repo_name}/{os.path.relpath(output_path, self.static_directory_path)})")
+      schema_files["Description"].append(content["description"])
+
+    self.make_main_menu_page(self.schema_directory_path,"Schema",content=write_table(schema_files,["Schema","Description"]))
+
+  def make_examples_page(self):
+    example_files = {
+      "File Name": [],
+      "Description": [],
+      "Download": []
+    }
+    example_assets_directory = os.path.join(self.static_assets_directory_path,"examples")
+    make_dir(example_assets_directory)
+    for example in self.lattice.examples:
+      content = load(example)
+      file_base_name = get_file_basename(example, depth=1)
+      formats = ['json', 'yaml', 'cbor']
+      output_path = {}
+      web_links = {}
+      for format in formats:
+        output_path[format] = os.path.join(example_assets_directory, f"{file_base_name}.{format}")
+        web_links[format] = f"[{format.upper()}](/{self.git_repo_name}/{os.path.relpath(output_path[format], self.static_directory_path)})"
+        translate(example, output_path[format])
+      example_files["File Name"].append(file_base_name)
+      example_files["Description"].append(content["metadata"]["description"])
+      example_files["Download"].append(f"{web_links['yaml']} {web_links['json']} {web_links['cbor']}")
+
+    self.make_main_menu_page(self.examples_directory_path,"Examples",content=write_table(example_files,["File Name","Description","Download"]))
 
   def make_page(self, page_path, front_matter, content=""):
     with open(page_path,'w') as file:
@@ -335,9 +378,6 @@ def prepend_file_content(file_path, new_content):
     original_content = original_file.read()
   with open(file_path,'w') as modified_file:
     modified_file.write(new_content + original_content)
-
-def make_examples_html():
-  pass
 
 def render_template(template_path, output_path, values):
   template_directory_path = os.path.abspath(os.path.join(template_path, os.pardir))
