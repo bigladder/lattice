@@ -2,10 +2,10 @@
 &lt;h1 id="ashrae205">ASHRAE205&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="schematype">SchemaType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
 &lt;col style="width: 20%" />
-&lt;col style="width: 65%" />
+&lt;col style="width: 64%" />
 &lt;col style="width: 14%" />
 &lt;/colgroup>
 &lt;thead>
@@ -96,7 +96,7 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="compressorspeedcontroltype">CompressorSpeedControlType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
 &lt;col style="width: 16%" />
 &lt;col style="width: 71%" />
@@ -112,12 +112,14 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>DISCRETE&lt;/code>&lt;/td>
-&lt;td>Compressor loading is controlled by cycling between one or more discrete stages&lt;/td>
+&lt;td>Compressor loading is controlled by cycling between one or more
+discrete stages&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>CONTINUOUS&lt;/code>&lt;/td>
-&lt;td>Compressor loading is controlled by continuously varying the speed of the compressor&lt;/td>
+&lt;td>Compressor loading is controlled by continuously varying the speed
+of the compressor&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -207,10 +209,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="concentrationtype">ConcentrationType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
 &lt;col style="width: 16%" />
-&lt;col style="width: 71%" />
+&lt;col style="width: 70%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
 &lt;thead>
@@ -223,27 +225,29 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>BY_VOLUME&lt;/code>&lt;/td>
-&lt;td>Concentration is defined as a fraction of total liquid mixture volume&lt;/td>
+&lt;td>Concentration is defined as a fraction of total liquid mixture
+volume&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>BY_MASS&lt;/code>&lt;/td>
-&lt;td>Concentration is defined as a fraction of total liquid mixture mass&lt;/td>
+&lt;td>Concentration is defined as a fraction of total liquid mixture
+mass&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="liquidmixture">LiquidMixture&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 18%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 19%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 20%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -268,7 +272,8 @@
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>concentration_type&lt;/code>&lt;/td>
-&lt;td>Defines whether concentration is defined on a volume or mass basis&lt;/td>
+&lt;td>Defines whether concentration is defined on a volume or mass
+basis&lt;/td>
 &lt;td>&lt;code>&amp;lt;ConcentrationType&amp;gt;&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
@@ -278,15 +283,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="liquidcomponent">LiquidComponent&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 19%" />
+&lt;col style="width: 18%" />
 &lt;col style="width: 14%" />
 &lt;col style="width: 19%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 13%" />
+&lt;col style="width: 7%" />
+&lt;col style="width: 12%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -316,14 +321,16 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)&lt;/td>
+&lt;td>If omitted, assume equal distribution with any other component with
+no defined concentration (e.g., can be left blank for the primary
+component)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table></description></item><item><title>Specifications: RS0003</title><link>https://bigladder.github.io/lattice/specifications/rs0003/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://bigladder.github.io/lattice/specifications/rs0003/</guid><description>
 &lt;h1 id="rs0003">RS0003&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="operationspeedcontroltype">OperationSpeedControlType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
 &lt;col style="width: 16%" />
 &lt;col style="width: 48%" />
@@ -339,22 +346,24 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>DISCRETE&lt;/code>&lt;/td>
-&lt;td>Fan assemblies that operate at one or more defined speeds dictated by a tap or dip switch&lt;/td>
+&lt;td>Fan assemblies that operate at one or more defined speeds dictated
+by a tap or dip switch&lt;/td>
 &lt;td>Performance map data is provided at individual impeller speeds&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>CONTINUOUS&lt;/code>&lt;/td>
 &lt;td>Fan assemblies that operate within a continuous range of speeds&lt;/td>
-&lt;td>Performance map data is provided over a range of impeller speeds&lt;/td>
+&lt;td>Performance map data is provided over a range of impeller
+speeds&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="installationspeedcontroltype">InstallationSpeedControlType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
 &lt;col style="width: 16%" />
-&lt;col style="width: 31%" />
-&lt;col style="width: 52%" />
+&lt;col style="width: 30%" />
+&lt;col style="width: 51%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -367,7 +376,8 @@
 &lt;tr class="odd">
 &lt;td>&lt;code>FIXED&lt;/code>&lt;/td>
 &lt;td>Fan speed does not change after installation&lt;/td>
-&lt;td>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> Examples include dip-switch/tap selection and pulley adjustments&lt;/td>
+&lt;td>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> Examples include
+dip-switch/tap selection and pulley adjustments&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>VARIABLE&lt;/code>&lt;/td>
@@ -377,10 +387,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="impellertype">ImpellerType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
-&lt;col style="width: 31%" />
-&lt;col style="width: 57%" />
+&lt;col style="width: 30%" />
+&lt;col style="width: 56%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
 &lt;thead>
@@ -408,22 +418,24 @@
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>AXIAL&lt;/code>&lt;/td>
-&lt;td>Fan impeller with shaft parallel to air flow stream for high static applications&lt;/td>
+&lt;td>Fan impeller with shaft parallel to air flow stream for high static
+applications&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>PROPELLER&lt;/code>&lt;/td>
-&lt;td>Fan impeller with shaft parallel to air flow stream for low static pressure applications&lt;/td>
+&lt;td>Fan impeller with shaft parallel to air flow stream for low static
+pressure applications&lt;/td>
 &lt;td>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="componenttype">ComponentType&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
-&lt;col style="width: 30%" />
+&lt;col style="width: 29%" />
 &lt;col style="width: 37%" />
-&lt;col style="width: 32%" />
+&lt;col style="width: 31%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -472,13 +484,13 @@
 &lt;/table>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0003-1">RS0003&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 14%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 15%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 23%" />
+&lt;col style="width: 22%" />
 &lt;col style="width: 8%" />
 &lt;col style="width: 10%" />
 &lt;/colgroup>
@@ -524,15 +536,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="description">Description&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 20%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -558,14 +570,14 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 19%" />
 &lt;col style="width: 18%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
+&lt;col style="width: 7%" />
 &lt;col style="width: 13%" />
 &lt;/colgroup>
 &lt;thead>
@@ -596,7 +608,8 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the
+representation&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>impeller_type&lt;/code>&lt;/td>
@@ -619,7 +632,7 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performance">Performance&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table style="width:98%;">
 &lt;colgroup>
 &lt;col style="width: 21%" />
 &lt;col style="width: 8%" />
@@ -627,7 +640,7 @@
 &lt;col style="width: 5%" />
 &lt;col style="width: 20%" />
 &lt;col style="width: 9%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -657,11 +670,13 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>True if the performance data reflects the static pressure difference across the enclosure&lt;/td>
+&lt;td>True if the performance data reflects the static pressure difference
+across the enclosure&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>assembly_components&lt;/code>&lt;/td>
-&lt;td>An array of components included in the fan assembly air stream, not including any fans&lt;/td>
+&lt;td>An array of components included in the fan assembly air stream, not
+including any fans&lt;/td>
 &lt;td>&lt;code>[{AssemblyComponent}]&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
@@ -675,7 +690,8 @@
 &lt;td>-&lt;/td>
 &lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Used to determine amount of heat from the motor added to the air stream&lt;/td>
+&lt;td>Used to determine amount of heat from the motor added to the air
+stream&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>maximum_impeller_rotational_speed&lt;/code>&lt;/td>
@@ -697,12 +713,16 @@
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>stability_curve&lt;/code>&lt;/td>
-&lt;td>The system curve defining the stability area for system selection&lt;/td>
+&lt;td>The system curve defining the stability area for system
+selection&lt;/td>
 &lt;td>&lt;code>{SystemCurve}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> Application software may use this curve to indicate to application software users when a selected fan is operating in an unstable region where surging or stalling is likely to occur&lt;/td>
+&lt;td>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> Application software may
+use this curve to indicate to application software users when a selected
+fan is operating in an unstable region where surging or stalling is
+likely to occur&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>operation_speed_control_type&lt;/code>&lt;/td>
@@ -711,7 +731,8 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Determines which performance map data group is used for &lt;code>performance_map&lt;/code>&lt;/td>
+&lt;td>Determines which performance map data group is used for
+&lt;code>performance_map&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>installation_speed_control_type&lt;/code>&lt;/td>
@@ -721,10 +742,23 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>&lt;ul>
-&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>DISCRETE&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>FIXED&lt;/code>, impeller speed shall be restricted to a single discrete speed&lt;/p>&lt;/li>
-&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>DISCRETE&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>VARIABLE&lt;/code>, impeller speed shall be restricted to a set of two or more discrete speeds&lt;/p>&lt;/li>
-&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>CONTINUOUS&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>FIXED&lt;/code>, impeller speed shall be restricted to a single speed (which may be interpolated from &lt;code>impeller_speed&lt;/code> values provided in the performance map)&lt;/p>&lt;/li>
-&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is &lt;code>CONTINUOUS&lt;/code> and &lt;code>installation_speed_control_type&lt;/code> is &lt;code>VARIABLE&lt;/code>, impeller speed shall be unrestricted within operational limits&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is
+&lt;code>DISCRETE&lt;/code> and &lt;code>installation_speed_control_type&lt;/code>
+is &lt;code>FIXED&lt;/code>, impeller speed shall be restricted to a single
+discrete speed&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is
+&lt;code>DISCRETE&lt;/code> and &lt;code>installation_speed_control_type&lt;/code>
+is &lt;code>VARIABLE&lt;/code>, impeller speed shall be restricted to a set of
+two or more discrete speeds&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is
+&lt;code>CONTINUOUS&lt;/code> and &lt;code>installation_speed_control_type&lt;/code>
+is &lt;code>FIXED&lt;/code>, impeller speed shall be restricted to a single
+speed (which may be interpolated from &lt;code>impeller_speed&lt;/code> values
+provided in the performance map)&lt;/p>&lt;/li>
+&lt;li>&lt;p>If &lt;code>operation_speed_control_type&lt;/code> is
+&lt;code>CONTINUOUS&lt;/code> and &lt;code>installation_speed_control_type&lt;/code>
+is &lt;code>VARIABLE&lt;/code>, impeller speed shall be unrestricted within
+operational limits&lt;/p>&lt;/li>
 &lt;/ul>&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
@@ -734,7 +768,8 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>If the fan assembly is packaged with a motor, a motor representation shall be provided&lt;/td>
+&lt;td>If the fan assembly is packaged with a motor, a motor representation
+shall be provided&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>mechanical_drive_representation&lt;/code>&lt;/td>
@@ -743,7 +778,8 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>If the fan assembly is packaged with a mechanical drive, a mechanical drive representation shall be provided&lt;/td>
+&lt;td>If the fan assembly is packaged with a mechanical drive, a
+mechanical drive representation shall be provided&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>performance_map&lt;/code>&lt;/td>
@@ -757,15 +793,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="assemblycomponent">AssemblyComponent&lt;/h3>
-&lt;table>
+&lt;table style="width:97%;">
 &lt;colgroup>
-&lt;col style="width: 18%" />
+&lt;col style="width: 17%" />
 &lt;col style="width: 11%" />
-&lt;col style="width: 13%" />
+&lt;col style="width: 12%" />
 &lt;col style="width: 7%" />
 &lt;col style="width: 11%" />
 &lt;col style="width: 6%" />
-&lt;col style="width: 30%" />
+&lt;col style="width: 29%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -804,30 +840,33 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>Optionally provided if the component has a Standard 205 representation&lt;/td>
+&lt;td>Optionally provided if the component has a Standard 205
+representation&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>wet_pressure_difference&lt;/code>&lt;/td>
-&lt;td>Additional static pressure difference if the component is wet (e.g., because of condensate collection or wetting evaporative media)&lt;/td>
+&lt;td>Additional static pressure difference if the component is wet (e.g.,
+because of condensate collection or wetting evaporative media)&lt;/td>
 &lt;td>&lt;code>Numeric&lt;/code>&lt;/td>
 &lt;td>Pa&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>&lt;ul>
-&lt;li>&lt;p>Corresponds to additional pressure difference at &lt;code>nominal_standard_air_volumetric_flow_rate&lt;/code>&lt;/p>&lt;/li>
+&lt;li>&lt;p>Corresponds to additional pressure difference at
+&lt;code>nominal_standard_air_volumetric_flow_rate&lt;/code>&lt;/p>&lt;/li>
 &lt;li>&lt;p>If unknown, a value of 75 Pa shall be used&lt;/p>&lt;/li>
 &lt;/ul>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="systemcurve">SystemCurve&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 29%" />
-&lt;col style="width: 14%" />
+&lt;col style="width: 28%" />
+&lt;col style="width: 13%" />
 &lt;col style="width: 14%" />
 &lt;col style="width: 9%" />
-&lt;col style="width: 14%" />
+&lt;col style="width: 13%" />
 &lt;col style="width: 7%" />
 &lt;col style="width: 9%" />
 &lt;/colgroup>
@@ -845,7 +884,8 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
-&lt;td>Volumetric air flow rate through an air distribution system at standard air conditions&lt;/td>
+&lt;td>Volumetric air flow rate through an air distribution system at
+standard air conditions&lt;/td>
 &lt;td>&lt;code>[Numeric][2..]&lt;/code>&lt;/td>
 &lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
@@ -864,14 +904,14 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performancemapcontinuous">PerformanceMapContinuous&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 26%" />
+&lt;col style="width: 25%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
+&lt;col style="width: 7%" />
 &lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
@@ -888,7 +928,8 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
-&lt;td>Data group describing grid variables for continuous fan performance&lt;/td>
+&lt;td>Data group describing grid variables for continuous fan
+performance&lt;/td>
 &lt;td>&lt;code>{GridVariablesContinuous}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
@@ -897,7 +938,8 @@
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
-&lt;td>Data group describing lookup variables for continuous fan performance&lt;/td>
+&lt;td>Data group describing lookup variables for continuous fan
+performance&lt;/td>
 &lt;td>&lt;code>{LookupVariablesContinuous}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
@@ -907,15 +949,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablescontinuous">GridVariablesContinuous&lt;/h3>
-&lt;table>
+&lt;table style="width:97%;">
 &lt;colgroup>
-&lt;col style="width: 26%" />
+&lt;col style="width: 25%" />
 &lt;col style="width: 12%" />
-&lt;col style="width: 13%" />
+&lt;col style="width: 12%" />
 &lt;col style="width: 8%" />
 &lt;col style="width: 12%" />
 &lt;col style="width: 6%" />
-&lt;col style="width: 19%" />
+&lt;col style="width: 18%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -931,7 +973,8 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
-&lt;td>Volumetric air flow rate through fan assembly at standard air conditions&lt;/td>
+&lt;td>Volumetric air flow rate through fan assembly at standard air
+conditions&lt;/td>
 &lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
 &lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
@@ -940,24 +983,27 @@
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>static_pressure_difference&lt;/code>&lt;/td>
-&lt;td>External static pressure across fan assembly at dry coil conditions&lt;/td>
+&lt;td>External static pressure across fan assembly at dry coil
+conditions&lt;/td>
 &lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
 &lt;td>Pa&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Any static pressure deduction (or addition) for wet coil is specified by &lt;code>wet_pressure_difference&lt;/code> in ‘assembly_components’ data group&lt;/td>
+&lt;td>Any static pressure deduction (or addition) for wet coil is
+specified by &lt;code>wet_pressure_difference&lt;/code> in
+‘assembly_components’ data group&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="lookupvariablescontinuous">LookupVariablesContinuous&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 24%" />
-&lt;col style="width: 14%" />
-&lt;col style="width: 19%" />
+&lt;col style="width: 23%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 18%" />
 &lt;col style="width: 9%" />
-&lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
+&lt;col style="width: 13%" />
+&lt;col style="width: 7%" />
 &lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
@@ -988,19 +1034,20 @@
 &lt;td>W&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller&lt;/td>
+&lt;td>Does not include the mechanical efficiency of any mechanical drive
+used to modify rotational speed between the motor and impeller&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performancemapdiscrete">PerformanceMapDiscrete&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 24%" />
+&lt;col style="width: 23%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
+&lt;col style="width: 7%" />
 &lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
@@ -1017,7 +1064,8 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>grid_variables&lt;/code>&lt;/td>
-&lt;td>Data group describing grid variables for discrete fan performance&lt;/td>
+&lt;td>Data group describing grid variables for discrete fan
+performance&lt;/td>
 &lt;td>&lt;code>{GridVariablesDiscrete}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
@@ -1026,7 +1074,8 @@
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>lookup_variables&lt;/code>&lt;/td>
-&lt;td>Data group describing lookup variables for discrete fan performance&lt;/td>
+&lt;td>Data group describing lookup variables for discrete fan
+performance&lt;/td>
 &lt;td>&lt;code>{LookupVariablesDiscrete}&lt;/code>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
@@ -1036,15 +1085,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablesdiscrete">GridVariablesDiscrete&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 22%" />
+&lt;col style="width: 21%" />
 &lt;col style="width: 13%" />
 &lt;col style="width: 13%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 13%" />
+&lt;col style="width: 12%" />
 &lt;col style="width: 7%" />
-&lt;col style="width: 20%" />
+&lt;col style="width: 19%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1060,31 +1109,36 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>speed_number&lt;/code>&lt;/td>
-&lt;td>Number indicating discrete speed of fan impeller in rank order (with 1 being the lowest speed)&lt;/td>
+&lt;td>Number indicating discrete speed of fan impeller in rank order (with
+1 being the lowest speed)&lt;/td>
 &lt;td>&lt;code>[Integer][1..]&lt;/code>&lt;/td>
 &lt;td>-&lt;/td>
 &lt;td>&lt;code>≥0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Data shall be provided for all allowable discrete speeds or settings&lt;/td>
+&lt;td>Data shall be provided for all allowable discrete speeds or
+settings&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>static_pressure_difference&lt;/code>&lt;/td>
-&lt;td>External static pressure across fan assembly at dry coil conditions&lt;/td>
+&lt;td>External static pressure across fan assembly at dry coil
+conditions&lt;/td>
 &lt;td>&lt;code>[Numeric][1..]&lt;/code>&lt;/td>
 &lt;td>Pa&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Any static pressure deduction (or addition) for wet coil is specified by &lt;code>wet_pressure_difference&lt;/code> in ‘assembly_components’ data group&lt;/td>
+&lt;td>Any static pressure deduction (or addition) for wet coil is
+specified by &lt;code>wet_pressure_difference&lt;/code> in
+‘assembly_components’ data group&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="lookupvariablesdiscrete">LookupVariablesDiscrete&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 28%" />
+&lt;col style="width: 27%" />
 &lt;col style="width: 13%" />
-&lt;col style="width: 18%" />
-&lt;col style="width: 9%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 8%" />
 &lt;col style="width: 13%" />
 &lt;col style="width: 7%" />
 &lt;col style="width: 9%" />
@@ -1103,7 +1157,8 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>standard_air_volumetric_flow_rate&lt;/code>&lt;/td>
-&lt;td>Volumetric air flow rate through fan assembly at standard air conditions&lt;/td>
+&lt;td>Volumetric air flow rate through fan assembly at standard air
+conditions&lt;/td>
 &lt;td>&lt;code>[Numeric/Null][1..]&lt;/code>&lt;/td>
 &lt;td>m&lt;sup>3&lt;/sup>/s&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
@@ -1117,7 +1172,8 @@
 &lt;td>W&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller&lt;/td>
+&lt;td>Does not include the mechanical efficiency of any mechanical drive
+used to modify rotational speed between the motor and impeller&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>impeller_rotational_speed&lt;/code>&lt;/td>
@@ -1135,15 +1191,15 @@
 &lt;p>None.&lt;/p>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0005-1">RS0005&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 14%" />
-&lt;col style="width: 20%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 11%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1187,15 +1243,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="description">Description&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 20%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1221,10 +1277,10 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 19%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 18%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 13%" />
 &lt;col style="width: 10%" />
 &lt;col style="width: 15%" />
@@ -1259,7 +1315,8 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the
+representation&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>nominal_voltage&lt;/code>&lt;/td>
@@ -1282,15 +1339,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performance">Performance&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 20%" />
+&lt;col style="width: 19%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 9%" />
 &lt;col style="width: 14%" />
-&lt;col style="width: 8%" />
-&lt;col style="width: 14%" />
+&lt;col style="width: 7%" />
+&lt;col style="width: 13%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1311,7 +1368,8 @@
 &lt;td>W&lt;/td>
 &lt;td>&lt;code>≥0.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Operational limit set to prevent overheating or overcurrent, not the rated name plate power&lt;/td>
+&lt;td>Operational limit set to prevent overheating or overcurrent, not the
+rated name plate power&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>standby_power&lt;/code>&lt;/td>
@@ -1348,22 +1406,25 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;ul>
-&lt;li>&lt;p>If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power&lt;/p>&lt;/li>
-&lt;li>&lt;p>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data&lt;/p>&lt;/li>
+&lt;li>&lt;p>If no performance map is defined, the motor shall be assumed to
+transfer all electric power directly to mechanical shaft power&lt;/p>&lt;/li>
+&lt;li>&lt;p>&lt;strong>&lt;em>Informative note:&lt;/em>&lt;/strong> This field may be
+omitted for motor-driven equipment where motor efficiencies are
+incorporated into their performance data&lt;/p>&lt;/li>
 &lt;/ul>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performancemapmotor">PerformanceMapMotor&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 18%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1398,15 +1459,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablesmotor">GridVariablesMotor&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 22%" />
+&lt;col style="width: 21%" />
 &lt;col style="width: 16%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 10%" />
 &lt;col style="width: 15%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1441,13 +1502,13 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="lookupvariablesmotor">LookupVariablesMotor&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 14%" />
 &lt;col style="width: 15%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 21%" />
+&lt;col style="width: 20%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
+&lt;col style="width: 15%" />
 &lt;col style="width: 8%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
@@ -1470,7 +1531,8 @@
 &lt;td>-&lt;/td>
 &lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
-&lt;td>Defined as the ratio of mechanical shaft power to electrical input power of the motor&lt;/td>
+&lt;td>Defined as the ratio of mechanical shaft power to electrical input
+power of the motor&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>power_factor&lt;/code>&lt;/td>
@@ -1486,7 +1548,7 @@
 &lt;h1 id="rs0006">RS0006&lt;/h1>
 &lt;h2 id="enumerations">Enumerations&lt;/h2>
 &lt;h3 id="coolingmethod">CoolingMethod&lt;/h3>
-&lt;table>
+&lt;table style="width:99%;">
 &lt;colgroup>
 &lt;col style="width: 22%" />
 &lt;col style="width: 37%" />
@@ -1502,38 +1564,46 @@
 &lt;tbody>
 &lt;tr class="odd">
 &lt;td>&lt;code>PASSIVE_COOLED&lt;/code>&lt;/td>
-&lt;td>Drive is cooled using natural air convection within the surrounding environment&lt;/td>
-&lt;td>All drive efficiency losses are assumed to be added as heat to the surrounding environment&lt;/td>
+&lt;td>Drive is cooled using natural air convection within the surrounding
+environment&lt;/td>
+&lt;td>All drive efficiency losses are assumed to be added as heat to the
+surrounding environment&lt;/td>
 &lt;/tr>
 &lt;tr class="even">
 &lt;td>&lt;code>ACTIVE_AIR_COOLED&lt;/code>&lt;/td>
-&lt;td>Drive is cooled using forced air convection within the surrounding environment&lt;/td>
+&lt;td>Drive is cooled using forced air convection within the surrounding
+environment&lt;/td>
 &lt;td>&lt;ul>
-&lt;li>&lt;p>Electrical power required for the active cooling system shall be included in the efficiency of the drive&lt;/p>&lt;/li>
-&lt;li>&lt;p>All drive efficiency losses are assumed to be added as heat to the surrounding environment&lt;/p>&lt;/li>
+&lt;li>&lt;p>Electrical power required for the active cooling system shall be
+included in the efficiency of the drive&lt;/p>&lt;/li>
+&lt;li>&lt;p>All drive efficiency losses are assumed to be added as heat to
+the surrounding environment&lt;/p>&lt;/li>
 &lt;/ul>&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>ACTIVE_LIQUID_COOLED&lt;/code>&lt;/td>
-&lt;td>Drive is cooled using forced liquid convection, transferring heat to the liquid&lt;/td>
+&lt;td>Drive is cooled using forced liquid convection, transferring heat to
+the liquid&lt;/td>
 &lt;td>&lt;ul>
-&lt;li>&lt;p>Any liquid pumping power shall be modeled external to the drive by the application software&lt;/p>&lt;/li>
-&lt;li>&lt;p>All drive efficiency losses are assumed to be added as heat to the liquid stream&lt;/p>&lt;/li>
+&lt;li>&lt;p>Any liquid pumping power shall be modeled external to the drive
+by the application software&lt;/p>&lt;/li>
+&lt;li>&lt;p>All drive efficiency losses are assumed to be added as heat to
+the liquid stream&lt;/p>&lt;/li>
 &lt;/ul>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0006-1">RS0006&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 14%" />
-&lt;col style="width: 20%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 11%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1577,15 +1647,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="description">Description&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 20%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1611,15 +1681,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 18%" />
 &lt;col style="width: 14%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 13%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
 &lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 14%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1649,16 +1719,17 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the
+representation&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performance">Performance&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 16%" />
 &lt;col style="width: 17%" />
-&lt;col style="width: 18%" />
-&lt;col style="width: 18%" />
+&lt;col style="width: 17%" />
 &lt;col style="width: 10%" />
 &lt;col style="width: 15%" />
 &lt;col style="width: 8%" />
@@ -1715,15 +1786,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performancemapdrive">PerformanceMapDrive&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 18%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 20%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1758,14 +1829,14 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablesdrive">GridVariablesDrive&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 18%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 10%" />
 &lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
 &lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
@@ -1801,14 +1872,14 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="lookupvariablesdrive">LookupVariablesDrive&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 13%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 21%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 20%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
 &lt;col style="width: 11%" />
 &lt;/colgroup>
 &lt;thead>
@@ -1831,8 +1902,10 @@
 &lt;td>&lt;code>≥0.0, ≤1.0&lt;/code>&lt;/td>
 &lt;td>&lt;span class="math inline">\(✓\)&lt;/span>&lt;/td>
 &lt;td>&lt;ul>
-&lt;li>&lt;p>Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)&lt;/p>&lt;/li>
-&lt;li>&lt;p>Input power shall include any power required to provide active air cooling for the drive&lt;/p>&lt;/li>
+&lt;li>&lt;p>Defined as the ratio of electrical output power (to the motor) to
+electrical input power (to the drive)&lt;/p>&lt;/li>
+&lt;li>&lt;p>Input power shall include any power required to provide active
+air cooling for the drive&lt;/p>&lt;/li>
 &lt;/ul>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -1883,15 +1956,15 @@
 &lt;/table>
 &lt;h2 id="data-groups">Data Groups&lt;/h2>
 &lt;h3 id="rs0007-1">RS0007&lt;/h3>
-&lt;table style="width:100%;">
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 14%" />
-&lt;col style="width: 20%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 11%" />
+&lt;col style="width: 19%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1935,15 +2008,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="description">Description&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
+&lt;col style="width: 19%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 20%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 21%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -1969,15 +2042,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="productinformation">ProductInformation&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 15%" />
-&lt;col style="width: 18%" />
 &lt;col style="width: 14%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 13%" />
 &lt;col style="width: 10%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
 &lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 14%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -2007,7 +2080,8 @@
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
 &lt;td>&lt;/td>
-&lt;td>Pattern shall match all model numbers that can be represented by the representation&lt;/td>
+&lt;td>Pattern shall match all model numbers that can be represented by the
+representation&lt;/td>
 &lt;/tr>
 &lt;tr class="odd">
 &lt;td>&lt;code>drive_type&lt;/code>&lt;/td>
@@ -2021,15 +2095,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performance">Performance&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 17%" />
+&lt;col style="width: 16%" />
 &lt;col style="width: 19%" />
-&lt;col style="width: 18%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 17%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -2064,15 +2138,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="performancemapmechdrive">PerformanceMapMechDrive&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
-&lt;col style="width: 17%" />
-&lt;col style="width: 15%" />
-&lt;col style="width: 24%" />
-&lt;col style="width: 10%" />
-&lt;col style="width: 15%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 14%" />
+&lt;col style="width: 23%" />
+&lt;col style="width: 9%" />
+&lt;col style="width: 14%" />
 &lt;col style="width: 8%" />
-&lt;col style="width: 10%" />
+&lt;col style="width: 9%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -2107,15 +2181,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="gridvariablesmechdrive">GridVariablesMechDrive&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 15%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 17%" />
-&lt;col style="width: 11%" />
 &lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 11%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 16%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">
@@ -2141,15 +2215,15 @@
 &lt;/tbody>
 &lt;/table>
 &lt;h3 id="lookupvariablesmechdrive">LookupVariablesMechDrive&lt;/h3>
-&lt;table>
+&lt;table style="width:96%;">
 &lt;colgroup>
 &lt;col style="width: 13%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 22%" />
-&lt;col style="width: 11%" />
-&lt;col style="width: 16%" />
-&lt;col style="width: 9%" />
-&lt;col style="width: 11%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 21%" />
+&lt;col style="width: 10%" />
+&lt;col style="width: 15%" />
+&lt;col style="width: 8%" />
+&lt;col style="width: 10%" />
 &lt;/colgroup>
 &lt;thead>
 &lt;tr class="header">

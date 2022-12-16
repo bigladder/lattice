@@ -1,0 +1,481 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Mechanical Drive",
+    "description": "Schema for ASHRAE 205 annex RS0007: Mechanical Drive",
+    "definitions": {
+        "DriveType": {
+            "type": "string",
+            "enum": [
+                "V_BELT",
+                "COGGED_BELT",
+                "SYNCHRONOUS_BELT",
+                "GEAR",
+                "CHAIN"
+            ],
+            "enum_text": [
+                "V-Belt",
+                "Cogged Belt",
+                "Synchronous Belt",
+                "Gear",
+                "Chain"
+            ],
+            "descriptions": [
+                "V-Belt",
+                "Cogged Belt",
+                "Synchronous Belt",
+                "Gear",
+                "Chain"
+            ]
+        },
+        "RS0007": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata data group",
+                    "type": "object",
+                    "properties": {
+                        "data_model": {
+                            "description": "Data model name",
+                            "type": "string",
+                            "notes": "Identifies the data model where the schema is defined"
+                        },
+                        "schema": {
+                            "description": "Schema name or identifier",
+                            "notes": "Identifies the schema used to define the data content"
+                        },
+                        "schema_version": {
+                            "description": "Version of the root schema this data complies with",
+                            "type": "string",
+                            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                        },
+                        "description": {
+                            "description": "Description of data content (suitable for display)",
+                            "type": "string"
+                        },
+                        "id": {
+                            "description": "Unique data set identifier",
+                            "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                            "type": "string",
+                            "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                        },
+                        "data_timestamp": {
+                            "description": "Date of data publication",
+                            "notes": "Date/time of publication of this data.",
+                            "type": "string",
+                            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                        },
+                        "data_version": {
+                            "description": "Integer version identifier for the data",
+                            "type": "integer",
+                            "minimum": 1,
+                            "notes": "Used by *data publisher* to track revisions of the data. `data_version` shall be incremented for each data revision."
+                        },
+                        "data_source": {
+                            "description": "Source(s) of the data",
+                            "type": "string"
+                        },
+                        "disclaimer": {
+                            "description": "Characterization of accuracy, limitations, and applicability of this data",
+                            "type": "string"
+                        },
+                        "notes": {
+                            "description": "Additional Information",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "data_model",
+                        "schema",
+                        "schema_version",
+                        "description",
+                        "id",
+                        "data_timestamp",
+                        "data_version"
+                    ],
+                    "additionalProperties": false
+                },
+                "description": {
+                    "description": "Data group describing product and rating information",
+                    "type": "object",
+                    "properties": {
+                        "product_information": {
+                            "description": "Data group describing product information",
+                            "type": "object",
+                            "properties": {
+                                "manufacturer": {
+                                    "description": "Manufacturer name",
+                                    "type": "string"
+                                },
+                                "model_number": {
+                                    "description": "Model number",
+                                    "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                                    "type": "string",
+                                    "regex": true
+                                },
+                                "drive_type": {
+                                    "description": "Type of mechanical drive",
+                                    "type": "string",
+                                    "enum": [
+                                        "V_BELT",
+                                        "COGGED_BELT",
+                                        "SYNCHRONOUS_BELT",
+                                        "GEAR",
+                                        "CHAIN"
+                                    ],
+                                    "enum_text": [
+                                        "V-Belt",
+                                        "Cogged Belt",
+                                        "Synchronous Belt",
+                                        "Gear",
+                                        "Chain"
+                                    ],
+                                    "descriptions": [
+                                        "V-Belt",
+                                        "Cogged Belt",
+                                        "Synchronous Belt",
+                                        "Gear",
+                                        "Chain"
+                                    ]
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "performance": {
+                    "description": "Data group containing performance information",
+                    "type": "object",
+                    "properties": {
+                        "speed_ratio": {
+                            "description": "Ratio of input shaft speed to output shaft speed",
+                            "type": "number",
+                            "exclusiveMinimum": 0.0,
+                            "units": "-"
+                        },
+                        "performance_map": {
+                            "description": "Data group describing drive performance when operating"
+                        }
+                    },
+                    "required": [
+                        "speed_ratio",
+                        "performance_map"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "metadata",
+                "performance"
+            ],
+            "additionalProperties": false
+        },
+        "Description": {
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "type": "object",
+                    "properties": {
+                        "manufacturer": {
+                            "description": "Manufacturer name",
+                            "type": "string"
+                        },
+                        "model_number": {
+                            "description": "Model number",
+                            "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                            "type": "string",
+                            "regex": true
+                        },
+                        "drive_type": {
+                            "description": "Type of mechanical drive",
+                            "type": "string",
+                            "enum": [
+                                "V_BELT",
+                                "COGGED_BELT",
+                                "SYNCHRONOUS_BELT",
+                                "GEAR",
+                                "CHAIN"
+                            ],
+                            "enum_text": [
+                                "V-Belt",
+                                "Cogged Belt",
+                                "Synchronous Belt",
+                                "Gear",
+                                "Chain"
+                            ],
+                            "descriptions": [
+                                "V-Belt",
+                                "Cogged Belt",
+                                "Synchronous Belt",
+                                "Gear",
+                                "Chain"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "ProductInformation": {
+            "type": "object",
+            "properties": {
+                "manufacturer": {
+                    "description": "Manufacturer name",
+                    "type": "string"
+                },
+                "model_number": {
+                    "description": "Model number",
+                    "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                    "type": "string",
+                    "regex": true
+                },
+                "drive_type": {
+                    "description": "Type of mechanical drive",
+                    "type": "string",
+                    "enum": [
+                        "V_BELT",
+                        "COGGED_BELT",
+                        "SYNCHRONOUS_BELT",
+                        "GEAR",
+                        "CHAIN"
+                    ],
+                    "enum_text": [
+                        "V-Belt",
+                        "Cogged Belt",
+                        "Synchronous Belt",
+                        "Gear",
+                        "Chain"
+                    ],
+                    "descriptions": [
+                        "V-Belt",
+                        "Cogged Belt",
+                        "Synchronous Belt",
+                        "Gear",
+                        "Chain"
+                    ]
+                }
+            },
+            "additionalProperties": false
+        },
+        "Performance": {
+            "type": "object",
+            "properties": {
+                "speed_ratio": {
+                    "description": "Ratio of input shaft speed to output shaft speed",
+                    "type": "number",
+                    "exclusiveMinimum": 0.0,
+                    "units": "-"
+                },
+                "performance_map": {
+                    "description": "Data group describing drive performance when operating"
+                }
+            },
+            "required": [
+                "speed_ratio",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMapMechDrive": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for drive performance"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for drive performance"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariablesMechDrive": {
+            "type": "object",
+            "properties": {
+                "output_power": {
+                    "description": "Output shaft power",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "minimum": 0.0
+                    },
+                    "units": "W"
+                }
+            },
+            "required": [
+                "output_power"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariablesMechDrive": {
+            "type": "object",
+            "properties": {
+                "efficiency": {
+                    "description": "Efficiency of drive",
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                    },
+                    "units": "-",
+                    "notes": "Defined as the ratio of output shaft power to input shaft power"
+                }
+            },
+            "required": [
+                "efficiency"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+        "metadata": {
+            "description": "Metadata data group",
+            "type": "object",
+            "properties": {
+                "data_model": {
+                    "description": "Data model name",
+                    "type": "string",
+                    "notes": "Identifies the data model where the schema is defined"
+                },
+                "schema": {
+                    "description": "Schema name or identifier",
+                    "notes": "Identifies the schema used to define the data content"
+                },
+                "schema_version": {
+                    "description": "Version of the root schema this data complies with",
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                },
+                "description": {
+                    "description": "Description of data content (suitable for display)",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique data set identifier",
+                    "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                    "type": "string",
+                    "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                },
+                "data_timestamp": {
+                    "description": "Date of data publication",
+                    "notes": "Date/time of publication of this data.",
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                },
+                "data_version": {
+                    "description": "Integer version identifier for the data",
+                    "type": "integer",
+                    "minimum": 1,
+                    "notes": "Used by *data publisher* to track revisions of the data. `data_version` shall be incremented for each data revision."
+                },
+                "data_source": {
+                    "description": "Source(s) of the data",
+                    "type": "string"
+                },
+                "disclaimer": {
+                    "description": "Characterization of accuracy, limitations, and applicability of this data",
+                    "type": "string"
+                },
+                "notes": {
+                    "description": "Additional Information",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "data_model",
+                "schema",
+                "schema_version",
+                "description",
+                "id",
+                "data_timestamp",
+                "data_version"
+            ],
+            "additionalProperties": false
+        },
+        "description": {
+            "description": "Data group describing product and rating information",
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "type": "object",
+                    "properties": {
+                        "manufacturer": {
+                            "description": "Manufacturer name",
+                            "type": "string"
+                        },
+                        "model_number": {
+                            "description": "Model number",
+                            "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                            "type": "string",
+                            "regex": true
+                        },
+                        "drive_type": {
+                            "description": "Type of mechanical drive",
+                            "type": "string",
+                            "enum": [
+                                "V_BELT",
+                                "COGGED_BELT",
+                                "SYNCHRONOUS_BELT",
+                                "GEAR",
+                                "CHAIN"
+                            ],
+                            "enum_text": [
+                                "V-Belt",
+                                "Cogged Belt",
+                                "Synchronous Belt",
+                                "Gear",
+                                "Chain"
+                            ],
+                            "descriptions": [
+                                "V-Belt",
+                                "Cogged Belt",
+                                "Synchronous Belt",
+                                "Gear",
+                                "Chain"
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "performance": {
+            "description": "Data group containing performance information",
+            "type": "object",
+            "properties": {
+                "speed_ratio": {
+                    "description": "Ratio of input shaft speed to output shaft speed",
+                    "type": "number",
+                    "exclusiveMinimum": 0.0,
+                    "units": "-"
+                },
+                "performance_map": {
+                    "description": "Data group describing drive performance when operating"
+                }
+            },
+            "required": [
+                "speed_ratio",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "metadata",
+        "performance"
+    ],
+    "additionalProperties": false
+}

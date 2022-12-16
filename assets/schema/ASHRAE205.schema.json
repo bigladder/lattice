@@ -1,0 +1,256 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "ASHRAE 205",
+    "description": "Base schema for ASHRAE 205 representations",
+    "definitions": {
+        "SchemaType": {
+            "type": "string",
+            "enum": [
+                "RS0001",
+                "RS0002",
+                "RS0003",
+                "RS0004",
+                "RS0005",
+                "RS0006",
+                "RS0007"
+            ],
+            "descriptions": [
+                "Liquid-Cooled Chiller",
+                "Unitary Cooling Air-Conditioning Equipment",
+                "Fan Assembly",
+                "Air-to-Air Direct Expansion Refrigerant Coil System",
+                "Motor",
+                "Electronic Motor Drive",
+                "Mechanical Drive"
+            ]
+        },
+        "CompressorType": {
+            "type": "string",
+            "enum": [
+                "RECIPROCATING",
+                "SCREW",
+                "CENTRIFUGAL",
+                "ROTARY",
+                "SCROLL"
+            ],
+            "enum_text": [
+                "Reciprocating",
+                "Screw",
+                "Centrifugal",
+                "Rotary",
+                "Scroll"
+            ],
+            "descriptions": [
+                "Reciprocating compressor",
+                "Screw compressor",
+                "Centrifugal compressor",
+                "Rotary compressor",
+                "Scroll compressor"
+            ]
+        },
+        "CompressorSpeedControlType": {
+            "type": "string",
+            "enum": [
+                "DISCRETE",
+                "CONTINUOUS"
+            ],
+            "enum_text": [
+                "Discrete",
+                "Continuous"
+            ],
+            "descriptions": [
+                "Compressor loading is controlled by cycling between one or more discrete stages",
+                "Compressor loading is controlled by continuously varying the speed of the compressor"
+            ]
+        },
+        "CondenserType": {
+            "type": "string",
+            "enum": [
+                "AIR",
+                "LIQUID",
+                "EVAPORATIVE"
+            ],
+            "enum_text": [
+                "Air",
+                "Liquid",
+                "Evaporative"
+            ],
+            "descriptions": [
+                "Air-cooled condenser",
+                "Liquid-cooled condenser",
+                "Evaporative condenser"
+            ]
+        },
+        "LiquidConstituent": {
+            "type": "string",
+            "enum": [
+                "WATER",
+                "PROPYLENE_GLYCOL",
+                "ETHYLENE_GLYCOL",
+                "SODIUM_CHLORIDE",
+                "CALCIUM_CHLORIDE",
+                "ETHANOL",
+                "METHANOL"
+            ],
+            "enum_text": [
+                "Water",
+                "Propylene Glycol",
+                "Ethylene Glycol",
+                "Sodium Chloride",
+                "Calcium Chloride",
+                "Ethanol",
+                "Methanol"
+            ],
+            "descriptions": [
+                "Water",
+                "Propylene glycol",
+                "Ethylene glycol",
+                "Sodium chloride",
+                "Calcium chloride",
+                "Ethanol",
+                "Methanol"
+            ]
+        },
+        "ConcentrationType": {
+            "type": "string",
+            "enum": [
+                "BY_VOLUME",
+                "BY_MASS"
+            ],
+            "enum_text": [
+                "By Volume",
+                "By Mass"
+            ],
+            "descriptions": [
+                "Concentration is defined as a fraction of total liquid mixture volume",
+                "Concentration is defined as a fraction of total liquid mixture mass"
+            ]
+        },
+        "LiquidMixture": {
+            "type": "object",
+            "properties": {
+                "liquid_components": {
+                    "description": "An array of all liquid components within the liquid mixture",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "liquid_constituent": {
+                                "description": "Substance of this component of the mixture",
+                                "type": "string",
+                                "enum": [
+                                    "WATER",
+                                    "PROPYLENE_GLYCOL",
+                                    "ETHYLENE_GLYCOL",
+                                    "SODIUM_CHLORIDE",
+                                    "CALCIUM_CHLORIDE",
+                                    "ETHANOL",
+                                    "METHANOL"
+                                ],
+                                "enum_text": [
+                                    "Water",
+                                    "Propylene Glycol",
+                                    "Ethylene Glycol",
+                                    "Sodium Chloride",
+                                    "Calcium Chloride",
+                                    "Ethanol",
+                                    "Methanol"
+                                ],
+                                "descriptions": [
+                                    "Water",
+                                    "Propylene glycol",
+                                    "Ethylene glycol",
+                                    "Sodium chloride",
+                                    "Calcium chloride",
+                                    "Ethanol",
+                                    "Methanol"
+                                ]
+                            },
+                            "concentration": {
+                                "description": "Concentration of this component of the mixture",
+                                "type": "number",
+                                "minimum": 0.0,
+                                "maximum": 1.0,
+                                "notes": "If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)"
+                            }
+                        },
+                        "required": [
+                            "liquid_constituent"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "notes": "Array may contain a single component"
+                },
+                "concentration_type": {
+                    "description": "Defines whether concentration is defined on a volume or mass basis",
+                    "type": "string",
+                    "enum": [
+                        "BY_VOLUME",
+                        "BY_MASS"
+                    ],
+                    "enum_text": [
+                        "By Volume",
+                        "By Mass"
+                    ],
+                    "descriptions": [
+                        "Concentration is defined as a fraction of total liquid mixture volume",
+                        "Concentration is defined as a fraction of total liquid mixture mass"
+                    ]
+                }
+            },
+            "required": [
+                "liquid_components",
+                "concentration_type"
+            ],
+            "additionalProperties": false
+        },
+        "LiquidComponent": {
+            "type": "object",
+            "properties": {
+                "liquid_constituent": {
+                    "description": "Substance of this component of the mixture",
+                    "type": "string",
+                    "enum": [
+                        "WATER",
+                        "PROPYLENE_GLYCOL",
+                        "ETHYLENE_GLYCOL",
+                        "SODIUM_CHLORIDE",
+                        "CALCIUM_CHLORIDE",
+                        "ETHANOL",
+                        "METHANOL"
+                    ],
+                    "enum_text": [
+                        "Water",
+                        "Propylene Glycol",
+                        "Ethylene Glycol",
+                        "Sodium Chloride",
+                        "Calcium Chloride",
+                        "Ethanol",
+                        "Methanol"
+                    ],
+                    "descriptions": [
+                        "Water",
+                        "Propylene glycol",
+                        "Ethylene glycol",
+                        "Sodium chloride",
+                        "Calcium chloride",
+                        "Ethanol",
+                        "Methanol"
+                    ]
+                },
+                "concentration": {
+                    "description": "Concentration of this component of the mixture",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "notes": "If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)"
+                }
+            },
+            "required": [
+                "liquid_constituent"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.2.0"
+}

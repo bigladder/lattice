@@ -1,0 +1,513 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Electronic Motor Drive",
+    "description": "Schema for ASHRAE 205 annex RS0006: Electronic Motor Drive",
+    "definitions": {
+        "CoolingMethod": {
+            "type": "string",
+            "enum": [
+                "PASSIVE_COOLED",
+                "ACTIVE_AIR_COOLED",
+                "ACTIVE_LIQUID_COOLED"
+            ],
+            "enum_text": [
+                "Passive Cooled",
+                "Active Air Cooled",
+                "Active Liquid Cooled"
+            ],
+            "descriptions": [
+                "Drive is cooled using natural air convection within the surrounding environment",
+                "Drive is cooled using forced air convection within the surrounding environment",
+                "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+            ],
+            "notes": [
+                "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                [
+                    "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                    "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                ],
+                [
+                    "Any liquid pumping power shall be modeled external to the drive by the application software",
+                    "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                ]
+            ]
+        },
+        "RS0006": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata data group",
+                    "type": "object",
+                    "properties": {
+                        "data_model": {
+                            "description": "Data model name",
+                            "type": "string",
+                            "notes": "Identifies the data model where the schema is defined"
+                        },
+                        "schema": {
+                            "description": "Schema name or identifier",
+                            "notes": "Identifies the schema used to define the data content"
+                        },
+                        "schema_version": {
+                            "description": "Version of the root schema this data complies with",
+                            "type": "string",
+                            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                        },
+                        "description": {
+                            "description": "Description of data content (suitable for display)",
+                            "type": "string"
+                        },
+                        "id": {
+                            "description": "Unique data set identifier",
+                            "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                            "type": "string",
+                            "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                        },
+                        "data_timestamp": {
+                            "description": "Date of data publication",
+                            "notes": "Date/time of publication of this data.",
+                            "type": "string",
+                            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                        },
+                        "data_version": {
+                            "description": "Integer version identifier for the data",
+                            "type": "integer",
+                            "minimum": 1,
+                            "notes": "Used by *data publisher* to track revisions of the data. `data_version` shall be incremented for each data revision."
+                        },
+                        "data_source": {
+                            "description": "Source(s) of the data",
+                            "type": "string"
+                        },
+                        "disclaimer": {
+                            "description": "Characterization of accuracy, limitations, and applicability of this data",
+                            "type": "string"
+                        },
+                        "notes": {
+                            "description": "Additional Information",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "data_model",
+                        "schema",
+                        "schema_version",
+                        "description",
+                        "id",
+                        "data_timestamp",
+                        "data_version"
+                    ],
+                    "additionalProperties": false
+                },
+                "description": {
+                    "description": "Data group describing product and rating information",
+                    "type": "object",
+                    "properties": {
+                        "product_information": {
+                            "description": "Data group describing product information",
+                            "type": "object",
+                            "properties": {
+                                "manufacturer": {
+                                    "description": "Manufacturer name",
+                                    "type": "string"
+                                },
+                                "model_number": {
+                                    "description": "Model number",
+                                    "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                                    "type": "string",
+                                    "regex": true
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "performance": {
+                    "description": "Data group containing performance information",
+                    "type": "object",
+                    "properties": {
+                        "maximum_power": {
+                            "description": "Maximum power draw of the drive",
+                            "type": "number",
+                            "minimum": 0.0,
+                            "units": "W"
+                        },
+                        "standby_power": {
+                            "description": "Power draw when the motor is not operating",
+                            "type": "number",
+                            "minimum": 0.0,
+                            "units": "W"
+                        },
+                        "cooling_method": {
+                            "description": "Method used to cool the drive",
+                            "type": "string",
+                            "enum": [
+                                "PASSIVE_COOLED",
+                                "ACTIVE_AIR_COOLED",
+                                "ACTIVE_LIQUID_COOLED"
+                            ],
+                            "enum_text": [
+                                "Passive Cooled",
+                                "Active Air Cooled",
+                                "Active Liquid Cooled"
+                            ],
+                            "descriptions": [
+                                "Drive is cooled using natural air convection within the surrounding environment",
+                                "Drive is cooled using forced air convection within the surrounding environment",
+                                "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+                            ],
+                            "notes": [
+                                "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                                [
+                                    "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                                    "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                                ],
+                                [
+                                    "Any liquid pumping power shall be modeled external to the drive by the application software",
+                                    "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                                ]
+                            ]
+                        },
+                        "performance_map": {
+                            "description": "Data group describing drive performance when operating"
+                        }
+                    },
+                    "required": [
+                        "maximum_power",
+                        "standby_power",
+                        "cooling_method",
+                        "performance_map"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "metadata",
+                "performance"
+            ],
+            "additionalProperties": false
+        },
+        "Description": {
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "type": "object",
+                    "properties": {
+                        "manufacturer": {
+                            "description": "Manufacturer name",
+                            "type": "string"
+                        },
+                        "model_number": {
+                            "description": "Model number",
+                            "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                            "type": "string",
+                            "regex": true
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "ProductInformation": {
+            "type": "object",
+            "properties": {
+                "manufacturer": {
+                    "description": "Manufacturer name",
+                    "type": "string"
+                },
+                "model_number": {
+                    "description": "Model number",
+                    "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                    "type": "string",
+                    "regex": true
+                }
+            },
+            "additionalProperties": false
+        },
+        "Performance": {
+            "type": "object",
+            "properties": {
+                "maximum_power": {
+                    "description": "Maximum power draw of the drive",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "units": "W"
+                },
+                "standby_power": {
+                    "description": "Power draw when the motor is not operating",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "units": "W"
+                },
+                "cooling_method": {
+                    "description": "Method used to cool the drive",
+                    "type": "string",
+                    "enum": [
+                        "PASSIVE_COOLED",
+                        "ACTIVE_AIR_COOLED",
+                        "ACTIVE_LIQUID_COOLED"
+                    ],
+                    "enum_text": [
+                        "Passive Cooled",
+                        "Active Air Cooled",
+                        "Active Liquid Cooled"
+                    ],
+                    "descriptions": [
+                        "Drive is cooled using natural air convection within the surrounding environment",
+                        "Drive is cooled using forced air convection within the surrounding environment",
+                        "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+                    ],
+                    "notes": [
+                        "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                        [
+                            "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                            "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                        ],
+                        [
+                            "Any liquid pumping power shall be modeled external to the drive by the application software",
+                            "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                        ]
+                    ]
+                },
+                "performance_map": {
+                    "description": "Data group describing drive performance when operating"
+                }
+            },
+            "required": [
+                "maximum_power",
+                "standby_power",
+                "cooling_method",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMapDrive": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for drive performance"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for drive performance"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariablesDrive": {
+            "type": "object",
+            "properties": {
+                "output_power": {
+                    "description": "Power delivered to the motor",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "minimum": 0.0
+                    },
+                    "units": "W"
+                },
+                "output_frequency": {
+                    "description": "Frequency delivered to the motor",
+                    "type": "array",
+                    "items": {
+                        "type": "number",
+                        "minimum": 0.0
+                    },
+                    "units": "Hz"
+                }
+            },
+            "required": [
+                "output_power",
+                "output_frequency"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariablesDrive": {
+            "type": "object",
+            "properties": {
+                "efficiency": {
+                    "description": "Efficiency of drive",
+                    "type": "array",
+                    "items": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0.0,
+                        "maximum": 1.0
+                    },
+                    "units": "-",
+                    "notes": [
+                        "Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)",
+                        "Input power shall include any power required to provide active air cooling for the drive"
+                    ]
+                }
+            },
+            "required": [
+                "efficiency"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.2.0",
+    "type": "object",
+    "properties": {
+        "metadata": {
+            "description": "Metadata data group",
+            "type": "object",
+            "properties": {
+                "data_model": {
+                    "description": "Data model name",
+                    "type": "string",
+                    "notes": "Identifies the data model where the schema is defined"
+                },
+                "schema": {
+                    "description": "Schema name or identifier",
+                    "notes": "Identifies the schema used to define the data content"
+                },
+                "schema_version": {
+                    "description": "Version of the root schema this data complies with",
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                },
+                "description": {
+                    "description": "Description of data content (suitable for display)",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "Unique data set identifier",
+                    "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                    "type": "string",
+                    "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                },
+                "data_timestamp": {
+                    "description": "Date of data publication",
+                    "notes": "Date/time of publication of this data.",
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                },
+                "data_version": {
+                    "description": "Integer version identifier for the data",
+                    "type": "integer",
+                    "minimum": 1,
+                    "notes": "Used by *data publisher* to track revisions of the data. `data_version` shall be incremented for each data revision."
+                },
+                "data_source": {
+                    "description": "Source(s) of the data",
+                    "type": "string"
+                },
+                "disclaimer": {
+                    "description": "Characterization of accuracy, limitations, and applicability of this data",
+                    "type": "string"
+                },
+                "notes": {
+                    "description": "Additional Information",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "data_model",
+                "schema",
+                "schema_version",
+                "description",
+                "id",
+                "data_timestamp",
+                "data_version"
+            ],
+            "additionalProperties": false
+        },
+        "description": {
+            "description": "Data group describing product and rating information",
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "type": "object",
+                    "properties": {
+                        "manufacturer": {
+                            "description": "Manufacturer name",
+                            "type": "string"
+                        },
+                        "model_number": {
+                            "description": "Model number",
+                            "notes": "Pattern shall match all model numbers that can be represented by the representation",
+                            "type": "string",
+                            "regex": true
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "performance": {
+            "description": "Data group containing performance information",
+            "type": "object",
+            "properties": {
+                "maximum_power": {
+                    "description": "Maximum power draw of the drive",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "units": "W"
+                },
+                "standby_power": {
+                    "description": "Power draw when the motor is not operating",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "units": "W"
+                },
+                "cooling_method": {
+                    "description": "Method used to cool the drive",
+                    "type": "string",
+                    "enum": [
+                        "PASSIVE_COOLED",
+                        "ACTIVE_AIR_COOLED",
+                        "ACTIVE_LIQUID_COOLED"
+                    ],
+                    "enum_text": [
+                        "Passive Cooled",
+                        "Active Air Cooled",
+                        "Active Liquid Cooled"
+                    ],
+                    "descriptions": [
+                        "Drive is cooled using natural air convection within the surrounding environment",
+                        "Drive is cooled using forced air convection within the surrounding environment",
+                        "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+                    ],
+                    "notes": [
+                        "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                        [
+                            "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                            "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                        ],
+                        [
+                            "Any liquid pumping power shall be modeled external to the drive by the application software",
+                            "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                        ]
+                    ]
+                },
+                "performance_map": {
+                    "description": "Data group describing drive performance when operating"
+                }
+            },
+            "required": [
+                "maximum_power",
+                "standby_power",
+                "cooling_method",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "metadata",
+        "performance"
+    ],
+    "additionalProperties": false
+}
