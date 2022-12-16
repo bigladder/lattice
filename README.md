@@ -1,6 +1,8 @@
+[![Release](https://img.shields.io/pypi/v/lattice.svg)](https://pypi.python.org/pypi/lattice)
+
 [![Build and Test](https://github.com/bigladder/lattice/actions/workflows/build-and-test.yaml/badge.svg)](https://github.com/bigladder/lattice/actions/workflows/build-and-test.yaml)
 
-[![Web Documentation](https://github.com/bigladder/lattice/actions/workflows/build-web.yaml/badge.svg)](https://github.com/bigladder/lattice/actions/workflows/build-web.yaml)
+[![Web Documentation](https://github.com/bigladder/lattice/actions/workflows/release.yaml/badge.svg)](https://github.com/bigladder/lattice/actions/workflows/release.yaml)
 
 Lattice
 ===========
