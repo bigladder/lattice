@@ -15,7 +15,7 @@ pyyaml = "*"
 cbor2 = "*"
 Jinja2 = "*"
 stringcase = "1.2.0"
-GitPython = "3.1.18"
+pygit2 = "^1.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"

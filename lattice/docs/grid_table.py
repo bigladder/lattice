@@ -259,7 +259,7 @@ def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blan
     return table
 
 
-def write_table(dat, columns, caption, preferred_sizes=None):
+def write_table(dat, columns, caption=None, preferred_sizes=None):
     """
     - dat: (Dict String (Array String)), dict of arrays of data for the table
     - columns: (Array String), the column names in desired order
