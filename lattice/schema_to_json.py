@@ -141,9 +141,20 @@ class DataGroup:
                     target_property_entry['maxItems'] = int(mnmx.group('min'))
             # 3. 'items' entry
             target_property_entry['items'] = dict()
-            self._get_simple_type(m[0], target_property_entry['items'])
-            self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
-            self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
+            inner_type = m[0]
+            if inner_type in ['ID', 'Reference']:
+                try:
+                    m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
+                    if m:
+                        target_property_entry['items']['scopedType'] = inner_type
+                        target_property_entry['items']['scope'] = m.group(1)
+                        self._get_simple_type(inner_type, target_property_entry['items'])
+                except KeyError:
+                    raise RuntimeError(f'"Constraints" key does not exist for Data Element "{entry_name}".') from None
+            else:
+                self._get_simple_type(m[0], target_property_entry['items'])
+                self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
+                self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
         else:
             # If the type is oneOf a set
             m = re.match(DataGroup.alternative_type, parent_dict['Data Type'])
@@ -458,38 +469,63 @@ def generate_json_schema(source_schema_input_path, json_schema_output_path):
         dump(main_schema_instance, json_schema_output_path)
 
 # -------------------------------------------------------------------------------------------------
-def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None):
-    if not lineage:
-        lineage = list()
+# def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None):
+#     if lineage is None:
+#         lineage = list()
+#     for key in schema:
+#         if key == 'scopedType' and schema[key] == scope_key:
+#             scopes_dict['.'.join(lineage)] = schema['scope'] # key is a dot-separated path
+#         elif isinstance(schema[key], dict):
+#             get_scope_locations(schema[key], scopes_dict, scope_key, lineage + [key])
+#         elif isinstance(schema[key], list):
+#             for entry in [item for item in schema[key] if isinstance(item, dict)]:
+#                 get_scope_locations(entry, scopes_dict, scope_key, lineage + [key])
+
+def get_scope_locations(schema: dict, scopes_dict: dict, lineage: list=None):
+    if lineage is None:
+        lineage = []
+    if scopes_dict is None:
+        scopes_dict = {}
     for key in schema:
-        if key == 'scopedType' and schema[key] == scope_key:
-            scopes_dict['.'.join(lineage)] = schema['scope'] # key is a dot-separated path
-        elif isinstance(schema[key], dict):
-            get_scope_locations(schema[key], scopes_dict, scope_key, lineage + [key])
+        if key == "definitions" and len(lineage) == 0:
+            continue
+        new_lineage = lineage + [key]
+        if isinstance(schema[key], dict):
+            if "scopedType" in schema[key]:
+                if schema[key]["scope"] not in scopes_dict:
+                    scopes_dict[schema[key]["scope"]] = {"ID": [], "Reference": []}
+                scopes_dict[schema[key]["scope"]][schema[key]["scopedType"]].append(new_lineage)
+            get_scope_locations(schema[key], scopes_dict, new_lineage)
         elif isinstance(schema[key], list):
             for entry in [item for item in schema[key] if isinstance(item, dict)]:
-                get_scope_locations(entry, scopes_dict, scope_key, lineage + [key])
+                get_scope_locations(entry, scopes_dict, new_lineage)
+
 
 # -------------------------------------------------------------------------------------------------
 def get_reference_value(data_dict: dict, lineage: list) -> str:
     test_reference = data_dict
+    depth = 1
     for adr in lineage:
         if test_reference.get(adr):
             if isinstance(test_reference[adr], list):
                 for item in test_reference[adr]:
-                    return get_reference_value(item, lineage[1:])
+                    return get_reference_value(item, lineage[depth:])
             else:
                 test_reference = test_reference[adr]
+                depth += 1
         else:
+            print(test_reference)
             return None
     return test_reference
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_references(input_file, input_schema):
-    id_scopes = dict()
-    reference_scopes = dict()
-    get_scope_locations(load(input_schema), scope_key='ID', scopes_dict=id_scopes)
-    get_scope_locations(load(input_schema), scope_key='Reference', scopes_dict=reference_scopes)
+    # id_scopes = dict()
+    # reference_scopes = dict()
+    # get_scope_locations(load(input_schema), scope_key='ID', scopes_dict=id_scopes)
+    # get_scope_locations(load(input_schema), scope_key='Reference', scopes_dict=reference_scopes)
+    scopes_dict = {}
+    get_scope_locations(load(input_schema), scopes_dict)
     data = load(input_file)
     ids = list()
     for id_loc in [id for id in id_scopes if id.startswith('properties')]:
@@ -508,4 +544,4 @@ def validate_file(input_file, input_schema):
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_file(input_file, input_schema):
-    postvalidate_references(input_file, input_schema) 
+    postvalidate_references(input_file, input_schema)
