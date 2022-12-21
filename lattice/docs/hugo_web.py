@@ -190,14 +190,21 @@ class HugoWeb:
     }
     schema_assets_directory = os.path.join(self.static_assets_directory_path,"schema")
     make_dir(schema_assets_directory)
+    references = {}
+    reference_counter = 1
+    reference_string = "\n"
     for schema in self.lattice.schemas:
       content = load(schema.json_schema_path)
       output_path = os.path.join(schema_assets_directory, get_file_basename(schema.json_schema_path))
       shutil.copy(schema.json_schema_path, output_path)
-      schema_files["Schema"].append(f"[{content['title']}](/{self.git_repo_name}/{os.path.relpath(output_path, self.static_directory_path)})")
+      references[reference_counter] = f"/{self.git_repo_name}/{os.path.relpath(output_path, self.static_directory_path)}"
+      schema_files["Schema"].append(f"[{content['title']}][{reference_counter}]")
+      reference_string += f"\n[{reference_counter}]: {references[reference_counter]}"
+      reference_counter += 1
       schema_files["Description"].append(content["description"])
 
-    self.make_main_menu_page(self.schema_directory_path,"Schema",content=write_table(schema_files,["Schema","Description"]))
+    content = "# JSON Schema\n\n" + write_table(schema_files,["Schema","Description"]) + reference_string + "\n"
+    self.make_main_menu_page(self.schema_directory_path,"Schema",content=content)
 
   def make_examples_page(self):
     example_files = {
@@ -207,21 +214,29 @@ class HugoWeb:
     }
     example_assets_directory = os.path.join(self.static_assets_directory_path,"examples")
     make_dir(example_assets_directory)
+    references = {}
+    reference_counter = 1
+    reference_string = "\n"
     for example in self.lattice.examples:
       content = load(example)
       file_base_name = get_file_basename(example, depth=1)
-      formats = ['json', 'yaml', 'cbor']
+      formats = ['yaml', 'json', 'cbor']
       output_path = {}
       web_links = {}
       for format in formats:
         output_path[format] = os.path.join(example_assets_directory, f"{file_base_name}.{format}")
-        web_links[format] = f"[{format.upper()}](/{self.git_repo_name}/{os.path.relpath(output_path[format], self.static_directory_path)})"
+        references[reference_counter] = f"/{self.git_repo_name}/{os.path.relpath(output_path[format], self.static_directory_path)}"
+        web_links[format] = f"[{format.upper()}][{reference_counter}]"
+        reference_string += f"\n[{reference_counter}]: {references[reference_counter]}"
+        reference_counter += 1
         translate(example, output_path[format])
       example_files["File Name"].append(file_base_name)
       example_files["Description"].append(content["metadata"]["description"])
       example_files["Download"].append(f"{web_links['yaml']} {web_links['json']} {web_links['cbor']}")
 
-    self.make_main_menu_page(self.examples_directory_path,"Examples",content=write_table(example_files,["File Name","Description","Download"]))
+
+    content = "# Example Files\n\n" + write_table(example_files,["File Name","Description","Download"]) + reference_string + "\n"
+    self.make_main_menu_page(self.examples_directory_path,"Examples",content=content)
 
   def make_page(self, page_path, front_matter, content=""):
     with open(page_path,'w') as file:
