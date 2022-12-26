@@ -39,7 +39,7 @@ LookupTableDrive:
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
-      Data Type: "{LookupVariables}"
+      Data Type: "{LookupVariablesDrive}"
       Required: True
 
 GridVariablesDrive:

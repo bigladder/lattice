@@ -2,6 +2,7 @@ import os
 import re
 from fnmatch import fnmatch
 import warnings
+from jsonschema.exceptions import RefResolutionError
 
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
@@ -165,7 +166,7 @@ class Lattice:
 
     if schema_type is None:
       if len(self.schemas) > 1:
-        raise Exception(f"Multiple schemas defined, and no schema type provide. Unable to validate file, \"{input_path}\".")
+        raise Exception(f"Multiple schemas defined, and no schema type provided. Unable to validate file, \"{input_path}\".")
       else:
         validate_file(input_path, self.schemas[0].json_schema_path)
         postvalidate_file(input_path, self.schemas[0].json_schema_path)
@@ -173,8 +174,11 @@ class Lattice:
       # Find corresponding schema
       for schema in self.schemas:
         if schema.schema_type == schema_type:
-          validate_file(input_path, schema.json_schema_path)
-          postvalidate_file(input_path, schema.json_schema_path)
+          try:
+            validate_file(input_path, schema.json_schema_path)
+            postvalidate_file(input_path, schema.json_schema_path)
+          except RefResolutionError as e:
+            raise Exception(f'Reference in schema {schema.json_schema_path} cannot be resolved.') from e
           return
       raise Exception(f"Unable to find matching schema, \"{schema_type}\", for file, \"{input_path}\".")
 

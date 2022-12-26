@@ -4,7 +4,12 @@ import os
 import re
 import jsonschema
 import posixpath
-import sys
+from pprint import pprint
+import warnings
+# 'once': Suppress multiple warnings from the same location. 
+# 'always': Show all warnings
+# 'ignore': Show no warnings
+warnings.simplefilter('once', UserWarning)
 
 # -------------------------------------------------------------------------------------------------
 class DataGroup:
@@ -155,7 +160,10 @@ class DataGroup:
                 for s, t in zip(selections.split(','), types):
                     target_dict['allOf'].append(dict())
                     self._construct_selection_if_then(target_dict['allOf'][-1], selection_key, s, entry_name)
-                    self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
+                    try:
+                        self._get_simple_type(t, target_dict['allOf'][-1]['then']['properties'][entry_name])
+                    except KeyError as e:
+                        raise RuntimeError(e)    
             elif parent_dict['Data Type'] in ['ID', 'Reference']:
                 try:
                     m = re.match(DataGroup.scope_constraint, parent_dict['Constraints'])
@@ -167,32 +175,19 @@ class DataGroup:
                     raise RuntimeError(f'"Constraints" key does not exist for Data Element "{entry_name}".') from None
             else:
                 # 1. 'type' entry
-                self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                try:
+                    self._get_simple_type(parent_dict['Data Type'], target_property_entry)
+                except KeyError as e:
+                    raise RuntimeError(e)
                 # 2. string pattern or 'm[in/ax]imum' entry
                 self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry)
                 self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry)
 
 
-    def _construct_selection_if_then(self, target_dict_to_append, selector, selection, entry_name):
-        '''
-        Construct paired if-then json entries for allOf collections translated from source-schema
-        "selector" Constraints.
-
-        :param target_dict_to_append:   This dictionary is modified in-situ with an if key and
-                                        associated then key
-        :param selector:                Constraints key
-        :param selection:               Item from constraints values list.
-        :param entry_name:              Data Element for which the Data Type must match the
-                                        Constraint
-        '''
-        target_dict_to_append['if'] = {'properties' : {selector : {'const' : ''.join(ch for ch in selection if ch.isalnum())} } }
-        target_dict_to_append['then'] = {'properties' : {entry_name : dict()}}
-
-
     def _get_simple_type(self, type_str, target_dict_to_append):
         ''' Return the internal type described by type_str, along with its json-appropriate key.
-            First, attempt to capture enum, definition, or special string type as references;
-            then default to fundamental types with simple key "type".
+            First, attempt to capture enum, definition, or special string types as references;
+            then default to fundamental types with simple json key "type".
 
             :param type_str:                Input string from source schema's Data Type key
             :param target_dict_to_append:   The json "items" node
@@ -216,7 +211,8 @@ class DataGroup:
             else:
                 target_dict_to_append['type'] = self._types[type_str]
         except KeyError:
-            print('Type not processed:', type_str)
+            raise KeyError(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
+            #print(f'Unknown Data Type {type_str} does not appear in type map {self._types}')
         return
 
 
@@ -266,6 +262,22 @@ class DataGroup:
                     pass
 
 
+    def _construct_selection_if_then(self, target_dict_to_append, selector, selection, entry_name):
+        '''
+        Construct paired if-then json entries for allOf collections translated from source-schema
+        "selector" Constraints.
+
+        :param target_dict_to_append:   This dictionary is modified in-situ with an if key and
+                                        associated then key
+        :param selector:                Constraints key
+        :param selection:               Item from constraints values list.
+        :param entry_name:              Data Element for which the Data Type must match the
+                                        Constraint
+        '''
+        target_dict_to_append['if'] = {'properties' : {selector : {'const' : ''.join(ch for ch in selection if ch.isalnum())} } }
+        target_dict_to_append['then'] = {'properties' : {entry_name : dict()}}
+
+
 # -------------------------------------------------------------------------------------------------
 class Enumeration:
 
@@ -305,8 +317,9 @@ class JSON_translator:
         ''' '''
         self._references = dict()
         self._fundamental_data_types = dict()
-        self._schema_object_types = ['Data Group', 'String Type', 'Enumeration'] # "Basic" object types - are there more?
+        self._data_group_types = {'Data Group'} # set of "basic" object types
         self._kwargs = kwargs
+
 
     def load_source_schema(self, input_file_path):
         '''Load and process a yaml schema into its json schema equivalent.'''
@@ -320,6 +333,39 @@ class JSON_translator:
         self._fundamental_data_types.clear()
         self._contents = load(input_file_path)
         sch = dict()
+
+        '''
+        # Create new data structure where keys are Object Types, and values are a list of entries of that type
+        self._file_object_types: set = {self._contents[base_level_tag]['Object Type'] for base_level_tag in self._contents}
+        self._object_structure = {}
+        for obj in self._file_object_types:
+            self._object_structure[obj] = [{base_level_tag:self._contents[base_level_tag]} for base_level_tag in self._contents if self._contents[base_level_tag]['Object Type'] == obj]
+
+        for meta_entry in self._object_structure.get('Meta', []):
+            for schema_section in [v for k,v in meta_entry.items()]:
+                self._load_meta_info(schema_section)
+
+        for string_type_entry in self._object_structure.get('String Type', []):
+            for tag, entry in string_type_entry.items():
+                if 'Is Regex' in entry:
+                    sch.update({tag : {"type":"string", "regex":True}})
+                else:
+                    sch.update({tag : {"type":"string", "pattern":entry['JSON Schema Pattern']}})
+
+        for enum_type_entry in self._object_structure.get('Enumeration', []):
+            for name_key in enum_type_entry.keys():
+                self._process_enumeration(name_key)
+
+        for dgt in self._data_group_types:
+            for datagroup_type_entry in self._object_structure.get(dgt, []) :
+                for tag, entry in datagroup_type_entry.items():
+                    dg = DataGroup(tag, self._fundamental_data_types, self._references)
+                    try:
+                        sch.update(dg.add_data_group(tag, entry['Data Elements']))
+                    except RuntimeError as e:
+                        warnings.warn(f'In file {input_file_path}: {e}', stacklevel=2)
+
+        '''
         # Iterate through the dictionary, looking for known types
         for base_level_tag in self._contents:
             if 'Object Type' in self._contents[base_level_tag]:
@@ -333,14 +379,15 @@ class JSON_translator:
                         sch.update({base_level_tag : {"type":"string", "pattern":self._contents[base_level_tag]['JSON Schema Pattern']}})
                 elif obj_type == 'Enumeration':
                     sch.update(self._process_enumeration(base_level_tag))
-                elif obj_type in self._schema_object_types:
+                elif obj_type in self._data_group_types:
                     dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
                     try:
                         sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
                     except RuntimeError as e:
-                        raise RuntimeError(f'In file {input_file_path}: {e}') from e
+                        warnings.warn(f'In file {input_file_path}: {e}', stacklevel=2)
         self._schema['definitions'] = sch
         return self._schema
+
 
     def _load_meta_info(self, schema_section):
         '''Store the global/common types and the types defined by any named references.'''
@@ -351,22 +398,26 @@ class JSON_translator:
         if 'Root Data Group' in schema_section:
             self._schema['$ref'] = self._schema_name + '.schema.json#/definitions/' + schema_section['Root Data Group']
         # Create a dictionary of available external objects for reference
-        refs = {'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml'),
-                f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml')}
+        refs = {'core' : load(os.path.join(os.path.dirname(__file__),'core.schema.yaml')),
+                f'{self._schema_name}' : load(os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml'))}
         if 'References' in schema_section:
             for ref in schema_section['References']:
-                refs.update({f'{ref}' : os.path.join(self._source_dir, ref + '.schema.yaml')})
+                try:
+                    refs.update({f'{ref}' : load(os.path.join(self._source_dir, ref + '.schema.yaml'))})
+                except RuntimeError:
+                    raise RuntimeError(f'{ref} reference file does not exist.') from None
         for ref_name in refs:
-            try:
-                ext_dict = load(refs[ref_name])
-                # Append the expected object types for this schema set with any Data Group Templates
-                self._schema_object_types.extend([ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
-                # Populate the references map so the parser knows where to locate any object types it subsequently encounters
-                self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types]
-                for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
-                    self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
-            except RuntimeError:
-                raise RuntimeError(f'{refs[ref_name]} reference file does not exist.') from None
+            ext_dict = refs[ref_name]
+            # Append the expected object types for this schema set with any Data Group Templates
+            # The 'Name' field of a Data Group Template is an object treated like a Data Group subclass
+            self._data_group_types.update([ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
+            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
+                self._fundamental_data_types[base_item] = ext_dict[base_item]['JSON Schema Type']
+        for ref_name in refs:
+            ext_dict = refs[ref_name]
+            # Populate the references map so the parser knows where to locate any object types it subsequently encounters
+            self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._data_group_types]
+
 
     def _process_enumeration(self, name_key):
         ''' Collect all Enumerators in an Enumeration block. '''
@@ -416,30 +467,37 @@ def generate_core_json_schema():
     return core_instance
 
 # -------------------------------------------------------------------------------------------------
-def search_for_reference(referenced_schemas: dict, schema_path: str, subdict: dict) -> bool:
+def search_for_reference(referenced_schemas: dict, subdict: dict) -> bool:
     '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
     subbed = False
     if '$ref' in subdict.keys():
         subbed = True
-        # parse the ref and locate the sub-dict
+        # parse the ref and locate the sub-dict (e.g. core.schema.json#/definitions/Metadata
+        # parses to core.schema.json and /definitions/Metadata)
         source_file, ref_loc = subdict['$ref'].split('#')
-        ref = referenced_schemas[os.path.splitext(source_file)[0]]
-        key_tree = ref_loc.lstrip('/').split('/')
-        sub_d = ref[key_tree[0]]
-        for k in key_tree[1:]:
-            sub_d = sub_d[k]
-        # replace the $ref with its contents
-        subdict.update(sub_d)
-        subdict.pop('$ref')
-        # re-search the substituted dictionary
-        subbed = search_for_reference(referenced_schemas, schema_path, subdict)
+        try:
+            ref: dict = referenced_schemas[os.path.splitext(source_file)[0]]
+        except KeyError as e:
+            raise RuntimeError(f'{source_file} is not in list of referenced schemas.')
+        key_tree: list = ref_loc.lstrip('/').split('/')
+        try:
+            sub_d = ref[key_tree[0]]
+            for k in key_tree[1:]:
+                sub_d = sub_d[k]
+            # replace the $ref with its contents
+            subdict.update(sub_d)
+            subdict.pop('$ref')
+            # re-search the substituted dictionary
+            subbed = search_for_reference(referenced_schemas, subdict)
+        except KeyError:
+            subbed = False # leave schema subdictionary as-is
     else:
         for key in subdict:
             if isinstance(subdict[key], dict):
-                subbed = search_for_reference(referenced_schemas, schema_path, subdict[key])
+                subbed = search_for_reference(referenced_schemas, subdict[key])
             if isinstance(subdict[key], list):
                 for entry in [item for item in subdict[key] if isinstance(item, dict)]:
-                    subbed = search_for_reference(referenced_schemas, schema_path, entry)
+                    subbed = search_for_reference(referenced_schemas, entry)
     return subbed
 
 # -------------------------------------------------------------------------------------------------
@@ -451,9 +509,9 @@ def generate_json_schema(source_schema_input_path, json_schema_output_path):
         j = JSON_translator()
         main_schema_instance = j.load_source_schema(source_schema_input_path)
         schema_ref_map = {'core.schema' : generate_core_json_schema()}
-        for ref_source in os.listdir(schema_dir):
+        for ref_source in os.listdir(schema_dir): #TODO: Don't double-load the source schema
             schema_ref_map[os.path.splitext(ref_source)[0]] = j.load_source_schema(os.path.join(schema_dir, ref_source))
-        while search_for_reference(schema_ref_map, schema_dir, main_schema_instance):
+        while search_for_reference(schema_ref_map, main_schema_instance):
             pass
         dump(main_schema_instance, json_schema_output_path)
 

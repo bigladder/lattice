@@ -76,7 +76,7 @@ Performance:
       Required: True
     performance_map:
       Description: "Data group describing drive performance when operating"
-      Data Type: "{PerformanceMap}"
+      Data Type: "{PerformanceMapMechDrive}"
       Required: True
 
 PerformanceMapMechDrive:
@@ -88,7 +88,7 @@ PerformanceMapMechDrive:
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
-      Data Type: "{LookupVariables}"
+      Data Type: "{LookupVariablesMechDrive}"
       Required: True
 
 GridVariablesMechDrive:
