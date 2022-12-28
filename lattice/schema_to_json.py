@@ -3,7 +3,7 @@ from .file_io import load, dump
 import os
 import re
 import jsonschema
-import posixpath
+from pathlib import Path
 from pprint import pprint
 import warnings
 # 'once': Suppress multiple warnings from the same location. 
@@ -317,7 +317,9 @@ class JSON_translator:
         ''' '''
         self._references = dict()
         self._fundamental_data_types = dict()
-        self._data_group_types = {'Data Group'} # set of "basic" object types
+        self._schema_object_types: set = {'String Type', 'Enumeration'} # "basic" object types
+        self._data_group_types: set = {'Data Group'} 
+        self._forward_declared_types = set()
         self._kwargs = kwargs
 
 
@@ -328,19 +330,20 @@ class JSON_translator:
                         'description': None,
                         'definitions' : dict()}
         self._references.clear()
-        self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
-        self._schema_name = os.path.splitext(os.path.splitext(os.path.basename(input_file_path))[0])[0]
+        source_path = Path(input_file_path).resolve()
+        self._source_dir = source_path.parent
+        self._schema_name = Path(source_path.stem).stem
         self._fundamental_data_types.clear()
-        self._contents = load(input_file_path)
+        self._contents = load(source_path)
         sch = dict()
 
-        '''
         # Create new data structure where keys are Object Types, and values are a list of entries of that type
         self._file_object_types: set = {self._contents[base_level_tag]['Object Type'] for base_level_tag in self._contents}
         self._object_structure = {}
         for obj in self._file_object_types:
             self._object_structure[obj] = [{base_level_tag:self._contents[base_level_tag]} for base_level_tag in self._contents if self._contents[base_level_tag]['Object Type'] == obj]
 
+        # Assemble references first
         for meta_entry in self._object_structure.get('Meta', []):
             for schema_section in [v for k,v in meta_entry.items()]:
                 self._load_meta_info(schema_section)
@@ -363,28 +366,8 @@ class JSON_translator:
                     try:
                         sch.update(dg.add_data_group(tag, entry['Data Elements']))
                     except RuntimeError as e:
-                        warnings.warn(f'In file {input_file_path}: {e}', stacklevel=2)
+                        warnings.warn(f'In file {source_path}: {e}', stacklevel=2)
 
-        '''
-        # Iterate through the dictionary, looking for known types
-        for base_level_tag in self._contents:
-            if 'Object Type' in self._contents[base_level_tag]:
-                obj_type = self._contents[base_level_tag]['Object Type']
-                if obj_type == 'Meta':
-                    self._load_meta_info(self._contents[base_level_tag])
-                elif obj_type == 'String Type':
-                    if 'Is Regex' in self._contents[base_level_tag]:
-                        sch.update({base_level_tag : {"type":"string", "regex":True}})
-                    else:
-                        sch.update({base_level_tag : {"type":"string", "pattern":self._contents[base_level_tag]['JSON Schema Pattern']}})
-                elif obj_type == 'Enumeration':
-                    sch.update(self._process_enumeration(base_level_tag))
-                elif obj_type in self._data_group_types:
-                    dg = DataGroup(base_level_tag, self._fundamental_data_types, self._references)
-                    try:
-                        sch.update(dg.add_data_group(base_level_tag, self._contents[base_level_tag]['Data Elements']))
-                    except RuntimeError as e:
-                        warnings.warn(f'In file {input_file_path}: {e}', stacklevel=2)
         self._schema['definitions'] = sch
         return self._schema
 
@@ -398,12 +381,12 @@ class JSON_translator:
         if 'Root Data Group' in schema_section:
             self._schema['$ref'] = self._schema_name + '.schema.json#/definitions/' + schema_section['Root Data Group']
         # Create a dictionary of available external objects for reference
-        refs = {'core' : load(os.path.join(os.path.dirname(__file__),'core.schema.yaml')),
-                f'{self._schema_name}' : load(os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml'))}
+        refs = {'core' : load(Path(__file__).with_name('core.schema.yaml')),
+                f'{self._schema_name}' : load(self._source_dir / f'{self._schema_name}.schema.yaml')}
         if 'References' in schema_section:
             for ref in schema_section['References']:
                 try:
-                    refs.update({f'{ref}' : load(os.path.join(self._source_dir, ref + '.schema.yaml'))})
+                    refs.update({f'{ref}' : load(self._source_dir / f'{ref}.schema.yaml')})
                 except RuntimeError:
                     raise RuntimeError(f'{ref} reference file does not exist.') from None
         for ref_name in refs:
@@ -416,7 +399,7 @@ class JSON_translator:
         for ref_name in refs:
             ext_dict = refs[ref_name]
             # Populate the references map so the parser knows where to locate any object types it subsequently encounters
-            self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._data_group_types]
+            self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types | self._data_group_types]
 
 
     def _process_enumeration(self, name_key):
@@ -439,16 +422,14 @@ class JSON_translator:
 class JSONSchemaValidator:
     def __init__(self, schema_path):
         with open(schema_path) as schema_file:
-            uri_path = os.path.abspath(os.path.dirname(schema_path))
-            if os.sep != posixpath.sep:
-                uri_path = posixpath.sep + uri_path
+            uri_path = Path(schema_path).resolve().parent.as_uri()
             resolver = jsonschema.RefResolver(f'file://{uri_path}/', schema_file)
             self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
     def validate(self, instance_path):
         instance = load(instance_path)
         errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
-        file_name =  os.path.basename(instance_path)
+        file_name =  Path(instance_path).name
         if len(errors) == 0:
             print(f"Validation successful for {file_name}")
         else:
@@ -463,7 +444,7 @@ class JSONSchemaValidator:
 def generate_core_json_schema():
     '''Create JSON schema from core YAML schema'''
     j = JSON_translator()
-    core_instance = j.load_source_schema(os.path.join(os.path.dirname(__file__),'core.schema.yaml'))
+    core_instance = j.load_source_schema(Path(__file__).with_name('core.schema.yaml'))
     return core_instance
 
 # -------------------------------------------------------------------------------------------------
@@ -501,16 +482,14 @@ def search_for_reference(referenced_schemas: dict, subdict: dict) -> bool:
     return subbed
 
 # -------------------------------------------------------------------------------------------------
-def generate_json_schema(source_schema_input_path, json_schema_output_path):
+def generate_json_schema(source_schema_input_path: str, json_schema_output_path: str):
     '''Create reference-resolved JSON schema from YAML source schema.'''
     if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
-        schema_dir = os.path.abspath(os.path.dirname(source_schema_input_path))
-        json_schema_output_dir = os.path.abspath(os.path.dirname(json_schema_output_path))
         j = JSON_translator()
         main_schema_instance = j.load_source_schema(source_schema_input_path)
         schema_ref_map = {'core.schema' : generate_core_json_schema()}
-        for ref_source in os.listdir(schema_dir): #TODO: Don't double-load the source schema
-            schema_ref_map[os.path.splitext(ref_source)[0]] = j.load_source_schema(os.path.join(schema_dir, ref_source))
+        for ref_source in Path(source_schema_input_path).parent.iterdir(): #TODO: Don't double-load the source schema
+            schema_ref_map[ref_source.stem] = j.load_source_schema(ref_source.resolve())
         while search_for_reference(schema_ref_map, main_schema_instance):
             pass
         dump(main_schema_instance, json_schema_output_path)
