@@ -423,7 +423,8 @@ class JSONSchemaValidator:
     def __init__(self, schema_path):
         with open(schema_path) as schema_file:
             uri_path = Path(schema_path).resolve().parent.as_uri()
-            resolver = jsonschema.RefResolver(f'file://{uri_path}/', schema_file)
+            print(uri_path, schema_file)
+            resolver = jsonschema.RefResolver(uri_path, schema_file)
             self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
     def validate(self, instance_path):
