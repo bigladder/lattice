@@ -357,7 +357,7 @@ class JSON_translator:
 
         for enum_type_entry in self._object_structure.get('Enumeration', []):
             for name_key in enum_type_entry.keys():
-                self._process_enumeration(name_key)
+                sch.update(self._process_enumeration(name_key))
 
         for dgt in self._data_group_types:
             for datagroup_type_entry in self._object_structure.get(dgt, []) :
@@ -423,7 +423,6 @@ class JSONSchemaValidator:
     def __init__(self, schema_path):
         with open(schema_path) as schema_file:
             uri_path = Path(schema_path).resolve().parent.as_uri()
-            print(uri_path, schema_file)
             resolver = jsonschema.RefResolver(uri_path, schema_file)
             self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
