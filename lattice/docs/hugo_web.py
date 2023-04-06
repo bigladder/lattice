@@ -231,7 +231,10 @@ class HugoWeb:
         reference_counter += 1
         translate(example, output_path[format])
       example_files["File Name"].append(file_base_name)
-      example_files["Description"].append(content["metadata"]["description"])
+      if "metadata" in  content:
+        example_files["Description"].append(content["metadata"]["description"])
+      else:
+        example_files["Description"].append("No description: Example has no \"metadata\" element.")
       example_files["Download"].append(f"{web_links['yaml']} {web_links['json']} {web_links['cbor']}")
 
 
