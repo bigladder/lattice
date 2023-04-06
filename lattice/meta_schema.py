@@ -118,7 +118,7 @@ class SchemaTypes:
         re.compile(values)
 
         # Constraints
-        self.element_names = "([a-z]+)(_([a-z]|[0-9])+)*"
+        self.element_names = "([a-z][a-z,0-9]*)(_([a-z,0-9])+)*"
         self.element_names_anchored = f"^{self.element_names}$"
         alpha_array = "(\[A-Z\]{[1-9]+})"
         numeric_array = "(\[0-9\]{[1-9]+})"
