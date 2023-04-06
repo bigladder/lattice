@@ -105,8 +105,8 @@ Pattern:
 Metadata:
   Object Type: "Data Group"
   Data Elements:
-    data_model:
-      Description: "Data model name"
+    schema_author:
+      Description: "Name of the schema author"
       Data Type: "String"
       Required: True
       Notes: "Identifies the data model where the schema is defined"
@@ -123,21 +123,19 @@ Metadata:
       Description: "Description of data content (suitable for display)"
       Data Type: "String"
       Required: True
-    id:
-      Description: "Unique data set identifier"
-      Data Type: "UUID"
-      Required: True
-      Notes: "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data."
-    data_timestamp:
+    timestamp:
       Description: "Date of data publication"
       Data Type: "Timestamp"
       Required: True
       Notes: "Date/time of publication of this data."
-    data_version:
+    id:
+      Description: "Unique data set identifier"
+      Data Type: "UUID"
+      Notes: "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data."
+    version:
       Description: "Integer version identifier for the data"
       Data Type: "Integer"
       Constraints: ">=1"
-      Required: True
       Notes: "Used by *data publisher* to track revisions of the data. `data_version` shall be incremented for each data revision."
     data_source:
       Description: "Source(s) of the data"
