@@ -195,7 +195,7 @@ def generate_meta_schema(output_path, schema=None):
             # Data Element Attributes
             data_group = source_schema[data_group_type]
             data_group_type_name = data_group["Name"]
-         
+
             for template_data_group in [template_key for template_key in source_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
                 meta_schema["definitions"][f"{template_data_group}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 
