@@ -212,7 +212,7 @@ class DataGroup:
                 target_dict_to_append['type'] = self._types[type_str]
         except KeyError:
             #raise KeyError(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
-            print(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
+            warnings.warn(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
         return
 
 
