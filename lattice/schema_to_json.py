@@ -428,12 +428,18 @@ class JSON_translator:
 # -------------------------------------------------------------------------------------------------
 class JSONSchemaValidator:
     def __init__(self, schema_path):
+        '''
+        :param schema_path: Path to validation schema
+        '''
         uri_path = Path(schema_path).absolute().parent.as_uri()
         with open(schema_path) as schema_file:
             resolver = jsonschema.RefResolver(uri_path, schema_file)
             self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
     def validate(self, instance_path):
+        '''
+        :param instance_path: Path to JSON instance to be validated
+        '''
         instance = load(instance_path)
         errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
         file_name =  Path(instance_path).name
@@ -449,14 +455,24 @@ class JSONSchemaValidator:
 
 # -------------------------------------------------------------------------------------------------
 def generate_core_json_schema(processing_path: Path):
-    '''Create JSON schema from core YAML schema'''
+    '''
+    Create JSON schema from core YAML schema. Any forward-declarations in core must be found in
+    the schema in the processing path.
+
+    :param processing_path:     The directory of source schema currently being processed
+    '''
     j = JSON_translator()
     core_instance = j.load_source_schema(Path(__file__).with_name('core.schema.yaml'), processing_path)
     return core_instance
 
 # -------------------------------------------------------------------------------------------------
 def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
-    '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
+    '''
+    Search for $ref keys and replace the associated dictionary entry in-situ.
+
+    :param referenced_schemas:   Keys = schema names, Values = JSON dictionary representations
+    :param subdict:              Nested piece of JSON dictionary relevant to the current iteration   
+    '''
     subbed = False
     if '$ref' in subdict.keys():
         subbed = True
@@ -490,7 +506,12 @@ def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
 
 # -------------------------------------------------------------------------------------------------
 def generate_json_schema(source_schema_input_path: str, json_schema_output_path: str) -> None:
-    '''Create reference-resolved JSON schema from YAML source schema.'''
+    '''
+    Create reference-resolved JSON schema from YAML source schema.
+
+    :param source_schema_input_path:   Absolute path to source schema (YAML)
+    :param json_schema_output_path:    JSON schema to write
+    '''
     if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
         j = JSON_translator()
         # schema_ref_map collects all schema in the directory to use in reference resolution (substituition)
@@ -527,6 +548,12 @@ def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Referen
 
 # -------------------------------------------------------------------------------------------------
 def get_reference_value(data_dict: dict, lineage: list) -> str:
+    '''
+    Following nested keys listed in lineage, return final value.
+
+    :param data_dict:     JSON dictionary representing file to validate
+    :param lineage:       Current location in dictionary tree
+    '''
     test_reference = data_dict
     for adr in lineage:
         if test_reference.get(adr):
@@ -541,7 +568,13 @@ def get_reference_value(data_dict: dict, lineage: list) -> str:
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_references(input_file, input_schema):
-    '''Make sure IDs and References match in scope.'''
+    '''
+    Make sure IDs and References match in scope.
+    
+    :param input_file:      JSON example to validate
+    :param input_schema:    JSON schema to validate against
+    :raises Exception:      When Reference scope does not match anything in ID scopes
+    '''
     id_scopes = dict()
     reference_scopes = dict()
     get_scope_locations(load(input_schema), scope_key='ID', scopes_dict=id_scopes)
@@ -559,9 +592,21 @@ def postvalidate_references(input_file, input_schema):
 
 # -------------------------------------------------------------------------------------------------
 def validate_file(input_file, input_schema):
+    '''
+    Validate example against schema.
+    
+    :param input_file:      JSON example to validate
+    :param input_schema:    JSON schema to validate against
+    '''
     v = JSONSchemaValidator(input_schema)
     v.validate(input_file)
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_file(input_file, input_schema):
+    '''
+    Validate input example against external rules; currently scopes dictated in schema.
+    
+    :param input_file:      JSON example to validate
+    :param input_schema:    JSON schema to validate against
+    '''
     postvalidate_references(input_file, input_schema)
