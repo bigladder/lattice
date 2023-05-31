@@ -19,6 +19,14 @@ Root:
       Data Type: "{Address}"
       Required: True
 
+SchemaType:
+  Object Type: "Enumeration"
+  Enumerators:
+    USPS:
+      Description: "Old style USPS address"
+    USPS4:
+      Description: "New address with +4 ZIP"
+
 Address:
   Object Type: "Data Group"
   Data Elements:
@@ -48,3 +56,4 @@ Address:
       Description: "Country"
       Data Type: "String"
       Required: True
+

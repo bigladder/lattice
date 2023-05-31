@@ -1,4 +1,4 @@
-from .file_io import load, dump, get_file_basename
+from .file_io import load, dump, get_file_basename, get_base_stem
 
 import os
 import re
@@ -322,11 +322,10 @@ class JSON_translator:
         self._fundamental_data_types = dict()
         self._schema_object_types: set = {'String Type', 'Enumeration'} # "basic" object types
         self._data_group_types: set = {'Data Group'} 
-        self._forward_declared_types = set()
         self._kwargs = kwargs
 
 
-    def load_source_schema(self, input_file_path):
+    def load_source_schema(self, input_file_path, forward_declaration_dir=None):
         '''Load and process a yaml schema into its json schema equivalent.'''
         self._schema = {'$schema': 'http://json-schema.org/draft-07/schema#',
                         'title': None,
@@ -335,6 +334,7 @@ class JSON_translator:
         self._references.clear()
         source_path = Path(input_file_path).absolute()
         self._source_dir = source_path.parent
+        self._forward_declaration_dir = forward_declaration_dir # core only
         self._schema_name = Path(source_path.stem).stem
         self._fundamental_data_types.clear()
         self._contents = load(source_path)
@@ -371,7 +371,6 @@ class JSON_translator:
                     except RuntimeError as e:
                         # Stop execution if the resulting schema will be incomplete
                         raise RuntimeError(f'In file {source_path}: {e}') from None
-                        #warnings.warn(f'In file {source_path}: {e}', stacklevel=2)
 
         self._schema['definitions'] = sch
         return self._schema
@@ -388,7 +387,10 @@ class JSON_translator:
         # Create a dictionary of available external objects for reference
         refs = {'core' : load(Path(__file__).with_name('core.schema.yaml')),
                 f'{self._schema_name}' : load(self._source_dir / f'{self._schema_name}.schema.yaml')}
-        if 'References' in schema_section:
+        if self._schema_name == 'core' and self._forward_declaration_dir and self._forward_declaration_dir.is_dir():
+            for file in self._forward_declaration_dir.iterdir():
+                refs.update({f'{get_base_stem(file)}' : load(file)})
+        elif 'References' in schema_section:
             for ref in schema_section['References']:
                 try:
                     refs.update({f'{ref}' : load(self._source_dir / f'{ref}.schema.yaml')})
@@ -446,10 +448,10 @@ class JSONSchemaValidator:
             raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
 
 # -------------------------------------------------------------------------------------------------
-def generate_core_json_schema():
+def generate_core_json_schema(processing_path: Path):
     '''Create JSON schema from core YAML schema'''
     j = JSON_translator()
-    core_instance = j.load_source_schema(Path(__file__).with_name('core.schema.yaml'))
+    core_instance = j.load_source_schema(Path(__file__).with_name('core.schema.yaml'), processing_path)
     return core_instance
 
 # -------------------------------------------------------------------------------------------------
@@ -492,7 +494,7 @@ def generate_json_schema(source_schema_input_path: str, json_schema_output_path:
     if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
         j = JSON_translator()
         # schema_ref_map collects all schema in the directory to use in reference resolution (substituition)
-        schema_ref_map = {'core.schema' : generate_core_json_schema()}
+        schema_ref_map = {'core.schema' : generate_core_json_schema(Path(source_schema_input_path).parent)}
         for ref_source in Path(source_schema_input_path).parent.iterdir():
             schema_ref_map[ref_source.stem] = j.load_source_schema(ref_source.absolute())
 

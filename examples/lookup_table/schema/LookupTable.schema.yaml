@@ -5,6 +5,14 @@ Schema:
   Version: "0.1.0"
   Root Data Group: LookupTableDrive
 
+SchemaType:
+  Object Type: "Enumeration"
+  Enumerators:
+    TYPE1:
+      Description: "Type 1"
+    TYPE2:
+      Description: "Type 2"
+
 LookupTable:
   Object Type: "Data Group Template"
   Name: Lookup Table

@@ -14,3 +14,11 @@ Rating:
     rating_reproducible_from_data:
       Data Type: Boolean
   Unit System: IPUnits
+
+SchemaType:
+  Object Type: "Enumeration"
+  Enumerators:
+    TYPE1:
+      Description: "Type 1"
+    TYPE2:
+      Description: "Type 2"

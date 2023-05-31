@@ -4,6 +4,28 @@ Schema:
   Description: Schema for time series data groups
   Version: "0.1.0"
 
+SchemaType:
+  Object Type: "Enumeration"
+  Enumerators:
+    CLIMATE_INFORMATION:
+      Description: "Climate information"
+
+TimeSeriesType:
+  Object Type: "Enumeration"
+  Enumerators:
+    INSTANTANEOUS:
+      Description: "Instantaneous"
+      Notes: "Values reflect the instant of the current timestamp in the corresponding TimeIntervals data group"
+    AVERAGE:
+      Description: "Average"
+      Notes: "Values reflect the average between the previous timestamp and the current timestamp in the corresponding TimeIntervals data group"
+    SUM:
+      Description: "Sum"
+      Notes: "Values reflect the integrated sum between the previous timestamp and the current timestamp in the corresponding TimeIntervals data group"
+    CUMULATIVE:
+      Description: "Cumulative"
+      Notes: "Values reflect the cumulative sum between the starting timestamp and the current timestamp in the corresponding TimeIntervals data group"
+
 TimeIntervals:
   Object Type: "Data Group"
   Data Elements:
