@@ -116,7 +116,7 @@ class SchemaTypes:
         re.compile(values)
 
         # Constraints
-        self.element_names = "([a-z]+)(_([a-z]|[0-9])+)*"
+        self.element_names = "([a-z][a-z,0-9]*)(_([a-z,0-9])+)*"
         self.element_names_anchored = f"^{self.element_names}$"
         alpha_array = "(\[A-Z\]{[1-9]+})"
         numeric_array = "(\[0-9\]{[1-9]+})"
@@ -193,7 +193,7 @@ def generate_meta_schema(output_path, schema: Path=None):
             # Data Element Attributes
             data_group = source_schema[data_group_type]
             data_group_type_name = data_group["Name"]
-         
+
             for template_data_group in [template_key for template_key in source_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
                 meta_schema["definitions"][f"{template_data_group}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 

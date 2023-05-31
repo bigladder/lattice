@@ -23,14 +23,14 @@ class SchemaFile:
       raise Exception(f"Required \"Schema\" object not found in schema file, \"{self.path}\".")
 
     self.schema_type = self.file_base_name # Overwritten if it is actually specified
-    self.data_model_type = None
+    self.schema_author = None
     self.root_data_group = None
     if "Root Data Group" in self.content["Schema"]:
       self.root_data_group = self.content["Schema"]["Root Data Group"]
       self.schema_type = self.root_data_group
       if self.root_data_group in self.content:
         # Get metadata
-        self.data_model_type = None
+        self.schema_author = None
         if "Data Elements" not in self.content[self.root_data_group]:
           raise Exception(f"Root Data Group, \"{self.root_data_group}\" does not contain \"Data Elements\".")
         else:
@@ -46,8 +46,8 @@ class SchemaFile:
                 match = constraint_pattern.match(constraint)
                 if match:
 
-                  if match.group(1) == "data_model":
-                    self.data_model_type = match.group(5)
+                  if match.group(1) == "schema_author":
+                    self.schema_author = match.group(5)
                   else:
                     pass # Warning?
 
@@ -123,7 +123,7 @@ class Lattice:
 
     # Collect list of schema files
     self.schemas = []
-    for file_name in os.listdir(self.schema_directory_path):
+    for file_name in sorted(os.listdir(self.schema_directory_path)):
       file_path = os.path.join(self.schema_directory_path, file_name)
       if fnmatch(file_path, "*.schema.yaml") or fnmatch(file_path, "*.schema.yml"):
         self.schemas.append(SchemaFile(file_path))
@@ -149,7 +149,6 @@ class Lattice:
   def setup_json_schemas(self):
     self.json_schema_directory = os.path.join(self.build_directory,"json_schema")
     make_dir(self.json_schema_directory)
-    self.core_json_schema_path = os.path.join(self.json_schema_directory,f"core.schema.json")
     for schema in self.schemas:
       json_schema_path = os.path.join(self.json_schema_directory,f"{schema.file_base_name}.schema.json")
       schema.set_json_schema_path(json_schema_path)
@@ -193,7 +192,7 @@ class Lattice:
     # Collect list of example files
     self.examples = []
     if self.example_directory_path is not None:
-      for file_name in os.listdir(self.example_directory_path):
+      for file_name in sorted(os.listdir(self.example_directory_path)):
         file_path = os.path.join(self.example_directory_path, file_name)
         if os.path.isfile(file_path):
           self.examples.append(os.path.abspath(file_path))
@@ -232,7 +231,7 @@ class Lattice:
     make_dir(self.web_docs_directory_path)
 
     if self.doc_templates_directory_path:
-        HugoWeb(self.doc_templates_directory_path, self.web_docs_directory_path).build()
+        HugoWeb(self).build()
     else:
         warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 

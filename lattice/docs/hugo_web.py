@@ -1,13 +1,15 @@
 import os
-import git
+import pygit2
 from distutils.dir_util import copy_tree
 import subprocess
 import shutil
+import platform
 
 from jinja2 import Environment, FileSystemLoader
 
-from ..file_io import dump, load, dump_to_string, get_file_basename, make_dir, get_extension
+from ..file_io import dump, load, dump_to_string, get_file_basename, make_dir, get_extension, check_executable, translate
 from .process_template import process_template
+from .grid_table import write_table
 
 class DocumentFile:
   def __init__(self, path):
@@ -24,12 +26,12 @@ class DocumentFile:
 
 
 class HugoWeb:
-  def __init__(self, docs_source_directory, build_directory, schema_directory=None):
-    self.build_directory = os.path.abspath(build_directory)
-    self.docs_source_directory = os.path.abspath(docs_source_directory)
+  def __init__(self, lattice):
+    self.lattice = lattice
+    self.build_directory = os.path.abspath(self.lattice.web_docs_directory_path)
+    self.docs_source_directory = os.path.abspath(self.lattice.doc_templates_directory_path)
     self.docs_config_directory = os.path.join(self.docs_source_directory,"web")
-    if schema_directory is None:
-      self.source_schema_directory_path = os.path.abspath(os.path.join(self.docs_source_directory,os.pardir,"schema"))
+    self.source_schema_directory_path = self.lattice.schema_directory_path
     self.title = os.path.relpath(self.docs_source_directory)
     self.description = ""
     self.author = ""
@@ -51,6 +53,8 @@ class HugoWeb:
     self.content_directory_path = make_dir(os.path.join(self.build_directory, "content"))
     self.layouts_directory_path = make_dir(os.path.join(self.build_directory, "layouts"))
     self.static_directory_path = make_dir(os.path.join(self.build_directory, "static"))
+    self.static_assets_directory_path = make_dir(os.path.join(self.static_directory_path, "assets"))
+
 
     # Asset directories
     self.icon_directory_path = make_dir(os.path.join(self.assets_directory_path, "icons"))
@@ -66,16 +70,16 @@ class HugoWeb:
     copy_tree(os.path.join(os.path.dirname(__file__),"hugo_layouts"),self.layouts_directory_path)
 
   def get_git_info(self):
-    self.git_repo = git.Repo(self.docs_source_directory, search_parent_directories=True)
+    self.git_repo = pygit2.Repository(pygit2.discover_repository(self.docs_source_directory))
     self.git_remote_url = os.path.splitext(self.git_repo.remotes[0].url)[0]
     git_url_parts = self.git_remote_url.split('/')
     self.git_repo_name = git_url_parts[-1]
     self.git_repo_owner = git_url_parts[-2]
     self.git_repo_host = os.path.splitext(git_url_parts[-3])[0]
-    if self.git_repo.head.is_detached:
+    if self.git_repo.head_is_detached:
       self.git_ref_name = "main"
     else:
-      self.git_ref_name = self.git_repo.head.ref.name
+      self.git_ref_name = self.git_repo.head.name
     self.base_url = fr"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/"
 
   def make_pages(self):
@@ -145,10 +149,10 @@ class HugoWeb:
     self.make_specification_pages()
 
     # Schema
-    self.make_main_menu_page(self.schema_directory_path,"Schema",content="Coming soon! Download the JSON Schema!")
+    self.make_schema_page()
 
     # Examples
-    self.make_main_menu_page(self.examples_directory_path,"Examples",content="Coming soon! Download valid examples!")
+    self.make_examples_page()
 
   def make_specification_pages(self):
     # Collect list of doc template files
@@ -178,6 +182,64 @@ class HugoWeb:
     for template in self.specification_templates:
       template.set_markdown_output_path(os.path.join(self.specifications_directory_path,f"{get_file_basename(template.path, depth=2)}.pdc"))
       self.make_specification_page(template.path, template.markdown_output_path, self.source_schema_directory_path, template.corresponding_schema_path)
+
+  def make_schema_page(self):
+    schema_files = {
+      "Schema": [],
+      "Description": []
+    }
+    schema_assets_directory = os.path.join(self.static_assets_directory_path,"schema")
+    make_dir(schema_assets_directory)
+    references = {}
+    reference_counter = 1
+    reference_string = "\n"
+    for schema in self.lattice.schemas:
+      content = load(schema.json_schema_path)
+      output_path = os.path.join(schema_assets_directory, get_file_basename(schema.json_schema_path))
+      shutil.copy(schema.json_schema_path, output_path)
+      references[reference_counter] = f"/{self.git_repo_name}/{os.path.relpath(output_path, self.static_directory_path)}"
+      schema_files["Schema"].append(f"[{content['title']}][{reference_counter}]")
+      reference_string += f"\n[{reference_counter}]: {references[reference_counter]}"
+      reference_counter += 1
+      schema_files["Description"].append(content["description"])
+
+    content = "# JSON Schema\n\n" + write_table(schema_files,["Schema","Description"]) + reference_string + "\n"
+    self.make_main_menu_page(self.schema_directory_path,"Schema",content=content)
+
+  def make_examples_page(self):
+    example_files = {
+      "File Name": [],
+      "Description": [],
+      "Download": []
+    }
+    example_assets_directory = os.path.join(self.static_assets_directory_path,"examples")
+    make_dir(example_assets_directory)
+    references = {}
+    reference_counter = 1
+    reference_string = "\n"
+    for example in self.lattice.examples:
+      content = load(example)
+      file_base_name = get_file_basename(example, depth=1)
+      formats = ['yaml', 'json', 'cbor']
+      output_path = {}
+      web_links = {}
+      for format in formats:
+        output_path[format] = os.path.join(example_assets_directory, f"{file_base_name}.{format}")
+        references[reference_counter] = f"/{self.git_repo_name}/{os.path.relpath(output_path[format], self.static_directory_path)}"
+        web_links[format] = f"[{format.upper()}][{reference_counter}]"
+        reference_string += f"\n[{reference_counter}]: {references[reference_counter]}"
+        reference_counter += 1
+        translate(example, output_path[format])
+      example_files["File Name"].append(file_base_name)
+      if "metadata" in  content:
+        example_files["Description"].append(content["metadata"]["description"])
+      else:
+        example_files["Description"].append("No description: Example has no \"metadata\" element.")
+      example_files["Download"].append(f"{web_links['yaml']} {web_links['json']} {web_links['cbor']}")
+
+
+    content = "# Example Files\n\n" + write_table(example_files,["File Name","Description","Download"]) + reference_string + "\n"
+    self.make_main_menu_page(self.examples_directory_path,"Examples",content=content)
 
   def make_page(self, page_path, front_matter, content=""):
     with open(page_path,'w') as file:
@@ -245,6 +307,10 @@ class HugoWeb:
     self.make_page(output_path, front_matter, content)
 
   def build(self):
+    # Check for dependencies
+    check_executable("hugo", "https://gohugo.io/installation/")
+    check_executable("npm", "https://nodejs.org/en/download/")
+
     self.make_pages()
 
     # Setup Hugo Config
@@ -253,16 +319,20 @@ class HugoWeb:
     # npm package.json
     dump(self.make_npm_package_json(),os.path.join(self.build_directory,"package.json"))
 
+    shell = False
+    if platform.system() == "Windows":
+      shell = True
+
     if not os.path.exists(os.path.join(self.build_directory,"go.mod")):
-      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory)],cwd=self.build_directory,check=True)
+      subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory).replace('\\','/')], cwd=self.build_directory, check=True, shell=shell)
 
     if not os.path.exists(os.path.join(self.build_directory,"go.sum")):
-      subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"],cwd=self.build_directory,check=True)
+      subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"], cwd=self.build_directory, check=True, shell=shell)
 
     if not os.path.exists(os.path.join(self.build_directory,"package-lock.json")):
-      subprocess.run(["npm", "install"],cwd=self.build_directory,check=True)
+      subprocess.run(["npm", "install"], cwd=self.build_directory, check=True, shell=shell)
 
-    subprocess.run(["hugo", "--minify"],cwd=self.build_directory,check=True)
+    subprocess.run(["hugo", "--minify"], cwd=self.build_directory, check=True, shell=shell)
 
   def make_hugo_config(self):
     return {
@@ -331,9 +401,6 @@ def prepend_file_content(file_path, new_content):
     original_content = original_file.read()
   with open(file_path,'w') as modified_file:
     modified_file.write(new_content + original_content)
-
-def make_examples_html():
-  pass
 
 def render_template(template_path, output_path, values):
   template_directory_path = os.path.abspath(os.path.join(template_path, os.pardir))

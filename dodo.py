@@ -9,7 +9,7 @@ BUILD_PATH = "build"
 
 examples = []
 
-for example_dir in os.listdir(EXAMPLES_PATH):
+for example_dir in sorted(os.listdir(EXAMPLES_PATH)):
   example_dir_path = os.path.join(EXAMPLES_PATH, example_dir)
   if os.path.isdir(example_dir_path):
     build_dir_path = os.path.join(BUILD_PATH, example_dir)
@@ -18,8 +18,6 @@ for example_dir in os.listdir(EXAMPLES_PATH):
 
 BASE_META_SCHEMA_PATH = os.path.join(SOURCE_PATH, "meta.schema.yaml")
 CORE_SCHEMA_PATH = os.path.join(SOURCE_PATH, "core.schema.yaml")
-
-DOIT_CONFIG = {"default_tasks": ["validate_example_files", "generate_markdown"]}
 
 def task_generate_meta_schemas():
   '''Generate JSON meta schemas'''
@@ -68,7 +66,7 @@ def task_generate_json_schemas():
                   [CORE_SCHEMA_PATH,
                    BASE_META_SCHEMA_PATH,
                    os.path.join(SOURCE_PATH, "schema_to_json.py")],
-      'targets': [schema.json_schema_path for schema in example.schemas] + [example.core_json_schema_path],
+      'targets': [schema.json_schema_path for schema in example.schemas],
       'actions': [
         (example.generate_json_schemas, [])
       ],
@@ -109,7 +107,7 @@ def task_generate_web_docs():
     name = os.path.basename(example.root_directory)
     yield {
       'name': name,
-      'task_dep': [f"validate_schemas:{name}"],
+      'task_dep': [f"validate_schemas:{name}",f"generate_json_schemas:{name}",f"validate_example_files:{name}"],
       'file_dep': [schema.path for schema in example.schemas] + [template.path for template in example.doc_templates],
       'targets': [os.path.join(example.web_docs_directory_path,"public")],
       'actions': [

@@ -77,3 +77,7 @@ def check_dir(dir_path, dir_description="Directory"):
       raise Exception(f"{dir_description}, \"{dir_path}\", does not exist.")
     elif not os.path.isdir(dir_path):
       raise Exception(f"{dir_description}, \"{dir_path}\", is not a directory.")
+
+def check_executable(name, install_url):
+    if shutil.which(name) is None:
+        raise Exception(f"Unable to find \"{name}\". To install, go to {install_url}.")

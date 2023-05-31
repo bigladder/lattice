@@ -1,4 +1,4 @@
-from .file_io import load, dump
+from .file_io import load, dump, get_file_basename
 
 import os
 import re
@@ -562,4 +562,4 @@ def validate_file(input_file, input_schema):
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_file(input_file, input_schema):
-    postvalidate_references(input_file, input_schema) 
+    postvalidate_references(input_file, input_schema)
