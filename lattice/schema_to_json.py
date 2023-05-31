@@ -9,7 +9,7 @@ import warnings
 # 'once': Suppress multiple warnings from the same location. 
 # 'always': Show all warnings
 # 'ignore': Show no warnings
-warnings.simplefilter('once', UserWarning)
+warnings.simplefilter('always', UserWarning)
 
 # -------------------------------------------------------------------------------------------------
 class DataGroup:
@@ -46,8 +46,8 @@ class DataGroup:
             if 'Data Type' in element:
                 try:
                     self._create_type_entry(group_subdict[e], elements, e)
-                except RuntimeError as e:
-                    raise
+                except RuntimeError as r:
+                    raise r
             if 'Units' in element:
                 elements['properties'][e]['units'] = element['Units']
             if 'Notes' in element:
@@ -146,9 +146,12 @@ class DataGroup:
                     target_property_entry['maxItems'] = int(mnmx.group('min'))
             # 3. 'items' entry
             target_property_entry['items'] = dict()
-            self._get_simple_type(m[0], target_property_entry['items'])
-            self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
-            self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
+            try:
+                self._get_simple_type(m[0], target_property_entry['items'])
+                self._get_pattern_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
+                self._get_numeric_constraints(parent_dict.get('Constraints'), target_property_entry['items'])
+            except KeyError as e:
+                raise RuntimeError(e)
         else:
             # If the type is oneOf a set
             m = re.match(DataGroup.alternative_type, parent_dict['Data Type'])
@@ -211,8 +214,8 @@ class DataGroup:
             else:
                 target_dict_to_append['type'] = self._types[type_str]
         except KeyError:
-            #raise KeyError(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
-            warnings.warn(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
+            raise KeyError(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
+            #warnings.warn(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
         return
 
 
@@ -366,7 +369,9 @@ class JSON_translator:
                     try:
                         sch.update(dg.add_data_group(tag, entry['Data Elements']))
                     except RuntimeError as e:
-                        warnings.warn(f'In file {source_path}: {e}', stacklevel=2)
+                        # Stop execution if the resulting schema will be incomplete
+                        raise RuntimeError(f'In file {source_path}: {e}') from None
+                        #warnings.warn(f'In file {source_path}: {e}', stacklevel=2)
 
         self._schema['definitions'] = sch
         return self._schema
@@ -421,8 +426,8 @@ class JSON_translator:
 # -------------------------------------------------------------------------------------------------
 class JSONSchemaValidator:
     def __init__(self, schema_path):
+        uri_path = Path(schema_path).absolute().parent.as_uri()
         with open(schema_path) as schema_file:
-            uri_path = Path(schema_path).absolute().parent.as_uri()
             resolver = jsonschema.RefResolver(uri_path, schema_file)
             self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
@@ -448,7 +453,7 @@ def generate_core_json_schema():
     return core_instance
 
 # -------------------------------------------------------------------------------------------------
-def search_for_reference(referenced_schemas: dict, subdict: dict) -> bool:
+def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
     '''Search for $ref keys and replace the associated dictionary entry in-situ.'''
     subbed = False
     if '$ref' in subdict.keys():
@@ -469,16 +474,16 @@ def search_for_reference(referenced_schemas: dict, subdict: dict) -> bool:
             subdict.update(sub_d)
             subdict.pop('$ref')
             # re-search the substituted dictionary
-            subbed = search_for_reference(referenced_schemas, subdict)
+            subbed = replace_reference(referenced_schemas, subdict)
         except KeyError:
             subbed = False # leave schema subdictionary as-is
     else:
         for key in subdict:
             if isinstance(subdict[key], dict):
-                subbed = search_for_reference(referenced_schemas, subdict[key])
+                subbed = replace_reference(referenced_schemas, subdict[key])
             if isinstance(subdict[key], list):
                 for entry in [item for item in subdict[key] if isinstance(item, dict)]:
-                    subbed = search_for_reference(referenced_schemas, entry)
+                    subbed = replace_reference(referenced_schemas, entry)
     return subbed
 
 # -------------------------------------------------------------------------------------------------
@@ -486,16 +491,27 @@ def generate_json_schema(source_schema_input_path: str, json_schema_output_path:
     '''Create reference-resolved JSON schema from YAML source schema.'''
     if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
         j = JSON_translator()
-        main_schema_instance = j.load_source_schema(source_schema_input_path)
+        # schema_ref_map collects all schema in the directory to use in reference resolution (substituition)
         schema_ref_map = {'core.schema' : generate_core_json_schema()}
-        for ref_source in Path(source_schema_input_path).parent.iterdir(): #TODO: Don't double-load the source schema
+        for ref_source in Path(source_schema_input_path).parent.iterdir():
             schema_ref_map[ref_source.stem] = j.load_source_schema(ref_source.absolute())
-        while search_for_reference(schema_ref_map, main_schema_instance):
+
+        main_schema_instance = schema_ref_map[Path(source_schema_input_path).stem]
+        while replace_reference(schema_ref_map, main_schema_instance):
             pass
+
         dump(main_schema_instance, json_schema_output_path)
 
 # -------------------------------------------------------------------------------------------------
 def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None) -> None:
+    '''
+    Populate a map of paths for a given scope name.
+
+    :param schema:        JSON dictionary representing schema
+    :param scopes_dict:   Stores all instances of the specified scope name with a path key
+    :param scope_key:     Name of the scope specifier
+    :param lineage:       Current location in dictionary tree
+    '''
     if not lineage:
         lineage = list()
     for key in schema:
