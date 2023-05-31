@@ -3,15 +3,22 @@ import json
 import cbor2
 import yaml
 import shutil
+from pathlib import Path
 
 def get_extension(file):
-    return os.path.splitext(file)[1]
+    if isinstance(file, Path):
+        return file.suffix 
+    else:
+        return os.path.splitext(file)[1]
 
 def get_file_basename(file, depth=0):
     basename = os.path.basename(file)
     for i in range(depth):
         basename = os.path.splitext(basename)[0]
     return basename
+
+def get_base_stem(file: Path):
+    return file.name.partition('.')[0]
 
 def load(input_file_path):
     ext = get_extension(input_file_path).lower()
@@ -54,9 +61,12 @@ def translate(input, output):
     dump(load(input),output)
 
 def make_dir(dir_path):
-  if not os.path.exists(dir_path):
-      os.mkdir(dir_path)
-  return dir_path
+  if isinstance(dir_path, Path):
+      Path.mkdir(dir_path, exist_ok=True)
+  else:
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
+    return dir_path
 
 def remove_dir(dir_path):
     if os.path.exists(dir_path) and os.path.isdir(dir_path):

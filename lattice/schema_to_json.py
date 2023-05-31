@@ -330,7 +330,7 @@ class JSON_translator:
                         'description': None,
                         'definitions' : dict()}
         self._references.clear()
-        source_path = Path(input_file_path).resolve()
+        source_path = Path(input_file_path).absolute()
         self._source_dir = source_path.parent
         self._schema_name = Path(source_path.stem).stem
         self._fundamental_data_types.clear()
@@ -422,7 +422,7 @@ class JSON_translator:
 class JSONSchemaValidator:
     def __init__(self, schema_path):
         with open(schema_path) as schema_file:
-            uri_path = Path(schema_path).resolve().parent.as_uri()
+            uri_path = Path(schema_path).absolute().parent.as_uri()
             resolver = jsonschema.RefResolver(uri_path, schema_file)
             self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
@@ -482,20 +482,20 @@ def search_for_reference(referenced_schemas: dict, subdict: dict) -> bool:
     return subbed
 
 # -------------------------------------------------------------------------------------------------
-def generate_json_schema(source_schema_input_path: str, json_schema_output_path: str):
+def generate_json_schema(source_schema_input_path: str, json_schema_output_path: str) -> None:
     '''Create reference-resolved JSON schema from YAML source schema.'''
     if os.path.isfile(source_schema_input_path) and '.schema.yaml' in source_schema_input_path:
         j = JSON_translator()
         main_schema_instance = j.load_source_schema(source_schema_input_path)
         schema_ref_map = {'core.schema' : generate_core_json_schema()}
         for ref_source in Path(source_schema_input_path).parent.iterdir(): #TODO: Don't double-load the source schema
-            schema_ref_map[ref_source.stem] = j.load_source_schema(ref_source.resolve())
+            schema_ref_map[ref_source.stem] = j.load_source_schema(ref_source.absolute())
         while search_for_reference(schema_ref_map, main_schema_instance):
             pass
         dump(main_schema_instance, json_schema_output_path)
 
 # -------------------------------------------------------------------------------------------------
-def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None):
+def get_scope_locations(schema: dict, scopes_dict: dict, scope_key: str='Reference', lineage: list=None) -> None:
     if not lineage:
         lineage = list()
     for key in schema:
@@ -523,6 +523,7 @@ def get_reference_value(data_dict: dict, lineage: list) -> str:
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_references(input_file, input_schema):
+    '''Make sure IDs and References match in scope.'''
     id_scopes = dict()
     reference_scopes = dict()
     get_scope_locations(load(input_schema), scope_key='ID', scopes_dict=id_scopes)

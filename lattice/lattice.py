@@ -1,8 +1,9 @@
 import os
 import re
-from fnmatch import fnmatch
 import warnings
+from fnmatch import fnmatch
 from jsonschema.exceptions import RefResolutionError
+from pathlib import Path
 
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, get_file_basename
@@ -139,11 +140,11 @@ class Lattice:
 
   def generate_meta_schemas(self):
     for schema in self.schemas:
-      schema.set_schema_patterns(generate_meta_schema(schema.meta_schema_path, schema.path))
+      schema.set_schema_patterns(generate_meta_schema(Path(schema.meta_schema_path), Path(schema.path)))
 
   def validate_schemas(self):
     for schema in self.schemas:
-      meta_validate_file(schema.path, schema.meta_schema_path)
+      meta_validate_file(Path(schema.path), Path(schema.meta_schema_path))
 
   def setup_json_schemas(self):
     self.json_schema_directory = os.path.join(self.build_directory,"json_schema")
@@ -178,7 +179,7 @@ class Lattice:
             validate_file(input_path, schema.json_schema_path)
             postvalidate_file(input_path, schema.json_schema_path)
           except RefResolutionError as e:
-            raise Exception(f'Reference in schema {schema.json_schema_path} cannot be resolved.') from e
+            raise Exception(f'Reference in schema {schema.json_schema_path} cannot be resolved: {e}') from e
           return
       raise Exception(f"Unable to find matching schema, \"{schema_type}\", for file, \"{input_path}\".")
 

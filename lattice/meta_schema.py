@@ -7,25 +7,23 @@ import sys
 import re
 import copy
 
+from pathlib import Path
 from .file_io import load, dump, get_file_basename
 from .schema_to_json import JSON_translator
 
 
 class MetaSchema:
-  def __init__(self, schema_path):
+  def __init__(self, schema_path: Path):
     with open(schema_path) as meta_schema_file:
-      uri_path = os.path.abspath(os.path.dirname(schema_path))
-      if os.sep != posixpath.sep:
-        uri_path = posixpath.sep + uri_path
-
-      resolver = jsonschema.RefResolver(f'file://{uri_path}/', meta_schema_file)
+      uri_path = Path(schema_path).absolute().parent.as_uri() + r'/' #TODO: Why is trailing slash needed here
+      resolver = jsonschema.RefResolver(uri_path, meta_schema_file)
       self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
 
-  def validate(self, instance_path):
-    with open(os.path.join(instance_path), 'r') as input_file:
+  def validate(self, instance_path: Path):
+    with open(instance_path, 'r') as input_file:
       instance = yaml.load(input_file, Loader=yaml.FullLoader)
     errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
-    file_name =  os.path.basename(instance_path)
+    file_name = instance_path.name
     if len(errors) == 0:
       print(f"Validation successful for {file_name}")
     else:
@@ -36,7 +34,7 @@ class MetaSchema:
       message_str = '\n  '.join(messages)
       raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
 
-def meta_validate_file(file_path, meta_schema_path):
+def meta_validate_file(file_path: Path, meta_schema_path: Path):
   meta_schema = MetaSchema(meta_schema_path)
   meta_schema.validate(file_path)
 
@@ -44,7 +42,7 @@ def meta_validate_file(file_path, meta_schema_path):
 
 class SchemaTypes:
 
-    def __init__(self, core_schema, schema=None):
+    def __init__(self, core_schema: dict, schema: dict=None):
         # Generate Regular Expressions
 
         # Data Types
@@ -141,19 +139,19 @@ class SchemaTypes:
         re.compile(conditional_requirements)
 
 
-core_meta_schema_path = os.path.join(os.path.dirname(__file__),'meta.schema.yaml')
-core_schema_path = os.path.join(os.path.dirname(__file__),'core.schema.yaml')
+core_meta_schema_path = Path(__file__).with_name('meta.schema.yaml')
+core_schema_path = Path(__file__).with_name('core.schema.yaml')
 
-def generate_meta_schema(output_path, schema=None):
+def generate_meta_schema(output_path, schema: Path=None):
     ''' '''
     core_schema = load(core_schema_path)
 
     referenced_schema = []
     if schema is not None:
         source_schema = load(schema)
-        schema_dir = os.path.dirname(schema)
+        schema_dir = schema.parent
         if 'References' in source_schema:
-            referenced_schema = [load(schema_file) for schema_file in [os.path.join(schema_dir, f'{ref}.yaml') for ref in source_schema['References']]]
+            referenced_schema = [load(schema_file) for schema_file in [schema.with_name(f'{ref}.yaml') for ref in source_schema['References']]]
         meta_schema_file_name = f"{get_file_basename(schema, depth=2)}.meta.schema.json"
     else:
         source_schema = None
@@ -246,7 +244,7 @@ def generate_meta_schema(output_path, schema=None):
     return schematypes
 
 
-def get_types(schema):
+def get_types(schema: dict) -> dict:
     '''For each Object Type in a schema, map a list of Objects matching that type.'''
     types = {}
     for object in schema:
