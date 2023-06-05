@@ -313,9 +313,6 @@ class HugoWeb:
 
     self.make_pages()
 
-    # Setup Hugo Config
-    dump(self.make_hugo_config(),os.path.join(self.build_directory,"config.yaml"))
-
     # npm package.json
     dump(self.make_npm_package_json(),os.path.join(self.build_directory,"package.json"))
 
@@ -327,7 +324,10 @@ class HugoWeb:
       subprocess.run(["hugo", "mod", "init", os.path.relpath(self.docs_source_directory).replace('\\','/')], cwd=self.build_directory, check=True, shell=shell)
 
     if not os.path.exists(os.path.join(self.build_directory,"go.sum")):
-      subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.4.0"], cwd=self.build_directory, check=True, shell=shell)
+      subprocess.run(["hugo", "mod", "get", r"github.com/google/docsy@v0.6.0"], cwd=self.build_directory, check=True, shell=shell)
+
+    # Setup Hugo Config
+    dump(self.make_hugo_config(),os.path.join(self.build_directory,"config.yaml"))
 
     if not os.path.exists(os.path.join(self.build_directory,"package-lock.json")):
       subprocess.run(["npm", "install"], cwd=self.build_directory, check=True, shell=shell)
