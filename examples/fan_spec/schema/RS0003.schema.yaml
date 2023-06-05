@@ -84,7 +84,7 @@ RS0003:
     metadata:
       Description: "Metadata data group"
       Data Type: "{Metadata}"
-      Constraints: ["data_model=ASHRAE_205", "schema=RS0003"]
+      Constraints: ["schema_author=ASHRAE_205", "schema=RS0003"]
       Required: True
     description:
       Description: "Data group describing product and rating information"

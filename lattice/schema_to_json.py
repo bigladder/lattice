@@ -1,4 +1,4 @@
-from .file_io import load, dump
+from .file_io import load, dump, get_file_basename
 
 import os
 import re
@@ -316,7 +316,7 @@ class JSON_translator:
                         'definitions' : dict()}
         self._references.clear()
         self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
-        self._schema_name = os.path.splitext(os.path.splitext(os.path.basename(input_file_path))[0])[0]
+        self._schema_name = get_file_basename(input_file_path, depth=2)
         self._fundamental_data_types.clear()
         self._contents = load(input_file_path)
         sch = dict()
@@ -508,4 +508,4 @@ def validate_file(input_file, input_schema):
 
 # -------------------------------------------------------------------------------------------------
 def postvalidate_file(input_file, input_schema):
-    postvalidate_references(input_file, input_schema) 
+    postvalidate_references(input_file, input_schema)

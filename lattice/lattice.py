@@ -21,14 +21,14 @@ class SchemaFile:
       raise Exception(f"Required \"Schema\" object not found in schema file, \"{self.path}\".")
 
     self.schema_type = self.file_base_name # Overwritten if it is actually specified
-    self.data_model_type = None
+    self.schema_author = None
     self.root_data_group = None
     if "Root Data Group" in self.content["Schema"]:
       self.root_data_group = self.content["Schema"]["Root Data Group"]
       self.schema_type = self.root_data_group
       if self.root_data_group in self.content:
         # Get metadata
-        self.data_model_type = None
+        self.schema_author = None
         if "Data Elements" not in self.content[self.root_data_group]:
           raise Exception(f"Root Data Group, \"{self.root_data_group}\" does not contain \"Data Elements\".")
         else:
@@ -44,8 +44,8 @@ class SchemaFile:
                 match = constraint_pattern.match(constraint)
                 if match:
 
-                  if match.group(1) == "data_model":
-                    self.data_model_type = match.group(5)
+                  if match.group(1) == "schema_author":
+                    self.schema_author = match.group(5)
                   else:
                     pass # Warning?
 
