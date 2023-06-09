@@ -3,7 +3,7 @@ Schema:
   Title: Lookup Table
   Description: Schema Lookup Tables using data group templates
   Version: "0.1.0"
-  Root Data Group: LookupTableDrive
+  Root Data Group: LookupTable
 
 SchemaType:
   Object Type: "Enumeration"
@@ -13,7 +13,7 @@ SchemaType:
     TYPE2:
       Description: "Type 2"
 
-LookupTable:
+LookupTableTemplate:
   Object Type: "Data Group Template"
   Name: Lookup Table
   Required Data Elements:
@@ -22,7 +22,7 @@ LookupTable:
     lookup_variables:
       Required: True
 
-GridVariables:
+GridVariablesTemplate:
   Object Type: "Data Group Template"
   Name: Grid Variables
   Required Data Types:
@@ -30,7 +30,7 @@ GridVariables:
     - "[Integer][1..]"
   Data Elements Required: True
 
-LookupVariables:
+LookupVariablesTemplate:
   Object Type: "Data Group Template"
   Name: Lookup Variables
   Required Data Types:
@@ -38,19 +38,19 @@ LookupVariables:
     - "[Integer/Null][1..]"
   Data Elements Required: True
 
-LookupTableDrive:
+LookupTable:
   Object Type: "Lookup Table"
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariablesDrive}"
+      Data Type: "{GridVariables}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
-      Data Type: "{LookupVariablesDrive}"
+      Data Type: "{LookupVariables}"
       Required: True
 
-GridVariablesDrive:
+GridVariables:
   Object Type: "Grid Variables"
   Data Elements:
     output_power:
@@ -60,7 +60,7 @@ GridVariablesDrive:
       Units: "W"
       Required: True
 
-LookupVariablesDrive:
+LookupVariables:
   Object Type: "Lookup Variables"
   Data Elements:
     efficiency:
