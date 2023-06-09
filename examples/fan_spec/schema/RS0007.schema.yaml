@@ -76,22 +76,22 @@ Performance:
       Required: True
     performance_map:
       Description: "Data group describing drive performance when operating"
-      Data Type: "{PerformanceMapMechDrive}"
+      Data Type: "{PerformanceMapDrive}"
       Required: True
 
-PerformanceMapMechDrive:
+PerformanceMapDrive:
   Object Type: "Performance Map"
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariablesMechDrive}"
+      Data Type: "{GridVariablesDrive}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
-      Data Type: "{LookupVariablesMechDrive}"
+      Data Type: "{LookupVariablesDrive}"
       Required: True
 
-GridVariablesMechDrive:
+GridVariablesDrive:
   Object Type: "Grid Variables"
   Data Elements:
     output_power:
@@ -101,7 +101,7 @@ GridVariablesMechDrive:
       Units: "W"
       Required: True
 
-LookupVariablesMechDrive:
+LookupVariablesDrive:
   Object Type: "Lookup Variables"
   Data Elements:
     efficiency:
