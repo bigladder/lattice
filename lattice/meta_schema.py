@@ -9,7 +9,7 @@ import copy
 
 from pathlib import Path
 from .file_io import load, dump, get_file_basename
-from .schema_to_json import JSON_translator
+from .schema_to_json import JsonTranslator
 
 
 class MetaSchema:
