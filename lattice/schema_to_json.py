@@ -30,7 +30,7 @@ class DataGroup:  # pylint: disable=R0903
     scope_constraint = r"^:(?P<scope>.*):"  # Lattice scope constraint for ID/Reference
     ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
 
-    def __init__(self, name, type_list, ref_list=None):
+    def __init__(self, name, type_list, ref_list=[]):
         self._name = name
         self._types = type_list
         self._refs = ref_list
@@ -124,7 +124,13 @@ class DataGroup:  # pylint: disable=R0903
             )
 
     def _populate_array_type(self, parent_dict, target_entry, matches):
-        """Decompose an array regex into its dictionary components"""
+        """
+        Decompose an array regex into its dictionary components
+
+        :param parent_dict:  Dict representing schema component
+        :param target_entry: Top level JSON describing the component
+        :param matches:      Match object for a ranged_array regex
+        """
         # 1. 'type' entry
         target_entry["type"] = "array"
         # 2. 'm[in/ax]Items' entry
@@ -147,12 +153,19 @@ class DataGroup:  # pylint: disable=R0903
             )
 
     def _populate_selector_types(self, parent_dict, target_entry, matches, entry_name):
-        """"""
+        """
+        Set up selector constraint as a JSON conditional
+
+        :param parent_dict:  Dict representing schema component
+        :param target_entry: Top level JSON describing the component
+        :param matches:      Match object for a one_of regex
+        :param entry_name:   Data Element name
+        """
         types = [t.strip() for t in matches.group("one_of").split(",")]
         selection_key, selections = parent_dict["Constraints"].split("(")
         if target_entry.get("allOf") is None:
             target_entry["allOf"] = []
-        for s, t in zip(selections.split(","), types):
+        for s, t in list(zip(selections.split(","), types)):
             target_entry["allOf"].append({})
             DataGroup._construct_selection_if_then(
                 target_entry["allOf"][-1], selection_key, s, entry_name
@@ -582,11 +595,10 @@ class JSONSchemaValidator:  # pylint: disable=R0903
         :param schema_path: Path to validation schema
         """
         uri_path = Path(schema_path).absolute().parent.as_uri()
-        with open(schema_path, encoding="utf-8") as schema_file:
-            resolver = jsonschema.RefResolver(uri_path, schema_file)
-            self.validator = jsonschema.Draft7Validator(
-                load(schema_path), resolver=resolver
-            )
+        resolver = jsonschema.RefResolver(uri_path, load(schema_path))
+        self.validator = jsonschema.Draft7Validator(
+            load(schema_path), resolver=resolver
+        )
 
     def validate(self, instance_path):
         """
@@ -700,7 +712,7 @@ def generate_json_schema(
 
 # -------------------------------------------------------------------------------------------------
 def get_scope_locations(
-    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = None
+    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = []
 ) -> None:
     """
     Populate a map of paths for a given scope name.
@@ -725,7 +737,7 @@ def get_scope_locations(
 
 
 # -------------------------------------------------------------------------------------------------
-def get_reference_value(data_dict: dict, lineage: list) -> str:
+def get_reference_value(data_dict: dict, lineage: list) -> dict:
     """
     Following nested keys listed in lineage, return final value.
 
@@ -741,7 +753,7 @@ def get_reference_value(data_dict: dict, lineage: list) -> str:
             else:
                 test_reference = test_reference[adr]
         else:
-            return None
+            return {}
     return test_reference
 
 

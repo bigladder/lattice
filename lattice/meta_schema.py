@@ -14,10 +14,10 @@ from .schema_to_json import JsonTranslator
 
 class MetaSchema:
   def __init__(self, schema_path: Path):
-    with open(schema_path) as meta_schema_file:
+      meta_schema_file = load(schema_path)
       uri_path = Path(schema_path).absolute().parent.as_uri() + r'/' #TODO: Why is trailing slash needed here
       resolver = jsonschema.RefResolver(uri_path, meta_schema_file)
-      self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
+      self.validator = jsonschema.Draft7Validator(meta_schema_file, resolver=resolver)
 
   def validate(self, instance_path: Path):
     with open(instance_path, 'r') as input_file:
@@ -42,7 +42,7 @@ def meta_validate_file(file_path: Path, meta_schema_path: Path):
 
 class SchemaTypes:
 
-    def __init__(self, core_schema: dict, schema: dict=None):
+    def __init__(self, core_schema: dict, schema: dict={}):
         # Generate Regular Expressions
 
         # Data Types
@@ -118,43 +118,44 @@ class SchemaTypes:
         # Constraints
         self.element_names = "([a-z][a-z,0-9]*)(_([a-z,0-9])+)*"
         self.element_names_anchored = f"^{self.element_names}$"
-        alpha_array = "(\[A-Z\]{[1-9]+})"
-        numeric_array = "(\[0-9\]{[1-9]+})"
+        alpha_array = "(\[A-Z\]{[1-9]+})" # type: ignore : meta string; eventually yields e.g. ([A-Z]{231})
+        numeric_array = "(\[0-9\]{[1-9]+})" # type: ignore : yields e.g. [0-9]{17}
         ranges = f"(>|>=|<=|<){number}"
         multiples = f"%{number}"
         data_element_value = f"{self.element_names}={values}"
-        sets = f"\[{number}(, {number})*\]"
+        sets = f"\[{number}(, {number})*\]" # type: ignore
         reference_scope = f":{self.type_base_names}:"
         selector = fr"{self.element_names}\({values}(,\s*{values})*\)"
 
         constraints = f"({alpha_array}|{numeric_array}|{ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})|({selector})"
         self.constraints_anchored = f"^{constraints}$"
 
-        re.compile(constraints)
+        re.compile(constraints) # test only
 
         # Conditional Requirements
         conditional_requirements = f"if (!?{self.element_names})(!?=({values}))?"
         self.conditional_requirements_anchored = f"^{conditional_requirements}$"
 
-        re.compile(conditional_requirements)
+        re.compile(conditional_requirements) # test only
 
 
 core_meta_schema_path = Path(__file__).with_name('meta.schema.yaml')
 core_schema_path = Path(__file__).with_name('core.schema.yaml')
 
-def generate_meta_schema(output_path, schema: Path=None):
+def generate_meta_schema(output_path, schema: Path):
     ''' '''
     core_schema = load(core_schema_path)
 
     referenced_schema = []
-    if schema is not None:
+    if schema.is_file():
         source_schema = load(schema)
         schema_dir = schema.parent
         if 'References' in source_schema:
             referenced_schema = [load(schema_file) for schema_file in [schema.with_name(f'{ref}.yaml') for ref in source_schema['References']]]
         meta_schema_file_name = f"{get_file_basename(schema, depth=2)}.meta.schema.json"
     else:
-        source_schema = None
+        source_schema = {}
+        meta_schema_file_name = ""
 
     schematypes = SchemaTypes(core_schema, source_schema)
 
@@ -238,8 +239,9 @@ def generate_meta_schema(output_path, schema: Path=None):
 
     with open(output_path, 'r') as file:
       content = file.read()
-    with open(output_path, 'w') as file:
-      file.writelines(content.replace("meta.schema.json", meta_schema_file_name))
+    if meta_schema_file_name:
+        with open(output_path, 'w') as file:
+            file.writelines(content.replace("meta.schema.json", meta_schema_file_name))
 
     return schematypes
 
