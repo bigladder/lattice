@@ -5,28 +5,26 @@ import copy
 from pathlib import Path
 from dataclasses import dataclass
 import jsonschema
-import yaml
 
 from .file_io import load, dump, get_file_basename
-
 
 class MetaSchema: #pylint: disable=R0903
     """Load and validate a metaschema"""
 
     def __init__(self, schema_path: Path):
-        """Set up validator"""
+        """
+        :param schema_path: Path to validation schema
+        """
         meta_schema_file = load(schema_path)
-        uri_path = Path(schema_path).absolute().parent.as_uri() + \
-            r'/'  # TODO: Why is trailing slash needed here
+        uri_path = Path(schema_path).absolute().parent.as_uri() + r"/"
         resolver = jsonschema.RefResolver(uri_path, meta_schema_file)
         self.validator = jsonschema.Draft7Validator(meta_schema_file, resolver=resolver)
 
-    def validate(self, instance_path: Path):
+    def validate(self, instance_path):
         """Collect validation errors"""
-        with open(instance_path, 'r', encoding='utf-8') as input_file:
-            instance = yaml.load(input_file, Loader=yaml.FullLoader)
+        instance = load(instance_path)
         errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
-        file_name = instance_path.name
+        file_name = Path(instance_path).name
         if len(errors) == 0:
             print(f"Validation successful for {file_name}")
         else:
@@ -84,10 +82,12 @@ class SchemaTypes: #pylint: disable=R0902
         template_data_group_prefixes = []
         if self.schema:
             template_data_group_prefixes = [
-                key for key in self.schema if self.schema[key]['Object Type'] == 'Data Group Template']
+                key for key in self.schema if self.schema[key]['Object Type'] ==
+                    'Data Group Template']
 
         if template_data_group_prefixes:
-            self.data_group_names_anchored = f"(^(?!({'|'.join(template_data_group_prefixes)})){self.type_base_names}$)"
+            self.data_group_names_anchored = (
+                f"(^(?!({'|'.join(template_data_group_prefixes)})){self.type_base_names}$)")
 
         data_groups = fr"\{{{self.type_base_names}\}}"
         enumerations = fr"<{self.type_base_names}>"
@@ -108,8 +108,8 @@ class SchemaTypes: #pylint: disable=R0902
         re.compile(values) # test only
 
         self.enumerator_anchored = f"^{enumerator}$"
-        
-        alpha_array = "(\\[A-Z\\]{[1-9]+})" # type: ignore : meta string; eventually yields e.g. ([A-Z]{231})
+
+        alpha_array = "(\\[A-Z\\]{[1-9]+})" # type: ignore : meta string yields e.g. ([A-Z]{231})
         numeric_array = "(\\[0-9\\]{[1-9]+})"  # type: ignore : yields e.g. [0-9]{17}
         ranges = f"(>|>=|<=|<){number}"
         multiples = f"%{number}"
@@ -118,6 +118,7 @@ class SchemaTypes: #pylint: disable=R0902
         reference_scope = f":{self.type_base_names}:"
         selector = fr"{self.element_names}\({values}(,\s*{values})*\)"
 
+        #pylint: disable-next=C0301
         constraints = f"({alpha_array}|{numeric_array}|{ranges})|({multiples})|({sets})|({data_element_value})|({reference_scope})|({selector})"
         re.compile(constraints)  # test only
         self.constraints_anchored = f"^{constraints}$"
@@ -155,17 +156,21 @@ class SchemaTypes: #pylint: disable=R0902
 def _replace_generated_patterns(meta_schema: dict, schematypes: SchemaTypes):
     """Replace generated patterns from core schema analysis"""
 
+    #pylint: disable=C0301
     definitions = meta_schema["definitions"]
-    definitions["Meta"]["properties"]["Unit Systems"]["patternProperties"][schematypes.type_base_names_anchored] = definitions["Meta"]["properties"]["Unit Systems"]["patternProperties"].pop("**GENERATED**")
-    definitions["DataGroupTemplate"]["properties"]["Required Data Elements"]["patternProperties"][schematypes.element_names_anchored] = definitions["DataGroupTemplate"]["properties"]["Required Data Elements"]["patternProperties"].pop("**GENERATED**")
+    definitions["Meta"]["properties"]["Unit Systems"]["patternProperties"][schematypes.type_base_names_anchored] = (
+        definitions["Meta"]["properties"]["Unit Systems"]["patternProperties"].pop("**GENERATED**"))
+    definitions["DataGroupTemplate"]["properties"]["Required Data Elements"]["patternProperties"][schematypes.element_names_anchored] = (
+        definitions["DataGroupTemplate"]["properties"]["Required Data Elements"]["patternProperties"].pop("**GENERATED**"))
     definitions["DataGroupTemplate"]["properties"]["Object Type"]["pattern"] = schematypes.type_base_names
     definitions["ConstraintsPattern"]["pattern"] = schematypes.constraints_anchored
     definitions["Required"]["oneOf"][1]["pattern"] = schematypes.conditional_requirements_anchored
-    definitions["Enumerator"]["patternProperties"][schematypes.enumerator_anchored] = definitions["Enumerator"]["patternProperties"].pop("**GENERATED**")
+    definitions["Enumerator"]["patternProperties"][schematypes.enumerator_anchored] = (
+        definitions["Enumerator"]["patternProperties"].pop("**GENERATED**"))
     definitions["DataTypePattern"]["pattern"] = schematypes.data_types_anchored
-    definitions["DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored] = definitions["DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop("**GENERATED**")
+    definitions["DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored] = (
+        definitions["DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop("**GENERATED**"))
     meta_schema["patternProperties"][schematypes.data_group_names_anchored] = meta_schema["patternProperties"].pop("**GENERATED**")
-
 
 def _populate_schema_specifics(meta_schema: dict, source_schema: dict):
     """Populate top-level, schema-specific desciptive elements"""
@@ -179,6 +184,7 @@ def _populate_schema_specifics(meta_schema: dict, source_schema: dict):
             for unit_system in source_schema['Schema']["Unit Systems"]:
                 meta_schema["definitions"][unit_system] = {
                     "type": "string", "enum": source_schema['Schema']["Unit Systems"][unit_system]}
+                # pylint: disable-next=C0301
                 meta_schema["definitions"]["DataElementAttributes"]["properties"]["Units"]["anyOf"].append(
                     {"$ref": f"meta.schema.json#/definitions/{unit_system}"})
 
@@ -205,7 +211,8 @@ def _populate_template_group_rules(definitions: dict,
 
     # Data Group component for the template data group
     definitions[f"{template_data_group}DataGroup"] = copy.deepcopy(definitions["DataGroup"])
-    definitions[f"{template_data_group}DataGroup"]["properties"]["Object Type"]["const"] = data_group["Name"]
+    definitions[f"{template_data_group}DataGroup"]["properties"]["Object Type"]["const"] = (
+        data_group["Name"])
 
 def _populate_template_group_element_rules(definitions: dict,
                                            data_group: dict,
@@ -213,32 +220,35 @@ def _populate_template_group_element_rules(definitions: dict,
                                            schematypes: SchemaTypes):
     """Create meta-schema validation entries for each of the custom data groups' elements"""
 
+    #pylint: disable=C0301
     if "Required Data Elements" in data_group:
         required_names = []
-        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"] = {}
+        definitions[f"{template_data_group}DataGroup"][
+            "properties"][
+                "Data Elements"][
+                    "properties"] = {}
         for data_element_name in data_group["Required Data Elements"]:
             required_names.append(data_element_name)
             data_element = data_group["Required Data Elements"][data_element_name]
-            definitions[f"{template_data_group}-{data_element_name}-DataElementAttributes"] = copy.deepcopy(
-                definitions[f"{template_data_group}DataElementAttributes"])
-            definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name] = copy.deepcopy(
-                definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored])
-            definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name][
-                "$ref"] = f"meta.schema.json#/definitions/{template_data_group}-{data_element_name}-DataElementAttributes"
+            definitions[f"{template_data_group}-{data_element_name}-DataElementAttributes"] = (
+                copy.deepcopy(definitions[f"{template_data_group}DataElementAttributes"]))
+            definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name] = (
+                copy.deepcopy(definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored]))
+            definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["$ref"] = (
+                f"meta.schema.json#/definitions/{template_data_group}-{data_element_name}-DataElementAttributes")
             for attribute in data_element:
-                definitions[f"{template_data_group}-{data_element_name}-DataElementAttributes"][
-                    "properties"][attribute]["const"] = data_element[attribute]
+                definitions[f"{template_data_group}-{data_element_name}-DataElementAttributes"]["properties"][attribute]["const"] = data_element[attribute]
                 if attribute not in definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"]:
                     definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["properties"][data_element_name]["required"].append(attribute)
         definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["required"] = required_names
         exclusive_element_names_anchored = f"(?!^({'|'.join(required_names)})$)(^{schematypes.element_names}$)"
-        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored] = definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop(schematypes.element_names_anchored)
-        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][
-            exclusive_element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{template_data_group}DataElementAttributes"
+        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored] = (
+            definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop(schematypes.element_names_anchored))
+        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][exclusive_element_names_anchored]["$ref"] = (
+            f"meta.schema.json#/definitions/{template_data_group}DataElementAttributes")
     else:
-        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][
-            schematypes.element_names_anchored]["$ref"] = f"meta.schema.json#/definitions/{template_data_group}DataElementAttributes"
-
+        definitions[f"{template_data_group}DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored]["$ref"] = (
+            f"meta.schema.json#/definitions/{template_data_group}DataElementAttributes")
 
 core_meta_schema_path = Path(__file__).with_name('meta.schema.yaml')
 core_schema_path = Path(__file__).with_name('core.schema.yaml')
@@ -276,16 +286,23 @@ def generate_meta_schema(output_path: Path, schema: Path): #pylint: disable=R091
         for d in referenced_schema:
             combined_schema.update(d)
         for data_group_type in [
-                key for key in combined_schema if combined_schema[key]['Object Type'] == 'Data Group Template']:
+                key for key in combined_schema if combined_schema[key]['Object Type'] ==
+                    'Data Group Template']:
             # Data Element Attributes
             data_group = source_schema[data_group_type]
             data_group_type_name = data_group["Name"]
 
             for template_data_group in [
-                    template_key for template_key in source_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
+                    template_key for template_key in source_schema if
+                        data_group_type_name == combined_schema[template_key]['Object Type']]:
 
-                _populate_template_group_rules(meta_schema["definitions"], data_group, template_data_group)
-                _populate_template_group_element_rules(meta_schema["definitions"], data_group, template_data_group, schematypes)
+                _populate_template_group_rules(meta_schema["definitions"],
+                                               data_group,
+                                               template_data_group)
+                _populate_template_group_element_rules(meta_schema["definitions"],
+                                                       data_group,
+                                                       template_data_group,
+                                                       schematypes)
 
                 # Main schema
                 meta_schema["patternProperties"][f"(^{template_data_group}*$)"] = {

@@ -594,11 +594,9 @@ class JSONSchemaValidator:  # pylint: disable=R0903
         """
         :param schema_path: Path to validation schema
         """
-        uri_path = Path(schema_path).absolute().parent.as_uri()
+        uri_path = Path(schema_path).absolute().parent.as_uri() + r"/"
         resolver = jsonschema.RefResolver(uri_path, load(schema_path))
-        self.validator = jsonschema.Draft7Validator(
-            load(schema_path), resolver=resolver
-        )
+        self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
 
     def validate(self, instance_path):
         """
