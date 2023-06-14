@@ -678,7 +678,7 @@ def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
 
 # -------------------------------------------------------------------------------------------------
 def generate_json_schema(
-    source_schema_input_path: str, json_schema_output_path: str
+    source_schema_input_path: Path, json_schema_output_path: Path
 ) -> None:
     """
     Create reference-resolved JSON schema from YAML source schema.
@@ -687,16 +687,14 @@ def generate_json_schema(
     :param json_schema_output_path:    JSON schema to write
     """
     if (
-        os.path.isfile(source_schema_input_path)
-        and ".schema.yaml" in source_schema_input_path
+        source_schema_input_path.is_file()
+        and source_schema_input_path.suffixes == ['.schema', '.yaml']
     ):
         # schema_ref_map collects all schema in the directory to use in reference resolution (substituition)
         schema_ref_map = {
-            "core.schema": generate_core_json_schema(
-                Path(source_schema_input_path).parent
-            )
+            "core.schema": generate_core_json_schema(source_schema_input_path.parent)
         }
-        for ref_source in Path(source_schema_input_path).parent.iterdir():
+        for ref_source in source_schema_input_path.parent.iterdir():
             schema_ref_map[ref_source.stem] = JsonTranslator(
                 ref_source.absolute()
             ).schema
