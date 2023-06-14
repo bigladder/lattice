@@ -51,7 +51,7 @@ def dump(content, output_file_path):
         with open(output_file_path, 'w', encoding='utf-8') as output_file:
             json.dump(content, output_file, indent=4)
     elif ext == '.cbor':
-        with open(output_file_path, 'wb', encoding='utf-8') as output_file:
+        with open(output_file_path, 'wb') as output_file:
             cbor2.dump(content, output_file)
     elif ext in ['.yaml', '.yml']:
         with open(output_file_path, 'w', encoding='utf-8') as out_file:
