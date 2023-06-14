@@ -32,3 +32,6 @@ jobs:
       #   with:
       #     name: build-content-${{ matrix.os }}-py${{ matrix.python-version }}
       #     path: build
+      - name: Lint with Pylint
+        run: |
+          pylint lattice

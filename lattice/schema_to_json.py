@@ -22,7 +22,9 @@ class DataGroup:  # pylint: disable=R0903
     alternative_type = (
         r"^\((?P<one_of>.*)\)"  # Parentheses encapsulate a list of options
     )
-    minmax_range_type = r"(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)"  # Parse ellipsis range-notation e.g. '[1..]'
+    # Parse ellipsis range-notation e.g. '[1..]'
+    minmax_range_type = r"(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)"
+
     enum_or_def = r"(\{|\<)(.*)(\}|\>)"
     numeric_type = (
         r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
@@ -30,7 +32,7 @@ class DataGroup:  # pylint: disable=R0903
     scope_constraint = r"^:(?P<scope>.*):"  # Lattice scope constraint for ID/Reference
     ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
 
-    def __init__(self, name, type_list, ref_list=[]):
+    def __init__(self, name, type_list, ref_list):
         self._name = name
         self._types = type_list
         self._refs = ref_list
@@ -208,9 +210,9 @@ class DataGroup:  # pylint: disable=R0903
                 target_dict_to_append["type"] = self._types[type_str]
         except KeyError:
             raise KeyError(
-                f"Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}"
+                f"Unknown type: {type_str} does not appear in referenced schema "
+                f"{list(self._refs.keys())} or type map {self._types}"
             ) from None
-            # warnings.warn(f'Unknown type: {type_str} does not appear in referenced schema {list(self._refs.keys())} or type map {self._types}')
         return
 
     @staticmethod
@@ -314,6 +316,7 @@ class DataGroup:  # pylint: disable=R0903
         collector = "allOf"
         selector_dict = {"properties": {collector: {}}}
         requirement_list = re.split(separator, requirement_str)
+        # pylint: disable-next=line-too-long
         dependent_req = r"(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?"
 
         for req in requirement_list:
@@ -398,7 +401,8 @@ class ObjectTypeList:
 
     def __init__(self, input_schema_path):
         """
-        Create new data structure where keys are Object Types, and values are a list of entries of that type
+        Create new data structure where keys are Object Types, and values are a list of entries
+        of that type
 
         :param input_schema_path:   Relative or absolute path to source schema file
         """
@@ -541,7 +545,8 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                     ) from None
         for _, ext_dict in refs.items():
             # Append the expected object types for this schema set with any Data Group Templates
-            # The 'Name' field of a Data Group Template is an object treated like a Data Group subclass
+            # The 'Name' field of a Data Group Template is an object treated like
+            # a Data Group subclass
             self._data_group_types.update(
                 [
                     ext_dict[name]["Name"]
@@ -558,7 +563,8 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                     "JSON Schema Type"
                 ]
         for ref_name, ext_dict in refs.items():
-            # Populate the references map so the parser knows where to locate any object types it subsequently encounters
+            # Populate the references map so the parser knows where to locate any object types it
+            # subsequently encounters
             self._references[ref_name] = [
                 base_item
                 for base_item in ext_dict
@@ -690,7 +696,8 @@ def generate_json_schema(
         source_schema_input_path.is_file()
         and source_schema_input_path.suffixes == ['.schema', '.yaml']
     ):
-        # schema_ref_map collects all schema in the directory to use in reference resolution (substituition)
+        # schema_ref_map collects all schema in the directory to use in reference
+        # resolution (substituition)
         schema_ref_map = {
             "core.schema": generate_core_json_schema(source_schema_input_path.parent)
         }
@@ -708,7 +715,7 @@ def generate_json_schema(
 
 # -------------------------------------------------------------------------------------------------
 def get_scope_locations(
-    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = []
+    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = None
 ) -> None:
     """
     Populate a map of paths for a given scope name.
@@ -718,7 +725,7 @@ def get_scope_locations(
     :param scope_key:     Name of the scope specifier
     :param lineage:       Current location in dictionary tree
     """
-    if not lineage:
+    if lineage is None:
         lineage = []
     for key in schema:
         if key == "scopedType" and schema[key] == scope_key:
