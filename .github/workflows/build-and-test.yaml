@@ -34,4 +34,4 @@ jobs:
       #     path: build
       - name: Lint with Pylint
         run: |
-          poetry run pylint --rcfile=.pylintrc lattice
+          poetry run pylint lattice
