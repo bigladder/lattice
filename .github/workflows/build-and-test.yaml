@@ -34,4 +34,4 @@ jobs:
       #     path: build
       - name: Lint with Pylint
         run: |
-          pylint lattice
+          poetry run pylint lattice
