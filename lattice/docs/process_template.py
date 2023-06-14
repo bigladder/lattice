@@ -9,7 +9,10 @@ import traceback
 from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNotFound
 import yaml
 
-from .schema_table import load_structure_from_object, data_types_table, string_types_table, enumerators_table, data_groups_table, write_data_model
+from .schema_table import (
+    load_structure_from_object, data_types_table, string_types_table,
+    enumerators_table, data_groups_table, write_data_model
+)
 from .grid_table import write_table
 
 def make_args_string(args_dict):
@@ -55,8 +58,7 @@ def render_header(level_and_content):
         content = level_and_content
     elif isinstance(level_and_content, (list, tuple)):
         level, content = level_and_content
-        if level < 1:
-            level = 1
+        level = max(level, 1)
     else:
         raise Exception("Unhandle type of level_and_content")
     return "#" * level + " " + content + "\n\n"
@@ -283,7 +285,7 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
         print(exc)
         traceback.print_exc()
     if log_file is not None:
-        with open(log_file, 'w') as handle:
+        with open(log_file, 'w', encoding='utf-8') as handle:
             if len(errs) > 0:
                 for err in errs:
                     handle.write(err.strip())
