@@ -293,7 +293,7 @@ class Lattice: # pylint:disable=R0902
                 markdown_path = os.path.join(
                     self.doc_output_dir, f"{get_file_basename(template.path, depth=1)}"
                 )
-                template.set_markdown_output_path(markdown_path)
+                template.markdown_output_path = markdown_path
 
     def generate_markdown_documents(self):
         """Generate markdown from doc templates"""

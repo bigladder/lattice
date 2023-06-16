@@ -1,8 +1,11 @@
+"""Build web documentation"""
+
 import os
 from distutils.dir_util import copy_tree # pylint: disable=deprecated-module
 import subprocess
 import shutil
 import platform
+from pathlib import Path
 import pygit2
 from jinja2 import Environment, FileSystemLoader
 
@@ -15,21 +18,40 @@ from .grid_table import write_table
 
 
 class DocumentFile:
+    """Parse the components of a documentation file"""
+
     def __init__(self, path):
-        self.path = os.path.abspath(path)
+        """Set up DocumentFile attributes"""
+        self.path = Path(path).absolute()
         self.file_base_name = get_file_basename(path, depth=2)
-        self.markdown_output_path = None
-        self.corresponding_schema_path = None
+        self._markdown_output_path = None
+        self._corresponding_schema_path = None
 
-    def set_markdown_output_path(self, path):
-        self.markdown_output_path = os.path.abspath(path)
+    @property
+    def markdown_output_path(self):
+        """Path to this DocumentFile's markdown output path"""
+        return self._markdown_output_path
 
-    def set_corresponding_schema_path(self, path):
-        self.corresponding_schema_path = os.path.relpath(path)
+    @markdown_output_path.setter
+    def markdown_output_path(self, path):
+        self._markdown_output_path = Path(path).absolute()
+
+    @property
+    def corresponding_schema_path(self):
+        """Path to this DocumentFile's corresponding schema path"""
+        return self._corresponding_schema_path
+
+    @corresponding_schema_path.setter
+    def corresponding_schema_path(self, path):
+        # continued use of os.path here; relative_to might still have issues with sibling paths
+        self._corresponding_schema_path = Path(os.path.relpath(path))
 
 
-class HugoWeb:
+class HugoWeb: #pylint: disable=too-many-instance-attributes
+    """Class that uses the hugo package to produce web documentation from schema"""
+
     def __init__(self, lattice):
+        """Set up location and formatting parameters"""
         self.lattice = lattice
         self.build_directory = os.path.abspath(
             self.lattice.web_docs_directory_path)
@@ -54,7 +76,7 @@ class HugoWeb:
         self.specification_counter = 1
         self.specification_templates = []
 
-    def setup_build_directory_structure(self):
+    def setup_build_directory_structure(self): #pylint: disable=missing-function-docstring
         self.assets_directory_path = make_dir(
             os.path.join(self.build_directory, "assets"))
         self.content_directory_path = make_dir(
@@ -86,9 +108,9 @@ class HugoWeb:
         copy_tree(os.path.join(os.path.dirname(__file__),
                   "hugo_layouts"), self.layouts_directory_path)
 
-    def get_git_info(self):
+    def get_git_info(self): #pylint: disable=missing-function-docstring
         self.git_repo = pygit2.Repository(
-            pygit2.discover_repository(self.docs_source_directory))
+            pygit2.discover_repository(self.docs_source_directory)) #pylint: disable=no-member
         self.git_remote_url = os.path.splitext(self.git_repo.remotes[0].url)[0]
         git_url_parts = self.git_remote_url.split('/')
         self.git_repo_name = git_url_parts[-1]
@@ -102,6 +124,7 @@ class HugoWeb:
             fr"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/"
         )
 
+    #pylint: disable-next=missing-function-docstring, too-many-branches, too-many-statements
     def make_pages(self):
         # Check config directory
         landing_page_content = ""
@@ -184,7 +207,8 @@ class HugoWeb:
         # Examples
         self.make_examples_page()
 
-    def make_specification_pages(self):
+    def make_specification_pages(self): #pylint: disable=missing-function-docstring
+
         # Collect list of doc template files
         if self.specification_order is not None:
             for specification_name in self.specification_order:
@@ -210,11 +234,11 @@ class HugoWeb:
                 if template.file_base_name in schema_file:
                     file_path = os.path.join(
                         self.source_schema_directory_path, schema_file)
-                    template.set_corresponding_schema_path(file_path)
+                    template.corresponding_schema_path = file_path
 
         # Process templates
         for template in self.specification_templates:
-            template.set_markdown_output_path(
+            template.markdown_output_path = (
                 os.path.join(self.specifications_directory_path,
                              f"{get_file_basename(template.path, depth=2)}.pdc"))
             self.make_specification_page(template.path,
@@ -222,7 +246,8 @@ class HugoWeb:
                                          self.source_schema_directory_path,
                                          template.corresponding_schema_path)
 
-    def make_schema_page(self):
+    def make_schema_page(self): #pylint: disable=missing-function-docstring
+
         schema_files = {
             "Schema": [],
             "Description": []
@@ -253,7 +278,7 @@ class HugoWeb:
         self.make_main_menu_page(
             self.schema_directory_path, "Schema", content=content)
 
-    def make_examples_page(self):
+    def make_examples_page(self): #pylint: disable=missing-function-docstring
         example_files = {
             "File Name": [],
             "Description": [],
@@ -299,10 +324,11 @@ class HugoWeb:
             self.examples_directory_path, "Examples", content=content)
 
     @staticmethod
-    def make_page(page_path, front_matter, content=""):
+    def make_page(page_path, front_matter, content=""): #pylint: disable=missing-function-docstring
         with open(page_path, 'w', encoding='utf-8') as file:
             file.writelines(f"{make_front_matter(front_matter)}{content}")
 
+    #pylint: disable-next=missing-function-docstring, too-many-arguments
     def make_main_menu_page(self,
                             page_dir_path,
                             title,
@@ -335,7 +361,7 @@ class HugoWeb:
         page_path = os.path.join(page_dir_path, "_index.pdc")
         HugoWeb.make_page(page_path, front_matter, content)
 
-    def make_specification_page(self,
+    def make_specification_page(self, #pylint: disable=missing-function-docstring
                                 template_path,
                                 output_path,
                                 schema_dir_path,
@@ -376,6 +402,7 @@ class HugoWeb:
         HugoWeb.make_page(output_path, front_matter, content)
 
     def build(self):
+        """Build documentation"""
         # Check for dependencies
         check_executable("hugo", "https://gohugo.io/installation/")
         check_executable("npm", "https://nodejs.org/en/download/")
@@ -413,7 +440,7 @@ class HugoWeb:
         subprocess.run(["hugo", "--minify"],
                        cwd=self.build_directory, check=True, shell=shell)
 
-    def make_hugo_config(self):
+    def make_hugo_config(self): #pylint: disable=missing-function-docstring
         return {
             "baseURL": self.base_url,
             "title": self.title,
@@ -460,7 +487,7 @@ class HugoWeb:
         }
 
     @staticmethod
-    def make_npm_package_json():
+    def make_npm_package_json(): #pylint: disable=missing-function-docstring
         return {
             "name": "lattice",
             "version": "0.0.1",
@@ -474,18 +501,18 @@ class HugoWeb:
         }
 
 
-def make_front_matter(front_matter):
+def make_front_matter(front_matter): #pylint: disable=missing-function-docstring
     return f"---\n{dump_to_string(front_matter,'yaml')}---\n\n"
 
 
-def prepend_file_content(file_path, new_content):
+def prepend_file_content(file_path, new_content): #pylint: disable=missing-function-docstring
     with open(file_path, 'r', encoding='utf-8') as original_file:
         original_content = original_file.read()
     with open(file_path, 'w', encoding='utf-8') as modified_file:
         modified_file.write(new_content + original_content)
 
 
-def render_template(template_path, output_path, values):
+def render_template(template_path, output_path, values): #pylint: disable=missing-function-docstring
     template_directory_path = os.path.abspath(
         os.path.join(template_path, os.pardir))
     template_environment = Environment(

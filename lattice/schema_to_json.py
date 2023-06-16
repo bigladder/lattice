@@ -4,8 +4,8 @@ import os
 import re
 import warnings
 from pathlib import Path
-import jsonschema
 from .file_io import load, dump, get_base_stem
+from .meta_schema import MetaSchema
 
 # 'once': Suppress multiple warnings from the same location.
 # 'always': Show all warnings
@@ -593,42 +593,6 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
 
 
 # -------------------------------------------------------------------------------------------------
-class JSONSchemaValidator:  # pylint: disable=R0903
-    """Class to validate instance against JSON schema"""
-
-    def __init__(self, schema_path):
-        """
-        :param schema_path: Path to validation schema
-        """
-        uri_path = Path(schema_path).absolute().parent.as_uri() + r"/"
-        resolver = jsonschema.RefResolver(uri_path, load(schema_path))
-        self.validator = jsonschema.Draft7Validator(load(schema_path), resolver=resolver)
-
-    def validate(self, instance_path):
-        """
-        :param instance_path: Path to JSON instance to be validated
-        """
-        instance = load(instance_path)
-        errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
-        file_name = Path(instance_path).name
-        if len(errors) == 0:
-            print(f"Validation successful for {file_name}")
-        else:
-            messages = []
-            for error in errors:
-                messages.append(
-                    f"{error.message} ({'.'.join([str(x) for x in error.path])})"
-                )
-            messages = [
-                f"{i}. {message}" for i, message in enumerate(messages, start=1)
-            ]
-            message_str = "\n  ".join(messages)
-            raise Exception(
-                f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}"
-            )
-
-
-# -------------------------------------------------------------------------------------------------
 def generate_core_json_schema(processing_path: Path):
     """
     Create JSON schema from core YAML schema. Any forward-declarations in core must be found in
@@ -801,7 +765,7 @@ def validate_file(input_file, input_schema):
     :param input_file:      JSON example to validate
     :param input_schema:    JSON schema to validate against
     """
-    v = JSONSchemaValidator(input_schema)
+    v = MetaSchema(input_schema)
     v.validate(input_file)
 
 
