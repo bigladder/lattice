@@ -4,7 +4,7 @@ Specifics for setting up schema tables.
 from copy import deepcopy
 import io
 import re
-from typing import Callable
+from typing import Callable, Optional
 
 from .grid_table import write_table
 
@@ -266,7 +266,7 @@ def data_groups_table(data_elements, caption=None, add_training_ws=True):
 def _write_table_and_caption(output_file: io.StringIO,
                              make_headers: bool,
                              table_from_struct, # array or dict
-                             table_write: Callable[[list, str, bool], None],
+                             table_write: Callable[[list, Optional[str], Optional[bool]], str],
                              table_title: str,
                              base_level: int):
     """Helper function to write parts of the data model"""
@@ -275,7 +275,7 @@ def _write_table_and_caption(output_file: io.StringIO,
         caption = None
     else:
         caption = table_title
-    output_file.writelines(table_write(table_from_struct, caption=caption))
+    output_file.writelines(table_write(table_from_struct, caption, None))
 
 def write_data_model(instance, make_headers=False, base_level=1):
     """

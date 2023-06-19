@@ -5,6 +5,7 @@ import re
 import warnings
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import List
 from jsonschema.exceptions import RefResolutionError
 
 from lattice.docs.process_template import process_template
@@ -84,7 +85,7 @@ class SchemaFile: # pylint:disable=R0902
                     pass  # Warning?
 
     @property
-    def meta_schema_path(self):
+    def meta_schema_path(self) -> Path:
         """Path to this SchemaFile's validating metaschema"""
         return self._meta_schema_path
 
@@ -93,7 +94,7 @@ class SchemaFile: # pylint:disable=R0902
         self._meta_schema_path = Path(meta_schema_path).absolute()
 
     @property
-    def json_schema_path(self):
+    def json_schema_path(self) -> Path:
         """Path to this SchemaFile as translated JSON"""
         return self._json_schema_path
 
@@ -161,7 +162,7 @@ class Lattice: # pylint:disable=R0902
             self.schema_directory_path = self.root_directory
 
         # Collect list of schema files
-        self.schemas: list[SchemaFile] = []
+        self.schemas: List[SchemaFile] = []
         for file_name in sorted(os.listdir(self.schema_directory_path)):
             file_path = os.path.join(self.schema_directory_path, file_name)
             if fnmatch(file_path, "*.schema.yaml") or fnmatch(file_path, "*.schema.yml"):

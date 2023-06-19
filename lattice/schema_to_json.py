@@ -4,6 +4,7 @@ import os
 import re
 import warnings
 from pathlib import Path
+from typing import Optional
 from .file_io import load, dump, get_base_stem
 from .meta_schema import MetaSchema
 
@@ -314,7 +315,7 @@ class DataGroup:  # pylint: disable=R0903
         """
         separator = r"\sand\s"
         collector = "allOf"
-        selector_dict = {"properties": {collector: {}}}
+        selector_dict: dict = {"properties": {collector: {}}}
         requirement_list = re.split(separator, requirement_str)
         # pylint: disable-next=line-too-long
         dependent_req = r"(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?"
@@ -443,27 +444,27 @@ class ObjectTypeList:
 class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
     """Class to translate source schema into JSON schema"""
 
-    def __init__(self, input_file_path, forward_declaration_dir=None):
+    def __init__(self, input_file_path: Path, forward_declaration_dir: Optional[Path]=None):
         """ """
-        self._schema = {
+        self._schema: dict = {
             "$schema": "http://json-schema.org/draft-07/schema#",
             "title": None,
             "description": None,
             "definitions": {},
         }
-        self._references = {}
-        self._fundamental_data_types = {}
-        source_path = Path(input_file_path).absolute()
-        self._source_dir = source_path.parent
-        self._forward_declaration_dir = forward_declaration_dir  # core only
-        self._schema_name = Path(source_path.stem).stem
+        self._references: dict = {}
+        self._fundamental_data_types: dict = {}
+        source_path = input_file_path.absolute()
+        self._source_dir: Path = source_path.parent
+        self._forward_declaration_dir: Optional[Path] = forward_declaration_dir  # core yaml only
+        self._schema_name: str = Path(source_path.stem).stem
         self._schema_object_types: set = {
             "String Type",
             "Enumeration",
         }  # "basic" object types
         self._data_group_types: set = {"Data Group"}
-        self._contents = load(source_path)
-        sch = {}
+        self._contents: dict = load(source_path)
+        sch: dict = {}
 
         file_objects = ObjectTypeList(input_file_path)
 
@@ -507,7 +508,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
         """Return the translated JSON schema dictionary"""
         return self._schema
 
-    def _load_meta_info(self, schema_section):
+    def _load_meta_info(self, schema_section: dict):
         """Store the global/common types and the types defined by any named references."""
         self._schema["title"] = schema_section["Title"]
         self._schema["description"] = schema_section["Description"]
@@ -572,7 +573,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                 in self._schema_object_types | self._data_group_types
             ]
 
-    def _process_enumeration(self, name_key):
+    def _process_enumeration(self, name_key: str):
         """Collect all Enumerators in an Enumeration block."""
         enums = self._contents[name_key]["Enumerators"]
         description = self._contents[name_key].get("Description")
@@ -679,7 +680,9 @@ def generate_json_schema(
 
 # -------------------------------------------------------------------------------------------------
 def get_scope_locations(
-    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = None
+    #pylint: disable-next=dangerous-default-value # default for mutable value is intentional,
+    # for recursion
+    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = []
 ) -> None:
     """
     Populate a map of paths for a given scope name.
@@ -689,7 +692,7 @@ def get_scope_locations(
     :param scope_key:     Name of the scope specifier
     :param lineage:       Current location in dictionary tree
     """
-    if lineage is None:
+    if not lineage:
         lineage = []
     for key in schema:
         if key == "scopedType" and schema[key] == scope_key:
@@ -725,7 +728,7 @@ def get_reference_value(data_dict: dict, lineage: list) -> dict:
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_references(input_file, input_schema):
+def postvalidate_references(input_file: Path, input_schema: Path):
     """
     Make sure IDs and References match in scope.
 
@@ -733,8 +736,8 @@ def postvalidate_references(input_file, input_schema):
     :param input_schema:    JSON schema to validate against
     :raises Exception:      When Reference scope does not match anything in ID scopes
     """
-    id_scopes = {}
-    reference_scopes = {}
+    id_scopes: dict = {}
+    reference_scopes: dict = {}
     get_scope_locations(load(input_schema), scope_key="ID", scopes_dict=id_scopes)
     get_scope_locations(
         load(input_schema), scope_key="Reference", scopes_dict=reference_scopes
@@ -758,7 +761,7 @@ def postvalidate_references(input_file, input_schema):
 
 
 # -------------------------------------------------------------------------------------------------
-def validate_file(input_file, input_schema):
+def validate_file(input_file: Path, input_schema: Path):
     """
     Validate example against schema.
 
@@ -770,7 +773,7 @@ def validate_file(input_file, input_schema):
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_file(input_file, input_schema):
+def postvalidate_file(input_file: Path, input_schema: Path):
     """
     Validate input example against external rules; currently scopes dictated in schema.
 

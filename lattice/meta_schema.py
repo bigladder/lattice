@@ -4,8 +4,8 @@ import re
 import copy
 from pathlib import Path
 from dataclasses import dataclass
+from typing import Dict, Any
 import jsonschema
-
 from .file_io import load, dump, get_file_basename
 
 class MetaSchema: #pylint: disable=R0903
@@ -109,8 +109,8 @@ class SchemaTypes: #pylint: disable=R0902
 
         self.enumerator_anchored = f"^{enumerator}$"
 
-        alpha_array = "(\\[A-Z\\]{[1-9]+})" # type: ignore : meta string yields e.g. ([A-Z]{231})
-        numeric_array = "(\\[0-9\\]{[1-9]+})"  # type: ignore : yields e.g. [0-9]{17}
+        alpha_array = "(\\[A-Z\\]{[1-9]+})" # type: ignore # meta string yields e.g. ([A-Z]{231})
+        numeric_array = "(\\[0-9\\]{[1-9]+})"  # type: ignore # yields e.g. [0-9]{17}
         ranges = f"(>|>=|<=|<){number}"
         multiples = f"%{number}"
         data_element_value = f"{self.element_names}={values}"
@@ -253,7 +253,7 @@ def _populate_template_group_element_rules(definitions: dict,
 core_meta_schema_path = Path(__file__).with_name('meta.schema.yaml')
 core_schema_path = Path(__file__).with_name('core.schema.yaml')
 
-def generate_meta_schema(output_path: Path, schema: Path): #pylint: disable=R0914
+def generate_meta_schema(output_path: Path, schema: Path) -> SchemaTypes: #pylint: disable=R0914
     """Generate metaschema from a combination of core schema and source schema"""
 
     core_schema = load(core_schema_path)
@@ -325,7 +325,7 @@ def generate_meta_schema(output_path: Path, schema: Path): #pylint: disable=R091
 def get_types(schema: dict) -> dict:
     """For each Object Type in a schema, map a list of Objects matching that type."""
 
-    types = {}
+    types: Dict[str, Any] = {}
     for schema_object in schema:
         if schema[schema_object]["Object Type"] not in types:
             types[schema[schema_object]["Object Type"]] = []
