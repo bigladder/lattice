@@ -82,10 +82,10 @@ Performance:
       Required: True
     performance_map:
       Description: "Data group describing drive performance when operating"
-      Data Type: "{PerformanceMapDrive}"
+      Data Type: "{PerformanceMap}"
       Required: True
 
-PerformanceMapDrive:
+PerformanceMap:
   Object Type: "Performance Map"
   Data Elements:
     grid_variables:
