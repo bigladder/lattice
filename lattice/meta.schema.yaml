@@ -141,17 +141,27 @@ definitions:
     enum:
     - "-"
     - m
-    - K
-    - W
+    - m2
+    - m3
+    - s
+    - m/s
+    - m2/s
+    - m3/s
     - kg
     - kg/s
-    - m3/s
+    - N
+    - J
+    - W
     - Pa
+    - K
+    - J/K
+    - W/K
     - m2-K/W
-    - Hz
     - V
+    - A
+    - C
+    - Hz
     - rev/s
-    - s
   DataTypePattern:
     type: string
     pattern: "**GENERATED**"
