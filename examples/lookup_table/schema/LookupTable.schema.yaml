@@ -7,7 +7,6 @@ Schema:
 
 LookupTable:
   Object Type: "Data Group Template"
-  Name: Lookup Table
   Required Data Elements:
     grid_variables:
       Required: True
@@ -16,7 +15,6 @@ LookupTable:
 
 GridVariables:
   Object Type: "Data Group Template"
-  Name: Grid Variables
   Required Data Types:
     - "[Numeric][1..]"
     - "[Integer][1..]"
@@ -24,14 +22,14 @@ GridVariables:
 
 LookupVariables:
   Object Type: "Data Group Template"
-  Name: Lookup Variables
   Required Data Types:
     - "[Numeric/Null][1..]"
     - "[Integer/Null][1..]"
   Data Elements Required: True
 
 LookupTableDrive:
-  Object Type: "Lookup Table"
+  Object Type: "Data Group"
+  Data Group Template: LookupTable
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
@@ -43,7 +41,8 @@ LookupTableDrive:
       Required: True
 
 GridVariablesDrive:
-  Object Type: "Grid Variables"
+  Object Type: "Data Group"
+  Data Group Template: GridVariables
   Data Elements:
     output_power:
       Description: "Output shaft power"
@@ -53,7 +52,8 @@ GridVariablesDrive:
       Required: True
 
 LookupVariablesDrive:
-  Object Type: "Lookup Variables"
+  Object Type: "Data Group"
+  Data Group Template: LookupVariables
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"

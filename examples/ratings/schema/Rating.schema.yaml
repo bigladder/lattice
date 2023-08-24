@@ -9,7 +9,6 @@ Schema:
 
 Rating:
   Object Type: "Data Group Template"
-  Name: Rating
   Required Data Elements:
     rating_reproducible_from_data:
       Data Type: Boolean

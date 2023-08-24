@@ -66,16 +66,9 @@ class SchemaTypes:
         re_string_types = '|'.join(string_types)
         re_string_types = f"({re_string_types})"
 
-        template_data_group_prefixes = []
-        if schema:
-            template_data_group_prefixes = [key for key in schema if schema[key]['Object Type'] == 'Data Group Template']
-
         self.type_base_names = "[A-Z]([A-Z]|[a-z]|[0-9])*"
         self.type_base_names_anchored = f"^{self.type_base_names}$"
-        if len(template_data_group_prefixes) > 0:
-            self.data_group_names_anchored = f"(^(?!({'|'.join(template_data_group_prefixes)})){self.type_base_names}$)"
-        else:
-            self.data_group_names_anchored = self.type_base_names_anchored
+        self.data_group_names_anchored = self.type_base_names_anchored
         data_groups = fr"\{{{self.type_base_names}\}}"
         enumerations = fr"<{self.type_base_names}>"
         optional_base_types = fr"{base_types}{{1}}(\/{base_types})*"
@@ -173,6 +166,7 @@ def generate_meta_schema(output_path, schema=None):
     meta_schema["definitions"]["Enumerator"]["patternProperties"][schematypes.enumerator_anchored] = meta_schema["definitions"]["Enumerator"]["patternProperties"].pop("**GENERATED**")
     meta_schema["definitions"]["DataTypePattern"]["pattern"] = schematypes.data_types_anchored
     meta_schema["definitions"]["DataGroup"]["properties"]["Data Elements"]["patternProperties"][schematypes.element_names_anchored] = meta_schema["definitions"]["DataGroup"]["properties"]["Data Elements"]["patternProperties"].pop("**GENERATED**")
+    meta_schema["definitions"]["DataGroup"]["properties"]["Data Group Template"]["pattern"] = schematypes.type_base_names_anchored
     meta_schema["patternProperties"][schematypes.data_group_names_anchored] = meta_schema["patternProperties"].pop("**GENERATED**")
 
     # Replace generated patterns from schema instance
@@ -194,9 +188,8 @@ def generate_meta_schema(output_path, schema=None):
         for data_group_type in [key for key in combined_schema if combined_schema[key]['Object Type'] == 'Data Group Template']:
             # Data Element Attributes
             data_group = source_schema[data_group_type]
-            data_group_type_name = data_group["Name"]
 
-            for template_data_group in [template_key for template_key in source_schema if data_group_type_name == combined_schema[template_key]['Object Type']]:
+            for template_data_group in [template_key for template_key in source_schema if 'Data Group Template' in combined_schema[template_key] and data_group_type == combined_schema[template_key]['Data Group Template']]:
                 meta_schema["definitions"][f"{template_data_group}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 
                 if "Unit System" in data_group:
@@ -210,7 +203,6 @@ def generate_meta_schema(output_path, schema=None):
 
                 # Data Group
                 meta_schema["definitions"][f"{template_data_group}DataGroup"] = copy.deepcopy(meta_schema["definitions"]["DataGroup"])
-                meta_schema["definitions"][f"{template_data_group}DataGroup"]["properties"]["Object Type"]["const"] = data_group["Name"]
 
                 if "Required Data Elements" in data_group:
                     required_names = []

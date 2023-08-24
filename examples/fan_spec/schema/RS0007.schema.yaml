@@ -30,7 +30,7 @@ DriveType:
 # Data Groups
 RS0007:
   Object Type: "Data Group"
-  Data Group Template: "Representation Specification"
+  Data Group Template: RepresentationSpecification
   Data Elements:
     metadata:
       Description: "Metadata data group"
@@ -82,7 +82,7 @@ Performance:
 
 PerformanceMapMechDrive:
   Object Type: "Data Group"
-  Data Group Template: "Performance Map"
+  Data Group Template: PerformanceMap
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
@@ -95,7 +95,7 @@ PerformanceMapMechDrive:
 
 GridVariablesMechDrive:
   Object Type: "Data Group"
-  Data Group Template: "Grid Variables"
+  Data Group Template: GridVariables
   Data Elements:
     output_power:
       Description: "Output shaft power"
@@ -106,7 +106,7 @@ GridVariablesMechDrive:
 
 LookupVariablesMechDrive:
   Object Type: "Data Group"
-  Data Group Template: "Lookup Variables"
+  Data Group Template: LookupVariables
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"

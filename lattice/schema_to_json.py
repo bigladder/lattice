@@ -359,8 +359,6 @@ class JSON_translator:
         for ref_name in refs:
             try:
                 ext_dict = load(refs[ref_name])
-                # Append the expected object types for this schema set with any Data Group Templates
-                self._schema_object_types.extend([ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
                 # Populate the references map so the parser knows where to locate any object types it subsequently encounters
                 self._references[ref_name] = [base_item for base_item in ext_dict if ext_dict[base_item]['Object Type'] in self._schema_object_types]
                 for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
