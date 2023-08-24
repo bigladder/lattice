@@ -28,7 +28,8 @@ CoolingMethod:
 
 # Data Groups
 RS0006:
-  Object Type: "Representation Specification"
+  Object Type: "Data Group"
+  Data Group Template: "Representation Specification"
   Data Elements:
     metadata:
       Description: "Metadata data group"
@@ -86,7 +87,8 @@ Performance:
       Required: True
 
 PerformanceMapDrive:
-  Object Type: "Performance Map"
+  Object Type: "Data Group"
+  Data Group Template: "Performance Map"
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
@@ -98,7 +100,8 @@ PerformanceMapDrive:
       Required: True
 
 GridVariablesDrive:
-  Object Type: "Grid Variables"
+  Object Type: "Data Group"
+  Data Group Template: "Grid Variables"
   Data Elements:
     output_power:
       Description: "Power delivered to the motor"
@@ -114,7 +117,8 @@ GridVariablesDrive:
       Required: True
 
 LookupVariablesDrive:
-  Object Type: "Lookup Variables"
+  Object Type: "Data Group"
+  Data Group Template: "Lookup Variables"
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"
