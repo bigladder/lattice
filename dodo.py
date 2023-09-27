@@ -115,3 +115,9 @@ def task_generate_web_docs():
       ],
       'clean': True
     }
+
+def task_test():
+  '''Run unit tests'''
+  return {
+    'actions': ['pytest -v test']
+  }

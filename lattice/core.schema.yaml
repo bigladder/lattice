@@ -140,7 +140,7 @@ Metadata:
     data_source:
       Description: "Source(s) of the data"
       Data Type: "String"
-      Note: "Used by *data publisher* to document methods (e.g. software and version) used to generate data. **Informative note:** `data_source` may be different from ratings source(s) included elsewhere."
+      Notes: "Used by *data publisher* to document methods (e.g. software and version) used to generate data. **Informative note:** `data_source` may be different from ratings source(s) included elsewhere."
     disclaimer:
       Description: "Characterization of accuracy, limitations, and applicability of this data"
       Data Type: "String"

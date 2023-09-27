@@ -3,9 +3,9 @@ Schema:
   Title: Lookup Table
   Description: Schema Lookup Tables using data group templates
   Version: "0.1.0"
-  Root Data Group: LookupTableDrive
+  Root Data Group: LookupTable
 
-LookupTable:
+LookupTableTemplate:
   Object Type: "Data Group Template"
   Required Data Elements:
     grid_variables:
@@ -13,23 +13,23 @@ LookupTable:
     lookup_variables:
       Required: True
 
-GridVariables:
+GridVariablesTemplate:
   Object Type: "Data Group Template"
   Required Data Types:
     - "[Numeric][1..]"
     - "[Integer][1..]"
   Data Elements Required: True
 
-LookupVariables:
+LookupVariablesTemplate:
   Object Type: "Data Group Template"
   Required Data Types:
     - "[Numeric/Null][1..]"
     - "[Integer/Null][1..]"
   Data Elements Required: True
 
-LookupTableDrive:
+LookupTable:
   Object Type: "Data Group"
-  Data Group Template: LookupTable
+  Data Group Template: LookupTableTemplate
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
@@ -40,9 +40,9 @@ LookupTableDrive:
       Data Type: "{LookupVariables}"
       Required: True
 
-GridVariablesDrive:
+GridVariables:
   Object Type: "Data Group"
-  Data Group Template: GridVariables
+  Data Group Template: GridVariablesTemplate
   Data Elements:
     output_power:
       Description: "Output shaft power"
@@ -51,9 +51,9 @@ GridVariablesDrive:
       Units: "W"
       Required: True
 
-LookupVariablesDrive:
+LookupVariables:
   Object Type: "Data Group"
-  Data Group Template: LookupVariables
+  Data Group Template: LookupVariablesTemplate
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"
