@@ -1,7 +1,7 @@
 from lattice.schema import SchemaPatterns, RegularExpressionPattern
+from typing import List # Needed for python versions < 3.9. 3.8 reaches end-of-life 2024-10.
 
-
-def execute_pattern_test(pattern: RegularExpressionPattern, valid_examples: list[str], invalid_examples: list[str], anchored: bool = True):
+def execute_pattern_test(pattern: RegularExpressionPattern, valid_examples: List[str], invalid_examples: List[str], anchored: bool = True):
 
     pattern_text = pattern.anchored() if anchored else pattern.pattern
 
