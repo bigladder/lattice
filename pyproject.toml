@@ -9,13 +9,13 @@ keywords = ["data-modeling", "schema", "lattice"]
 repository = "https://github.com/bigladder/lattice"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 jsonschema = "*"
 pyyaml = "*"
 cbor2 = "*"
 Jinja2 = "*"
 stringcase = "1.2.0"
-pygit2 = "^1.10.0"
+pygit2 = "^1.13.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
