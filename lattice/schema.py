@@ -1,5 +1,5 @@
 from __future__ import annotations # Needed for type hinting classes that are not yet fully defined
-from .file_io import load, dump, get_file_basename
+from .file_io import load, get_file_basename
 import pathlib
 import re
 
@@ -26,6 +26,7 @@ class RegularExpressionPattern:
 
 class SchemaPatterns:
 
+    # TODO: Move to static members of individual classes? (e.g., DataElement.pattern?)
     number = RegularExpressionPattern("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
     integer = RegularExpressionPattern("([-+]?[0-9]+)")
     string = RegularExpressionPattern("\".*\"")
@@ -86,17 +87,6 @@ class SchemaPatterns:
         # Conditional Requirements
         self.conditional_requirements = RegularExpressionPattern(f"if (!?{self.data_element_names})(!?=({self.values}))?")
 
-class DataType:
-    def __init__(self, name: str, data_type_dictionary: dict):
-        self.name = name
-        self.dictionary = data_type_dictionary
-
-class StringType:
-    def __init__(self, name: str, string_type_dictionary: dict):
-        self.name = name
-        self.dictionary = string_type_dictionary
-
-
 class Constraint:
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
@@ -127,15 +117,12 @@ class DataElementValueConstraint(Constraint):
         Constraint.__init__(self, text, parent_data_element)
         self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
         match = self.pattern.match(self.text)
-        self.data_element_name = match.group(1)
-        self.data_element_value = match.group(5)
-
+        self.data_element_name = match.group(1) # TODO: Named groups?
+        self.data_element_value = match.group(5) # TODO: Named groups?
 
 class ArrayLengthLimitsConstraint(Constraint):
     def __init__(self, text: str, parent_data_element: DataElement):
         Constraint.__init__(self, text, parent_data_element)
-
-
 
 class DataElement:
     def __init__(self, name : str, data_element_dictionary : dict, parent_data_group : DataGroup):
@@ -182,6 +169,16 @@ class DataElement:
                 raise Exception(f"Unrecognized constraint syntax, \"{constraint}\"")
                 self.constraints.append(Constraint(constraint, self))
 
+class DataType:
+    def __init__(self, name: str, data_type_dictionary: dict, parent_schema : Schema):
+        self.name = name
+        self.dictionary = data_type_dictionary
+
+class StringType:
+    def __init__(self, name: str, string_type_dictionary: dict, parent_schema : Schema):
+        self.name = name
+        self.dictionary = string_type_dictionary
+
 class DataGroup:
     def __init__(self, name, data_group_dictionary, parent_schema : Schema):
         self.name = name
@@ -192,22 +189,25 @@ class DataGroup:
             self.data_elements[data_element] = DataElement(data_element, self.dictionary["Data Elements"][data_element], self)
 
 class Enumerator:
-    def __init__(self, name, enumerator_dictionary) -> None:
+    def __init__(self, name, enumerator_dictionary, parent_enumeration : Enumeration) -> None:
         self.name = name
         self.dictionary = enumerator_dictionary
+        self.parent_enumeration = parent_enumeration
 
 class Enumeration:
-    def __init__(self, name, enumeration_dictionary):
+    def __init__(self, name, enumeration_dictionary, parent_schema : Schema):
         self.name = name
         self.dictionary = enumeration_dictionary
+        self.parent_schema = parent_schema
         self.enumerators = {}
         for enumerator in self.dictionary["Enumerators"]:
-            self.enumerators[enumerator] = Enumerator(enumerator, self.dictionary["Enumerators"][enumerator])
+            self.enumerators[enumerator] = Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self)
 
 class DataGroupTemplate:
-    def __init__(self, name: str, data_group_template_dictionary: dict):
+    def __init__(self, name: str, data_group_template_dictionary: dict, parent_schema : Schema):
         self.name = name
         self.dictionary = data_group_template_dictionary
+        self.parent_schema = parent_schema
 
 class Schema:
 
@@ -239,13 +239,13 @@ class Schema:
                 if object_type == "Data Group":
                     self.data_groups[object_name] = DataGroup(object_name, self.source_dictionary[object_name], self)
                 elif object_type == "Enumeration":
-                    self.enumerations[object_name] = Enumeration(object_name, self.source_dictionary[object_name])
+                    self.enumerations[object_name] = Enumeration(object_name, self.source_dictionary[object_name], self)
                 elif object_type == "Data Type":
-                    self.data_types[object_name] = DataType(object_name, self.source_dictionary[object_name])
+                    self.data_types[object_name] = DataType(object_name, self.source_dictionary[object_name], self)
                 elif object_type == "String Type":
-                    self.data_types[object_name] = StringType(object_name, self.source_dictionary[object_name])
+                    self.data_types[object_name] = StringType(object_name, self.source_dictionary[object_name], self)
                 elif object_type == "Data Group Template":
-                    self.data_types[object_name] = DataGroupTemplate(object_name, self.source_dictionary[object_name])
+                    self.data_types[object_name] = DataGroupTemplate(object_name, self.source_dictionary[object_name], self)
                 else:
                     raise Exception(f"Unrecognized Object Type, \"{object_type}\" in {self.file_path}")
 
