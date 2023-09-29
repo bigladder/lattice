@@ -6,7 +6,6 @@ import yaml
 import copy
 
 from .file_io import load, dump, get_file_basename
-from .schema_to_json import JSON_translator
 from .schema import SchemaPatterns
 
 
@@ -47,10 +46,10 @@ def generate_meta_schema(output_path, schema=None):
     ''' '''
     referenced_schema = []
     if schema is not None:
-        source_schema = load(schema)
+        source_schema = load(schema) # TODO: Replace with Schema class
         schema_dir = os.path.dirname(schema)
-        if 'References' in source_schema:
-            referenced_schema = [load(schema_file) for schema_file in [os.path.join(schema_dir, f'{ref}.yaml') for ref in source_schema['References']]]
+        if 'References' in source_schema["Schema"]:
+            referenced_schema = [load(schema_file) for schema_file in [os.path.join(schema_dir, f'{ref}.schema.yaml') for ref in source_schema["Schema"]['References']]]
         meta_schema_file_name = f"{get_file_basename(schema, depth=2)}.meta.schema.json"
     else:
         source_schema = None
@@ -83,14 +82,25 @@ def generate_meta_schema(output_path, schema=None):
                     meta_schema["definitions"][unit_system] = {"type": "string", "enum": source_schema['Schema']["Unit Systems"][unit_system]}
                     meta_schema["definitions"]["DataElementAttributes"]["properties"]["Units"]["anyOf"].append({"$ref":f"meta.schema.json#/definitions/{unit_system}"})
         # Data Group Templates (gather from referenced Schema as well)
-        combined_schema = source_schema.copy()
-        for d in referenced_schema:
-            combined_schema.update(d)
+        data_group_templates = {}
+        for template_name in [t for t in source_schema if source_schema[t]['Object Type'] == 'Data Group Template']:
+           data_group_templates[template_name] = source_schema[template_name]
 
-        data_group_template_names = [key for key in combined_schema if combined_schema[key]['Object Type'] == 'Data Group Template']
-        meta_schema["definitions"]["DataGroup"]["properties"]["Data Group Template"]["enum"] = data_group_template_names
-        for data_group_template_name in data_group_template_names:
-            data_group_template = combined_schema[data_group_template_name]
+        for ref in referenced_schema:
+          for template_name in [t for t in ref if ref[t]['Object Type'] == 'Data Group Template']:
+            data_group_templates[template_name] = ref[template_name]
+
+        if len(data_group_templates) > 0:
+            meta_schema["definitions"]["DataGroup"]["properties"]["Data Group Template"]["enum"] = list(data_group_templates.keys())
+        else:
+            # If no Data Group Templates are defined, Data Groups should not define that property
+            meta_schema["definitions"]["DataGroup"]["properties"].pop("Data Group Template")
+
+        # Data Groups based on Data Group Templates still have to match the normal Data Group pattern
+        meta_schema["patternProperties"][schema_patterns.type_base_names.anchored()]["allOf"].append({"if": {"properties": {"Object Type": {"const": "Data Group"}, "Data Group Template": True}}, "then": {"$ref": f"meta.schema.json#/definitions/DataGroup"}})
+
+        for data_group_template_name in data_group_templates:
+            data_group_template = data_group_templates[data_group_template_name]
             meta_schema["definitions"][f"{data_group_template_name}DataElementAttributes"] = copy.deepcopy(meta_schema["definitions"]["DataElementAttributes"])
 
             if "Unit System" in data_group_template:

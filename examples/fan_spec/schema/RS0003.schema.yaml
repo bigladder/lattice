@@ -80,7 +80,7 @@ ComponentType:
 
 RS0003:
   Object Type: "Data Group"
-  Data Group Template: RepresentationSpecification
+  Data Group Template: RepresentationSpecificationTemplate
   Data Elements:
     metadata:
       Description: "Metadata data group"
@@ -230,7 +230,7 @@ SystemCurve:
 
 PerformanceMapContinuous:
   Object Type: "Data Group"
-  Data Group Template: PerformanceMap
+  Data Group Template: PerformanceMapTemplate
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for continuous fan performance"
@@ -243,7 +243,7 @@ PerformanceMapContinuous:
 
 GridVariablesContinuous:
   Object Type: "Data Group"
-  Data Group Template: GridVariables
+  Data Group Template: GridVariablesTemplate
   Data Elements:
     standard_air_volumetric_flow_rate:
       Description: "Volumetric air flow rate through fan assembly at standard air conditions"
@@ -261,7 +261,7 @@ GridVariablesContinuous:
 
 LookupVariablesContinuous:
   Object Type: "Data Group"
-  Data Group Template: LookupVariables
+  Data Group Template: LookupVariablesTemplate
   Data Elements:
     impeller_rotational_speed:
       Description: "Rotational speed of fan impeller"
@@ -279,7 +279,7 @@ LookupVariablesContinuous:
 
 PerformanceMapDiscrete:
   Object Type: "Data Group"
-  Data Group Template: PerformanceMap
+  Data Group Template: PerformanceMapTemplate
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for discrete fan performance"
@@ -292,7 +292,7 @@ PerformanceMapDiscrete:
 
 GridVariablesDiscrete:
   Object Type: "Data Group"
-  Data Group Template: GridVariables
+  Data Group Template: GridVariablesTemplate
   Data Elements:
     speed_number:
       Description: "Number indicating discrete speed of fan impeller in rank order (with 1 being the lowest speed)"
@@ -311,7 +311,7 @@ GridVariablesDiscrete:
 
 LookupVariablesDiscrete:
   Object Type: "Data Group"
-  Data Group Template: LookupVariables
+  Data Group Template: LookupVariablesTemplate
   Data Elements:
     standard_air_volumetric_flow_rate:
       Description: "Volumetric air flow rate through fan assembly at standard air conditions"
