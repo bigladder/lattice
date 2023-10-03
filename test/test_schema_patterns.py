@@ -1,7 +1,9 @@
-from lattice.schema import SchemaPatterns, RegularExpressionPattern
-from typing import List # Needed for python versions < 3.9. 3.8 reaches end-of-life 2024-10.
+import lattice.schema
+# Needed for python versions < 3.9. 3.8 reaches end-of-life 2024-10.
+from typing import List
 
-def execute_pattern_test(pattern: RegularExpressionPattern, valid_examples: List[str], invalid_examples: List[str], anchored: bool = True):
+
+def execute_pattern_test(pattern: lattice.schema.RegularExpressionPattern, valid_examples: List[str], invalid_examples: List[str], anchored: bool = True):
 
     pattern_text = pattern.anchored() if anchored else pattern.pattern
 
@@ -16,7 +18,7 @@ def execute_pattern_test(pattern: RegularExpressionPattern, valid_examples: List
 
 def test_integer_pattern():
     execute_pattern_test(
-        pattern=SchemaPatterns().integer,
+        pattern=lattice.schema.IntegerType.value_pattern,
         valid_examples=[
             "1",
             "0",
@@ -38,7 +40,7 @@ def test_integer_pattern():
 def test_data_type_pattern():
 
     execute_pattern_test(
-        pattern=SchemaPatterns().data_types,
+        pattern=lattice.schema.SchemaPatterns().data_types,
         valid_examples=[
             "Numeric",
             "[Numeric]",
@@ -52,26 +54,27 @@ def test_data_type_pattern():
 
 def test_enumerator_pattern():
 
-    execute_pattern_test(pattern=SchemaPatterns().enumerator,
-                         valid_examples=[
-        "ENUMERATOR",
-        "ENUMERATOR_2",
-        "NEW_ENUMERATOR",
-        "A",
-    ],
+    execute_pattern_test(
+        pattern=lattice.schema.EnumerationType.value_pattern,
+        valid_examples=[
+            "ENUMERATOR",
+            "ENUMERATOR_2",
+            "NEW_ENUMERATOR",
+            "A",
+        ],
         invalid_examples=[
-        "Wrong",
-        "wrong",
-        "_A",
-        "A_",
-        "000_A"
-    ],
+            "Wrong",
+            "wrong",
+            "_A",
+            "A_",
+            "000_A"
+        ],
         anchored=True)
 
 
 def test_value_pattern():
     execute_pattern_test(
-        pattern=SchemaPatterns().values,
+        pattern=lattice.schema._value_pattern,
         valid_examples=[
             "3.14",
             "\"\"",
@@ -93,7 +96,7 @@ def test_value_pattern():
 def test_data_element_value_constraint_pattern():
 
     execute_pattern_test(
-        pattern=SchemaPatterns().data_element_value_constraint,
+        pattern=lattice.schema.DataElementValueConstraint.pattern,
         valid_examples=[
             "schema=RS0001"
         ],
@@ -107,7 +110,7 @@ def test_data_element_value_constraint_pattern():
 def test_selector_constraint_pattern():
 
     execute_pattern_test(
-        pattern=SchemaPatterns().selector_constraint,
+        pattern=lattice.schema.SelectorConstraint.pattern,
         valid_examples=[
             "operation_speed_control_type(CONTINUOUS, DISCRETE)"
         ],

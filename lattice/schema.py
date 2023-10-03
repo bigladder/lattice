@@ -27,6 +27,7 @@ class RegularExpressionPattern:
 
 # Data Types
 _type_base_names = RegularExpressionPattern("[A-Z]([A-Z]|[a-z]|[0-9])*")
+_data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
 
 class DataType:
     def __init__(self, text, parent_data_element: DataElement):
@@ -85,6 +86,7 @@ class DataGroupType(DataType):
 
 class EnumerationType(DataType):
     pattern = RegularExpressionPattern(fr"<{_type_base_names}>")
+    value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
     def __init__(self, text, parent_data_element):
         super().__init__(text, parent_data_element)
 
@@ -93,6 +95,8 @@ class AlternativeType(DataType):
     def __init__(self, text, parent_data_element):
         super().__init__(text, parent_data_element)
 
+_value_pattern = RegularExpressionPattern(f"(({NumericType.value_pattern})|({StringType.value_pattern})|({EnumerationType.value_pattern})|({BooleanType.value_pattern}))")
+
 # Constraints
 class Constraint:
     def __init__(self, text: str, parent_data_element: DataElement):
@@ -100,26 +104,36 @@ class Constraint:
         self.parent_data_element = parent_data_element
 
 class RangeConstraint(Constraint):
+    pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
 
 class MultipleConstraint(Constraint):
+    pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
 
 class SetConstraint(Constraint):
+    pattern = RegularExpressionPattern(f"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(self, text, parent_data_element)
 
 class SelectorConstraint(Constraint):
+    pattern = RegularExpressionPattern(fr"{_data_element_names}\({EnumerationType.value_pattern}(, ?{EnumerationType.value_pattern})*\)")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
 
 class StringPatternConstraint(Constraint):
+    pattern = RegularExpressionPattern("\".*\"")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(self, text, parent_data_element)
+        try:
+            re.compile(text)
+        except:
+            raise Exception(f"Invalid regular expression: {text}")
 
 class DataElementValueConstraint(Constraint):
+    pattern = RegularExpressionPattern(f"({_data_element_names})=({_value_pattern})")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
         self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
@@ -128,16 +142,39 @@ class DataElementValueConstraint(Constraint):
         self.data_element_value = match.group(5) # TODO: Named groups?
 
 class ArrayLengthLimitsConstraint(Constraint):
+    pattern = RegularExpressionPattern(f"\[(\d*)\.\.(\d*)\]")
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(self, text, parent_data_element)
 
-def constraint_factory():
-    pass
+_constraint_list = [
+    RangeConstraint,
+    MultipleConstraint,
+    SetConstraint,
+    SelectorConstraint,
+    StringPatternConstraint,
+    DataElementValueConstraint,
+    ArrayLengthLimitsConstraint
+]
+
+def _constraint_factory(input: str, parent_data_element: DataElement):
+    number_of_matches = 0
+    match_type = None
+    for constraint in _constraint_list:
+        if constraint.pattern.match(input):
+            match_type = constraint
+            number_of_matches += 1
+
+    if number_of_matches == 1:
+        return match_type(input, parent_data_element)
+    elif number_of_matches == 0:
+        raise Exception(f"No matching constraint for {input}.")
+    else:
+        raise Exception(f"Multiple matches found for constraint, {input}")
 
 # Required
 
 class DataElement:
-    pattern = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
+    pattern = _data_element_names
     def __init__(self, name : str, data_element_dictionary : dict, parent_data_group : DataGroup):
         self.name = name
         self.dictionary = data_element_dictionary
@@ -151,7 +188,7 @@ class DataElement:
             elif attribute == "Data Type":
                 self.data_type = self.parent_data_group.parent_schema.data_type_factory(self.dictionary[attribute], self)
             elif attribute == "Constraints":
-                self.make_constraints(self.dictionary[attribute])
+                self.set_constraints(self.dictionary[attribute])
             elif attribute == "Required":
                 self.required = self.dictionary[attribute]
             elif attribute == "Notes":
@@ -159,27 +196,12 @@ class DataElement:
             else:
                 raise Exception(f"Unrecognized attribute, \"{attribute}\". Schema={self.parent_data_group.parent_schema.file_path}, Data Group={self.parent_data_group.name}, Data Element={self.name}")
 
-    def make_constraints(self, constraints_input):
-        schema_patterns = self.parent_data_group.parent_schema.schema_patterns
+    def set_constraints(self, constraints_input):
         if type(constraints_input) is not list:
             constraints_input = [constraints_input]
 
         for constraint in constraints_input:
-            data_element_value_match = schema_patterns.data_element_value_constraint.match(constraint)
-            ranges_match = schema_patterns.range_constraint.match(constraint)
-            multiple_match = schema_patterns.multiple_constraint.match(constraint)
-            selector_match = schema_patterns.selector_constraint.match(constraint)
-            if data_element_value_match:
-                self.constraints.append(DataElementValueConstraint(constraint, self))
-            elif ranges_match:
-                self.constraints.append(RangeConstraint(constraint, self))
-            elif multiple_match:
-                self.constraints.append(MultipleConstraint(constraint, self))
-            elif selector_match:
-                self.constraints.append(SelectorConstraint(constraint, self))
-            else:
-                raise Exception(f"Unrecognized constraint syntax, \"{constraint}\"")
-                self.constraints.append(Constraint(constraint, self))
+            self.constraints.append(_constraint_factory(constraint, self))
 
     def resolve(self):
         self.data_type.resolve()
@@ -223,7 +245,7 @@ class DataGroup:
             data_element.resolve()
 
 class Enumerator:
-    pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
+    pattern = EnumerationType.value_pattern
     def __init__(self, name, enumerator_dictionary, parent_enumeration : Enumeration) -> None:
         self.name = name
         self.dictionary = enumerator_dictionary
@@ -247,7 +269,7 @@ class DataGroupTemplate:
 
 class SchemaPatterns:
 
-    # TODO: Move to static members of individual classes? (e.g., DataElement.pattern?)
+    # TODO: Remove in favor of class members of respective classes?
     numeric = NumericType.value_pattern
     integer = IntegerType.value_pattern
     string = StringType.value_pattern
@@ -284,8 +306,7 @@ class SchemaPatterns:
 
         self.data_group_types = DataGroupType.pattern
         self.enumeration_types = EnumerationType.pattern
-        self.optional_base_types = fr"{base_types}{{1}}(\/{base_types})*"
-        single_type = fr"({self.optional_base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
+        single_type = fr"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
         alternatives = fr"\(({single_type})(,\s*{single_type})+\)"
         arrays = fr"\[({single_type})\](\[\d*\.*\d*\])?"
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
@@ -296,12 +317,12 @@ class SchemaPatterns:
         # Constraints
         alpha_array = "(\[A-Z\]{[1-9]+})"
         numeric_array = "(\[0-9\]{[1-9]+})"
-        self.range_constraint = RegularExpressionPattern(f"(>|>=|<=|<){self.numeric}")
-        self.multiple_constraint = RegularExpressionPattern(f"%{self.numeric}")
-        self.data_element_value_constraint = RegularExpressionPattern(f"({self.data_element_names})=({self.values})")
-        sets = f"\[{self.numeric}(, {self.numeric})*\]"
+        self.range_constraint = RangeConstraint.pattern
+        self.multiple_constraint = MultipleConstraint.pattern
+        self.data_element_value_constraint = DataElementValueConstraint.pattern
+        sets = SetConstraint.pattern
         reference_scope = f":{_type_base_names}:"
-        self.selector_constraint = RegularExpressionPattern(fr"{self.data_element_names}\({self.enumerator}(,\s*{self.enumerator})*\)")
+        self.selector_constraint = SelectorConstraint.pattern
 
         self.constraints = RegularExpressionPattern(f"({alpha_array}|{numeric_array}|{self.range_constraint})|({self.multiple_constraint})|({sets})|({self.data_element_value_constraint})|({reference_scope})|({self.selector_constraint})")
 
@@ -345,7 +366,7 @@ class Schema:
             self.description = self.source_dictionary["Schema"]["Description"]
             self.version = self.source_dictionary["Schema"]["Version"]
             self.root_data_group_name = self.source_dictionary["Schema"]["Root Data Group"] if "Root Data Group" in self.source_dictionary["Schema"] else None
-            self.process_references()
+            self.set_reference_schemas()
 
         for object_name in self.source_dictionary:
             object_type = self.source_dictionary[object_name]["Object Type"]
@@ -383,7 +404,7 @@ class Schema:
         for data_group in self.data_groups.values():
             data_group.resolve()
 
-    def process_references(self):
+    def set_reference_schemas(self):
         self.reference_schemas = {}
         if self.file_path != core_schema_path:
             self.set_reference_schema("core", core_schema_path)
