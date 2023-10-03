@@ -32,8 +32,8 @@ GridVariablesTemplate:
 LookupVariablesTemplate:
   Object Type: "Data Group Template"
   Required Data Types:
-    - "[Numeric/Null][1..]"
-    - "[Integer/Null][1..]"
+    - "[Numeric][1..]"
+    - "[Integer][1..]"
   Data Elements Required: True
 
 RepresentationSpecificationTemplate:

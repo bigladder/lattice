@@ -23,8 +23,8 @@ GridVariablesTemplate:
 LookupVariablesTemplate:
   Object Type: "Data Group Template"
   Required Data Types:
-    - "[Numeric/Null][1..]"
-    - "[Integer/Null][1..]"
+    - "[Numeric][1..]"
+    - "[Integer][1..]"
   Data Elements Required: True
 
 LookupTable:
@@ -57,7 +57,7 @@ LookupVariables:
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: [">=0.0","<=1.0"]
       Units: "-"
       Notes: "Defined as the ratio of output shaft power to input shaft power"

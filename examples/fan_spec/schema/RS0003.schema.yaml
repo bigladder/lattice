@@ -164,12 +164,12 @@ Performance:
       Notes: "***Informative note:*** Application software may use this curve to indicate to application software users when a selected fan is operating in an unstable region where surging or stalling is likely to occur"
     operation_speed_control_type:
       Description: "Type of performance map"
-      Data Type: "{OperationSpeedControlType}"
+      Data Type: "<OperationSpeedControlType>"
       Required: True
       Notes: "Determines which performance map data group is used for `performance_map`"
     installation_speed_control_type:
       Description: "Type of fan impeller speed control"
-      Data Type: "{InstallationSpeedControlType}"
+      Data Type: "<InstallationSpeedControlType>"
       Required: True
       Notes: ["If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single discrete speed",
               "If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be restricted to a set of two or more discrete speeds",
@@ -265,13 +265,13 @@ LookupVariablesContinuous:
   Data Elements:
     impeller_rotational_speed:
       Description: "Rotational speed of fan impeller"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: ">=0.0"
       Units: "rev/s"
       Required: True
     shaft_power:
       Description: "Mechanical shaft power input to fan assembly"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: ">=0.0"
       Units: "W"
       Notes: "Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller"
@@ -315,20 +315,20 @@ LookupVariablesDiscrete:
   Data Elements:
     standard_air_volumetric_flow_rate:
       Description: "Volumetric air flow rate through fan assembly at standard air conditions"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: ">=0.0"
       Units: "m3/s"
       Required: True
     shaft_power:
       Description: "Mechanical shaft power input to fan assembly"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: ">=0.0"
       Units: "W"
       Notes: "Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller"
       Required: True
     impeller_rotational_speed:
       Description: "Rotational speed of fan impeller"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: ">=0.0"
       Units: "rev/s"
       Required: True
