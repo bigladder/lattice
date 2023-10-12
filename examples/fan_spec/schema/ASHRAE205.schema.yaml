@@ -14,34 +14,30 @@ Schema:
 
 #Data Group Templates
 
-PerformanceMap:
+PerformanceMapTemplate:
   Object Type: "Data Group Template"
-  Name: Performance Map
   Required Data Elements:
     grid_variables:
       Required: True
     lookup_variables:
       Required: True
 
-GridVariables:
+GridVariablesTemplate:
   Object Type: "Data Group Template"
-  Name: Grid Variables
   Required Data Types:
     - "[Numeric][1..]"
     - "[Integer][1..]"
   Data Elements Required: True
 
-LookupVariables:
+LookupVariablesTemplate:
   Object Type: "Data Group Template"
-  Name: Lookup Variables
   Required Data Types:
-    - "[Numeric/Null][1..]"
-    - "[Integer/Null][1..]"
+    - "[Numeric][1..]"
+    - "[Integer][1..]"
   Data Elements Required: True
-  
-RepresentationSpecification:
+
+RepresentationSpecificationTemplate:
   Object Type: "Data Group Template"
-  Name: Representation Specification
   Required Data Elements:
     metadata:
       Required: True

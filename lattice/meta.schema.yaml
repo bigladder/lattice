@@ -187,6 +187,9 @@ definitions:
       Object Type:
         type: string
         const: Data Group
+      Data Group Template:
+        type: string
+        enum: "**GENERATED**"
       Data Elements:
         type: object
         patternProperties:
@@ -204,11 +207,9 @@ definitions:
   DataGroupTemplate:
     type: object
     properties:
-      Name:
-        type: string
       Object Type:
         type: string
-        pattern: "**GENERATED**"
+        const: Data Group Template
       Required Data Elements:
         type: object
         patternProperties:
@@ -229,6 +230,9 @@ definitions:
 type: object
 patternProperties:
   "**GENERATED**":
+    properties:
+      Object Type:
+        enum: ["Meta", "Data Type", "String Type", "Enumeration", "Data Group", "Data Group Template"]
     allOf:
     - if:
         properties:
@@ -258,6 +262,13 @@ patternProperties:
         properties:
           Object Type:
             const: Data Group
+          Data Group Template: false
       then:
         "$ref": meta.schema.json#/definitions/DataGroup
+    - if:
+        properties:
+          Object Type:
+            const: Data Group Template
+      then:
+        "$ref": meta.schema.json#/definitions/DataGroupTemplate
 additionalProperties: false

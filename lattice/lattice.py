@@ -12,7 +12,7 @@ from .docs import HugoWeb, DocumentFile
 class SchemaFile:
   def __init__(self, path):
     self.path = os.path.abspath(path)
-    self.content = load(self.path)
+    self.content = load(self.path) # TODO: Replace with Schema class
 
     self.file_base_name = get_file_basename(self.path, depth=2)
 

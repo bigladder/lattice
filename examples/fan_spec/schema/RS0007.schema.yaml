@@ -29,7 +29,8 @@ DriveType:
 
 # Data Groups
 RS0007:
-  Object Type: "Representation Specification"
+  Object Type: "Data Group"
+  Data Group Template: RepresentationSpecificationTemplate
   Data Elements:
     metadata:
       Description: "Metadata data group"
@@ -79,20 +80,22 @@ Performance:
       Data Type: "{PerformanceMap}"
       Required: True
 
-PerformanceMapMechDrive:
-  Object Type: "Performance Map"
+PerformanceMap:
+  Object Type: "Data Group"
+  Data Group Template: PerformanceMapTemplate
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariablesMechDrive}"
+      Data Type: "{GridVariables}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
       Data Type: "{LookupVariables}"
       Required: True
 
-GridVariablesMechDrive:
-  Object Type: "Grid Variables"
+GridVariables:
+  Object Type: "Data Group"
+  Data Group Template: GridVariablesTemplate
   Data Elements:
     output_power:
       Description: "Output shaft power"
@@ -101,12 +104,13 @@ GridVariablesMechDrive:
       Units: "W"
       Required: True
 
-LookupVariablesMechDrive:
-  Object Type: "Lookup Variables"
+LookupVariables:
+  Object Type: "Data Group"
+  Data Group Template: LookupVariablesTemplate
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"
-      Data Type: "[Numeric/Null][1..]"
+      Data Type: "[Numeric][1..]"
       Constraints: [">=0.0","<=1.0"]
       Units: "-"
       Notes: "Defined as the ratio of output shaft power to input shaft power"
