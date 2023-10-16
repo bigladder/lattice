@@ -18,7 +18,7 @@ def get_extension(file) -> str:
 def get_file_basename(file, depth=0) -> str:
     """Return file's base name; i.e. the name with 'depth' suffixes removed"""
     basename = os.path.basename(file)
-    for i in range(depth):
+    for i in range(depth): #pylint: disable=unused-variable
         basename = os.path.splitext(basename)[0]
     return basename
 
@@ -60,6 +60,7 @@ def dump(content, output_file_path):
     else:
         raise Exception(f"Unsupported output \"{ext}\".")
 
+
 def dump_to_string(content, output_type='json'):
     """Write a dictionary as a string"""
     if output_type == 'json':
@@ -83,10 +84,12 @@ def make_dir(dir_path):
             os.mkdir(dir_path)
     return dir_path
 
+
 def remove_dir(dir_path):
     """Remove existing directory path"""
     if os.path.exists(dir_path) and os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
+
 
 def check_dir(dir_path, dir_description="Directory"):
     """Returns if a path both exists and is a directory"""
@@ -95,6 +98,7 @@ def check_dir(dir_path, dir_description="Directory"):
     if not os.path.isdir(dir_path):
         raise Exception(
             f"{dir_description}, \"{dir_path}\", is not a directory.")
+
 
 def check_executable(name, install_url):
     """Return if the named executable exists in system paths."""
