@@ -1,6 +1,5 @@
 """Classes that encapsulate the basic data model architecture for lattice"""
 
-import os
 import re
 import warnings
 from fnmatch import fnmatch
@@ -109,12 +108,12 @@ class SchemaFile: # pylint:disable=R0902
         self._json_schema_path = Path(json_schema_path).absolute()
 
     @property
-    def cpp_header_path(self):
+    def cpp_header_path(self): # pylint:disable=C0116
         return self._cpp_header_path
 
     @cpp_header_path.setter
     def cpp_header_path(self, value):
-        self._cpp_header_path = os.path.abspath(value)
+        self._cpp_header_path = Path(value).absolute()
 
 class Lattice: # pylint:disable=R0902
     """
@@ -123,9 +122,9 @@ class Lattice: # pylint:disable=R0902
 
     def __init__(
         self,
-        root_directory=".",
-        build_directory=None,
-        build_output_directory_name=".lattice/",
+        root_directory=Path.cwd(),
+        build_directory: Path = None,
+        build_output_directory_name=".lattice",
         build_validation=True,
     ):
         """Set up file structure"""
@@ -137,12 +136,12 @@ class Lattice: # pylint:disable=R0902
         else:
             check_dir(build_directory, "Build directory")
 
-        self.root_directory = root_directory
+        self.root_directory: Path = Path(root_directory)
 
         if build_output_directory_name is None:
-            self.build_directory = build_directory
+            self.build_directory: Path = Path(build_directory)
         else:
-            self.build_directory = os.path.join(build_directory, build_output_directory_name)
+            self.build_directory: Path = Path(build_directory) / build_output_directory_name
         make_dir(self.build_directory)
 
         self.collect_schemas()
@@ -155,7 +154,7 @@ class Lattice: # pylint:disable=R0902
 
         self.collect_doc_templates()
 
-        self.web_docs_directory_path = os.path.join(self.doc_output_dir, "web")
+        self.web_docs_directory_path: Path = self.doc_output_dir / "web"
 
         if build_validation:
             self.generate_meta_schemas()
@@ -170,18 +169,18 @@ class Lattice: # pylint:disable=R0902
 
         # Make sure root directory has minimum content (i.e., schema directory,
         # or at least one schema file)
-        schema_directory_path = os.path.join(self.root_directory, "schema")
-        if os.path.exists(schema_directory_path):
+        schema_directory_path = self.root_directory / "schema"
+        if schema_directory_path.exists():
             self.schema_directory_path = schema_directory_path
         else:
             self.schema_directory_path = self.root_directory
 
         # Collect list of schema files
         self.schemas: List[SchemaFile] = []
-        for file_name in sorted(os.listdir(self.schema_directory_path)):
-            file_path = os.path.join(self.schema_directory_path, file_name)
-            if fnmatch(file_path, "*.schema.yaml") or fnmatch(file_path, "*.schema.yml"):
-                self.schemas.append(SchemaFile(file_path))
+        for file_name in sorted(list(self.schema_directory_path.iterdir())):
+            #file_path = self.schema_directory_path / file_name
+            if fnmatch(file_name, "*.schema.yaml") or fnmatch(file_name, "*.schema.yml"):
+                self.schemas.append(SchemaFile(file_name))
 
         if len(self.schemas) == 0:
             raise Exception(f'No schemas found in "{self.schema_directory_path}".')
@@ -189,11 +188,11 @@ class Lattice: # pylint:disable=R0902
     def setup_meta_schemas(self):
         """Set up meta_schema subdirectory"""
 
-        self.meta_schema_directory = os.path.join(self.build_directory, "meta_schema")
+        self.meta_schema_directory = Path(self.build_directory) / "meta_schema"
         make_dir(self.meta_schema_directory)
         for schema in self.schemas:
-            meta_schema_path = os.path.join(
-                self.meta_schema_directory, f"{schema.file_base_name}.meta.schema.json"
+            meta_schema_path = (
+                self.meta_schema_directory / f"{schema.file_base_name}.meta.schema.json"
             )
             schema.meta_schema_path = meta_schema_path
 
@@ -211,12 +210,10 @@ class Lattice: # pylint:disable=R0902
 
     def setup_json_schemas(self):
         """Set up json_schema subdirectory"""
-        self.json_schema_directory = os.path.join(self.build_directory, "json_schema")
+        self.json_schema_directory = Path(self.build_directory) / "json_schema"
         make_dir(self.json_schema_directory)
         for schema in self.schemas:
-            json_schema_path = os.path.join(
-                self.json_schema_directory, f"{schema.file_base_name}.schema.json"
-            )
+            json_schema_path = self.json_schema_directory / f"{schema.file_base_name}.schema.json"
             schema.json_schema_path = json_schema_path
 
     def generate_json_schemas(self):
@@ -265,8 +262,8 @@ class Lattice: # pylint:disable=R0902
     def collect_example_files(self):
         """Collect data model instances from examples subdirectory"""
 
-        example_directory_path = os.path.join(self.root_directory, "examples")
-        if os.path.exists(example_directory_path):
+        example_directory_path = self.root_directory / "examples"
+        if example_directory_path.exists():
             self.example_directory_path = example_directory_path
         else:
             self.example_directory_path = None
@@ -274,10 +271,10 @@ class Lattice: # pylint:disable=R0902
         # Collect list of example files
         self.examples = []
         if self.example_directory_path is not None:
-            for file_name in sorted(os.listdir(self.example_directory_path)):
-                file_path = os.path.join(self.example_directory_path, file_name)
-                if os.path.isfile(file_path):
-                    self.examples.append(os.path.abspath(file_path))
+            for file_name in sorted(list(self.example_directory_path.iterdir())):
+                #file_path = self.example_directory_path / file_name
+                if file_name.is_file():
+                    self.examples.append(file_name.absolute())
 
     def validate_example_files(self):
         """Validate example instance(s) against JSON schema"""
@@ -288,8 +285,8 @@ class Lattice: # pylint:disable=R0902
     def collect_doc_templates(self):
         """Collect documentation templates from docs subdirectory"""
 
-        doc_templates_directory_path = os.path.join(self.root_directory, "docs")
-        if os.path.exists(doc_templates_directory_path):
+        doc_templates_directory_path = self.root_directory / "docs"
+        if doc_templates_directory_path.exists():
             self.doc_templates_directory_path = doc_templates_directory_path
         else:
             self.doc_templates_directory_path = None
@@ -297,17 +294,16 @@ class Lattice: # pylint:disable=R0902
         # Collect list of doc template files
         self.doc_templates = []
         if self.doc_templates_directory_path is not None:
-            for file_name in os.listdir(self.doc_templates_directory_path):
-                file_path = os.path.join(self.doc_templates_directory_path, file_name)
-                if os.path.isfile(file_path) and ".md" in file_name:
-                    self.doc_templates.append(DocumentFile(file_path))
-        self.doc_output_dir = os.path.join(self.build_directory, "docs")
+            for file_name in list(self.doc_templates_directory_path.iterdir()):
+                #file_path = self.doc_templates_directory_path / file_name
+                if file_name.is_file() and ".md" in file_name.name:
+                    self.doc_templates.append(DocumentFile(file_name))
+        self.doc_output_dir = self.build_directory / "docs"
         if len(self.doc_templates) > 0:
             make_dir(self.doc_output_dir)
             for template in self.doc_templates:
-                markdown_path = os.path.join(
-                    self.doc_output_dir, f"{get_file_basename(template.path, depth=1)}"
-                )
+                markdown_path = (
+                    self.doc_output_dir / f"{get_file_basename(template.path, depth=1)}")
                 template.markdown_output_path = markdown_path
 
     def generate_markdown_documents(self):
@@ -330,15 +326,15 @@ class Lattice: # pylint:disable=R0902
             warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 
     def setup_cpp_source_files(self):
-        """"""
-        self.cpp_output_dir = os.path.join(self.build_directory,"cpp")
+        """Create directories for generated CPP source"""
+        self.cpp_output_dir = Path(self.build_directory) / "cpp"
         make_dir(self.cpp_output_dir)
         for schema in self.schemas:
-            schema.cpp_header_path = os.path.join(self.cpp_output_dir, f"{get_file_basename(schema.path)}.h")
+            schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name}.h"
 
     def generate_cpp_headers(self):
-        """"""
+        """Generate CPP header and source files"""
         h = H_translator()
         for schema in self.schemas:
-            h.translate(schema.path, self.root_directory)
+            h.translate(schema.path, self.root_directory.name)
             dump(str(h), schema.cpp_header_path)
