@@ -5,7 +5,7 @@ from .util import snake_style
 
 def remove_prefix(text, prefix):
     return text[len(prefix):] if text.startswith(prefix) else text
-        
+
 # -------------------------------------------------------------------------------------------------
 class Header_entry_format:
     def __init__(self, name, parent=None):
@@ -209,7 +209,7 @@ class Data_element(Header_entry):
                 m = re.match(r'\((.*)\)', parent_dict['Data Type'])
                 if m:
                     # Choices can only be mapped to enums, so store the mapping for future use
-                    # Constraints (of selection type) are of the form 
+                    # Constraints (of selection type) are of the form
                     # selection_key(ENUM_VAL_1, ENUM_VAL_2, ENUM_VAL_3)
                     # They connect pairwise with Data Type of the form ({Type_1}, {Type_2}, {Type_3})
                     oneof_selection_key = parent_dict['Constraints'].split('(')[0]
@@ -261,7 +261,6 @@ class Data_element(Header_entry):
             internal_type = type_str
         # Look through the references to assign a source to the type. 'key' is generally a
         # schema name; its value will be a list of matchable data object names
-        print(internal_type)
         for key in self._refs:
             if internal_type in self._refs[key]:
                 simple_type = f'{snake_style(key)}_ns::{internal_type}'
@@ -277,7 +276,7 @@ class Data_element(Header_entry):
 
         try:
             if '/' in type_str:
-                # e.g. "Numeric/Null" 
+                # e.g. "Numeric/Null"
                 simple_type = self._datatypes[type_str.split('/')[0]]
             else:
                 simple_type = self._datatypes[type_str]
@@ -314,7 +313,7 @@ class Data_element(Header_entry):
 #     Special case struct for Lookup Variables. Its value property adds a LookupStruct declaration.
 
 #     This class could initialize correctly by simply deriving from Struct; however, the rich-
-#     comparison between Header_entry(s) only works when items being compared are not a subclass and 
+#     comparison between Header_entry(s) only works when items being compared are not a subclass and
 #     sub-subclass.
 #     '''
 
@@ -398,10 +397,10 @@ class Member_function_override(Functional_header_entry):
 class Object_serialization_declaration(Functional_header_entry):
 
     def __init__(self, name, parent):
-        super().__init__('void', 
-                         'from_json', 
-                         f'(const nlohmann::json& j, {name}& x)', 
-                         name, 
+        super().__init__('void',
+                         'from_json',
+                         f'(const nlohmann::json& j, {name}& x)',
+                         name,
                          parent)
 
 # -------------------------------------------------------------------------------------------------
@@ -535,16 +534,16 @@ class H_translator:
         for base_level_tag in (
             [tag for tag in self._contents if self._contents[tag].get('Object Type') == 'Meta']):
             s = Struct(base_level_tag, self._namespace)
-            d = Data_element_static_metainfo(base_level_tag.lower(), 
-                                             s, 
+            d = Data_element_static_metainfo(base_level_tag.lower(),
+                                             s,
                                              self._contents[base_level_tag],
                                              'Title')
-            d = Data_element_static_metainfo(base_level_tag.lower(), 
-                                             s, 
+            d = Data_element_static_metainfo(base_level_tag.lower(),
+                                             s,
                                              self._contents[base_level_tag],
                                              'Version')
-            d = Data_element_static_metainfo(base_level_tag.lower(), 
-                                             s, 
+            d = Data_element_static_metainfo(base_level_tag.lower(),
+                                             s,
                                              self._contents[base_level_tag],
                                              'Description')
         for base_level_tag in (
@@ -574,10 +573,10 @@ class H_translator:
             # else:
             #     # Catch-all for when a class of name _schema_name isn't present in the schema
             #     s = Struct(base_level_tag, self._namespace)
-            
+
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element(data_element, 
-                                    s, 
+                d = Data_element(data_element,
+                                    s,
                                     self._contents[base_level_tag]['Data Elements'][data_element],
                                     self._fundamental_data_types,
                                     self._references,
@@ -587,18 +586,18 @@ class H_translator:
             for data_element in self._contents[base_level_tag]['Data Elements']:
                 d = Data_isset_element(data_element, s)
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element_static_metainfo(data_element, 
-                                                 s, 
+                d = Data_element_static_metainfo(data_element,
+                                                 s,
                                                  self._contents[base_level_tag]['Data Elements'][data_element],
                                                  'Units')
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element_static_metainfo(data_element, 
-                                                 s, 
+                d = Data_element_static_metainfo(data_element,
+                                                 s,
                                                  self._contents[base_level_tag]['Data Elements'][data_element],
                                                  'Description')
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element_static_metainfo(data_element, 
-                                                 s, 
+                d = Data_element_static_metainfo(data_element,
+                                                 s,
                                                  self._contents[base_level_tag]['Data Elements'][data_element],
                                                  'Name')
         H_translator.modified_insertion_sort(self._namespace.child_entries)
@@ -608,10 +607,10 @@ class H_translator:
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in (
             [tag for tag in self._contents if self._contents[tag].get('Object Type') == 'Enumeration']):
-            Enum_serialization_declaration(base_level_tag, 
-                               self._namespace, 
+            Enum_serialization_declaration(base_level_tag,
+                               self._namespace,
                                self._contents[base_level_tag]['Enumerators'])
-        for base_level_tag in ([tag for tag in self._contents 
+        for base_level_tag in ([tag for tag in self._contents
             if self._contents[tag].get('Object Type') in self._data_group_types]):
                 # from_json declarations are necessary in top container, as the header-declared
                 # objects might be included and used from elsewhere.
@@ -662,25 +661,27 @@ class H_translator:
         if 'References' in schema_section:
             for ref in schema_section['References']:
                 refs.update({f'{ref}' : os.path.join(self._source_dir, ref + '.schema.yaml')})
-        # refs.insert(0,self._schema_name) # prepend the current file to references list so that 
+        # refs.insert(0,self._schema_name) # prepend the current file to references list so that
         #                                  # objects are found locally first
         for ref_file in refs:
             ext_dict = load(refs[ref_file])
-            self._data_group_types.extend([ext_dict[name]['Name'] for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
-            self._references[ref_file] = [name for name in ext_dict if ext_dict[name]['Object Type'] in self._data_group_types] # Do we need to check Enumeration and String Type as well?
-            cpp_types = {'integer' : 'int', 
-                         'string' : 'std::string', 
-                         'number' : 'double', 
+            self._data_group_types.extend([name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
+            self._references[ref_file] = [name for name in ext_dict if ext_dict[name]['Object Type'] in self._data_group_types + ['Enumeration']]
+            cpp_types = {'integer' : 'int',
+                         'string' : 'std::string',
+                         'number' : 'double',
                          'boolean': 'bool'}
             for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
                 self._fundamental_data_types[base_item] = cpp_types.get(ext_dict[base_item]['JSON Schema Type'])
-            print(self._fundamental_data_types)
+            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'String Type']:
+                self._fundamental_data_types[base_item] = 'std::string'
+            #print(self._fundamental_data_types)
 
     # .............................................................................................
     def _add_function_overrides(self, parent_node, base_class_name):
         '''Get base class virtual functions to be overridden.'''
-        base_class = os.path.join(os.path.dirname(__file__), 
-                                  'src', 
+        base_class = os.path.join(os.path.dirname(__file__),
+                                  'src',
                                   f'{snake_style(base_class_name)}.h')
         try:
             with open(base_class) as b:
@@ -694,7 +695,7 @@ class H_translator:
                             Member_function_override(f_ret_type, f_name, f_args, '', parent_node)
         except:
             pass
-        
+
     # .............................................................................................
     def _add_performance_overloads(self, parent_node=None):
         ''' '''
@@ -702,13 +703,13 @@ class H_translator:
             parent_node = self.root
         for entry in parent_node.child_entries:
             if entry.parent and entry.superclass == 'PerformanceMapBase':
-                for lvstruct in [lv for lv in entry.parent.child_entries 
+                for lvstruct in [lv for lv in entry.parent.child_entries
                                    if lv.superclass == 'LookupVariablesBase'
                                    and remove_prefix(lv.name, 'LookupVariables') == remove_prefix(entry.name, 'PerformanceMap')]:
                     f_ret = f'{lvstruct.name}Struct'
                     n_ret = len([c for c in lvstruct.child_entries if isinstance(c, Data_element)])
                     # for each performance map, find GridVariables sibling of PerformanceMap, that has a matching name
-                    for gridstruct in [gridv for gridv in entry.parent.child_entries 
+                    for gridstruct in [gridv for gridv in entry.parent.child_entries
                                     if gridv.superclass == 'GridVariablesBase'
                                     and remove_prefix(gridv.name, 'GridVariables') == remove_prefix(entry.name, 'PerformanceMap')]:
                         f_args = list()
@@ -724,7 +725,7 @@ class H_translator:
         for listing in self._contents:
             if 'Data Elements' in self._contents[listing]:
                 for element in self._contents[listing]['Data Elements']:
-                    if (element == data_element 
+                    if (element == data_element
                         and 'Data Type' in self._contents[listing]['Data Elements'][element]):
                         return self._contents[listing]['Data Elements'][element]['Data Type']
 
