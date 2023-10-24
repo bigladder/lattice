@@ -41,7 +41,7 @@ def load(input_file_path) -> dict:
         with open(input_file_path, 'r', encoding='utf-8') as input_file:
             return yaml.load(input_file, Loader=yaml.FullLoader)
     else:
-        raise Exception(f"Unsupported input \"{ext}\".")
+        raise ValueError(f"Unsupported input \"{ext}\".")
 
 
 def dump(content, output_file_path):
@@ -57,12 +57,12 @@ def dump(content, output_file_path):
         with open(output_file_path, 'w', encoding='utf-8') as out_file:
             yaml.dump(content, out_file, sort_keys=False)
     elif ext == '.h':
-        with open(output_file_path, 'w') as header:
+        with open(output_file_path, 'w', encoding='utf-8') as header:
             header.write(content)
             header.write('\n')
 
     else:
-        raise Exception(f"Unsupported output \"{ext}\".")
+        raise ValueError(f"Unsupported output \"{ext}\".")
 
 
 def dump_to_string(content, output_type='json'):
@@ -71,7 +71,7 @@ def dump_to_string(content, output_type='json'):
         return json.dumps(content, indent=4)
     if output_type in ['yaml', 'yml']:
         return yaml.dump(content, sort_keys=False)
-    raise Exception(f"Unsupported output \"{output_type}\".")
+    raise ValueError(f"Unsupported output \"{output_type}\".")
 
 
 def translate(input_file, output_file):
@@ -98,14 +98,14 @@ def remove_dir(dir_path):
 def check_dir(dir_path, dir_description="Directory"):
     """Returns if a path both exists and is a directory"""
     if not os.path.exists(dir_path):
-        raise Exception(f"{dir_description}, \"{dir_path}\", does not exist.")
+        raise FileNotFoundError(f"{dir_description}, \"{dir_path}\", does not exist.")
     if not os.path.isdir(dir_path):
-        raise Exception(
+        raise FileNotFoundError(
             f"{dir_description}, \"{dir_path}\", is not a directory.")
 
 
 def check_executable(name, install_url):
     """Return if the named executable exists in system paths."""
     if shutil.which(name) is None:
-        raise Exception(
+        raise FileNotFoundError(
             f"Unable to find \"{name}\". To install, go to {install_url}.")

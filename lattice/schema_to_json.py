@@ -682,7 +682,7 @@ def generate_json_schema(
 def get_scope_locations(
     #pylint: disable-next=dangerous-default-value # default for mutable value is intentional,
     # for recursion
-    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: list = []
+    schema: dict, scopes_dict: dict, scope_key: str = "Reference", lineage: Optional[list] = None
 ) -> None:
     """
     Populate a map of paths for a given scope name.
@@ -755,7 +755,7 @@ def postvalidate_references(input_file: Path, input_schema: Path):
         ]
         reference_scope = get_reference_value(data, lineage)
         if reference_scope is not None and reference_scope not in ids:
-            raise Exception(
+            raise ValueError(
                 f"Scope mismatch in {input_file}; {reference_scope} not in ID scope list {ids}."
             )
 
