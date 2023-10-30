@@ -7,13 +7,13 @@ def remove_prefix(text, prefix):
     return text[len(prefix):] if text.startswith(prefix) else text
 
 # -------------------------------------------------------------------------------------------------
-class Header_entry_format:
+class HeaderEntryFormat:
     def __init__(self, name, parent=None):
         self._opener = '{'
         self._closure = '}'
 
 # -------------------------------------------------------------------------------------------------
-class Header_entry:
+class HeaderEntry:
 
     def __init__(self, name, parent=None):
         self.type = 'namespace'
@@ -97,7 +97,7 @@ class Header_entry:
         return self._get_level()
 
 # -------------------------------------------------------------------------------------------------
-class Typedef(Header_entry):
+class Typedef(HeaderEntry):
 
     def __init__(self, name, parent, typedef):
         super().__init__(name, parent)
@@ -110,7 +110,7 @@ class Typedef(Header_entry):
         return self._level*'\t' + self.type + ' ' + self._typedef + ' ' + self.name + ';'
 
 # -------------------------------------------------------------------------------------------------
-class Enumeration(Header_entry):
+class Enumeration(HeaderEntry):
 
     def __init__(self, name, parent, item_dict):
         super().__init__(name, parent)
@@ -142,7 +142,7 @@ class Enumeration(Header_entry):
         return entry
 
 # -------------------------------------------------------------------------------------------------
-class Enum_serialization_declaration(Header_entry):
+class EnumSerializationDeclaration(HeaderEntry):
 
     def __init__(self, name, parent, item_dict):
         super().__init__(name, parent)
@@ -163,7 +163,7 @@ class Enum_serialization_declaration(Header_entry):
         return entry
 
 # -------------------------------------------------------------------------------------------------
-class Struct(Header_entry):
+class Struct(HeaderEntry):
 
     def __init__(self, name, parent, superclass=''):
         super().__init__(name, parent)
@@ -174,7 +174,7 @@ class Struct(Header_entry):
             self._inheritance_decl = f' : public {superclass}'
 
 # -------------------------------------------------------------------------------------------------
-class Data_element(Header_entry):
+class DataElement(HeaderEntry):
 
     def __init__(self, name, parent, element, data_types, references, find_func=None):
         super().__init__(name, parent)
@@ -345,7 +345,7 @@ class Data_element(Header_entry):
 #         return entry
 
 # -------------------------------------------------------------------------------------------------
-class Data_isset_element(Header_entry):
+class DataIsSetElement(HeaderEntry):
 
     def __init__(self, name, parent):
         super().__init__(name, parent)
@@ -356,7 +356,7 @@ class Data_isset_element(Header_entry):
         return self._level*'\t' + 'bool ' + self.name + '_is_set;'
 
 # -------------------------------------------------------------------------------------------------
-class Data_element_static_metainfo(Header_entry):
+class DataElementStaticMetainfo(HeaderEntry):
 
     def __init__(self, name, parent, element, meta_key):
         super().__init__(name, parent)
@@ -372,7 +372,7 @@ class Data_element_static_metainfo(Header_entry):
         return self._level*'\t' + self._type_specifier + ' ' + self.type + ' ' + self.name + self._closure
 
 # -------------------------------------------------------------------------------------------------
-class Functional_header_entry(Header_entry):
+class FunctionalHeaderEntry(HeaderEntry):
 
     def __init__(self, f_ret, f_name, f_args, name, parent):
         super().__init__(name, parent)
@@ -387,14 +387,14 @@ class Functional_header_entry(Header_entry):
         return self._level*'\t' + ' '.join([self.ret_type, self.fname, self.args]) + self._closure
 
 # -------------------------------------------------------------------------------------------------
-class Member_function_override(Functional_header_entry):
+class MemberFunctionOverride(FunctionalHeaderEntry):
 
     def __init__(self, f_ret, f_name, f_args, name, parent):
         super().__init__(f_ret, f_name, f_args, name, parent)
         self._closure = ' override;'
 
 # -------------------------------------------------------------------------------------------------
-class Object_serialization_declaration(Functional_header_entry):
+class ObjectSerializationDeclaration(FunctionalHeaderEntry):
 
     def __init__(self, name, parent):
         super().__init__('void',
@@ -404,7 +404,7 @@ class Object_serialization_declaration(Functional_header_entry):
                          parent)
 
 # -------------------------------------------------------------------------------------------------
-class Initialize_function(Functional_header_entry):
+class InitializeFunction(FunctionalHeaderEntry):
     ''' Deprecated '''
 
     def __init__(self, name, parent):
@@ -435,7 +435,7 @@ class Initialize_function(Functional_header_entry):
 #         return entry
 
 # -------------------------------------------------------------------------------------------------
-class Calculate_performance_overload(Functional_header_entry):
+class CalculatePerformanceOverload(FunctionalHeaderEntry):
 
     def __init__(self, f_ret, f_args, name, parent, n_return_values):
         super().__init__(f_ret, 'calculate_performance', '(' + ', '.join(f_args) + ')', name, parent)
@@ -451,7 +451,7 @@ class Calculate_performance_overload(Functional_header_entry):
 
 
 # -------------------------------------------------------------------------------------------------
-class H_translator:
+class HeaderTranslator:
 
     def __init__(self):
         self._references = dict()
@@ -519,8 +519,8 @@ class H_translator:
         self._add_included_headers(self._contents['Schema'].get('References'))
 
         # Create "root" node(s)
-        self._top_namespace = Header_entry(f'{container_class_name}')
-        self._namespace = Header_entry(f'{snake_style(self._schema_name)}_ns', parent=self._top_namespace)
+        self._top_namespace = HeaderEntry(f'{container_class_name}')
+        self._namespace = HeaderEntry(f'{snake_style(self._schema_name)}_ns', parent=self._top_namespace)
 
         # First, assemble typedefs
         for base_level_tag in (
@@ -534,15 +534,15 @@ class H_translator:
         for base_level_tag in (
             [tag for tag in self._contents if self._contents[tag].get('Object Type') == 'Meta']):
             s = Struct(base_level_tag, self._namespace)
-            d = Data_element_static_metainfo(base_level_tag.lower(),
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
                                              s,
                                              self._contents[base_level_tag],
                                              'Title')
-            d = Data_element_static_metainfo(base_level_tag.lower(),
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
                                              s,
                                              self._contents[base_level_tag],
                                              'Version')
-            d = Data_element_static_metainfo(base_level_tag.lower(),
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
                                              s,
                                              self._contents[base_level_tag],
                                              'Description')
@@ -575,7 +575,7 @@ class H_translator:
             #     s = Struct(base_level_tag, self._namespace)
 
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element(data_element,
+                d = DataElement(data_element,
                                     s,
                                     self._contents[base_level_tag]['Data Elements'][data_element],
                                     self._fundamental_data_types,
@@ -584,37 +584,37 @@ class H_translator:
                                     )
                 self._add_member_headers(d)
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_isset_element(data_element, s)
+                d = DataIsSetElement(data_element, s)
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element_static_metainfo(data_element,
+                d = DataElementStaticMetainfo(data_element,
                                                  s,
                                                  self._contents[base_level_tag]['Data Elements'][data_element],
                                                  'Units')
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element_static_metainfo(data_element,
+                d = DataElementStaticMetainfo(data_element,
                                                  s,
                                                  self._contents[base_level_tag]['Data Elements'][data_element],
                                                  'Description')
             for data_element in self._contents[base_level_tag]['Data Elements']:
-                d = Data_element_static_metainfo(data_element,
+                d = DataElementStaticMetainfo(data_element,
                                                  s,
                                                  self._contents[base_level_tag]['Data Elements'][data_element],
                                                  'Name')
-        H_translator.modified_insertion_sort(self._namespace.child_entries)
+        HeaderTranslator.modified_insertion_sort(self._namespace.child_entries)
         # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
         self._add_performance_overloads()
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in (
             [tag for tag in self._contents if self._contents[tag].get('Object Type') == 'Enumeration']):
-            Enum_serialization_declaration(base_level_tag,
+            EnumSerializationDeclaration(base_level_tag,
                                self._namespace,
                                self._contents[base_level_tag]['Enumerators'])
         for base_level_tag in ([tag for tag in self._contents
             if self._contents[tag].get('Object Type') in self._data_group_types]):
                 # from_json declarations are necessary in top container, as the header-declared
                 # objects might be included and used from elsewhere.
-                Object_serialization_declaration(base_level_tag, self._namespace)
+                ObjectSerializationDeclaration(base_level_tag, self._namespace)
 
         return self._fundamental_base_class
 
@@ -692,7 +692,7 @@ class H_translator:
                             f_ret_type = m.group(1)
                             f_name = m.group(2)
                             f_args = f'({m.group(3)})'
-                            Member_function_override(f_ret_type, f_name, f_args, '', parent_node)
+                            MemberFunctionOverride(f_ret_type, f_name, f_args, '', parent_node)
         except:
             pass
 
@@ -707,16 +707,16 @@ class H_translator:
                                    if lv.superclass == 'LookupVariablesBase'
                                    and remove_prefix(lv.name, 'LookupVariables') == remove_prefix(entry.name, 'PerformanceMap')]:
                     f_ret = f'{lvstruct.name}Struct'
-                    n_ret = len([c for c in lvstruct.child_entries if isinstance(c, Data_element)])
+                    n_ret = len([c for c in lvstruct.child_entries if isinstance(c, DataElement)])
                     # for each performance map, find GridVariables sibling of PerformanceMap, that has a matching name
                     for gridstruct in [gridv for gridv in entry.parent.child_entries
                                     if gridv.superclass == 'GridVariablesBase'
                                     and remove_prefix(gridv.name, 'GridVariables') == remove_prefix(entry.name, 'PerformanceMap')]:
                         f_args = list()
-                        for ce in [c for c in gridstruct.child_entries if isinstance(c, Data_element)]:
+                        for ce in [c for c in gridstruct.child_entries if isinstance(c, DataElement)]:
                             f_args.append(' '.join(['double', ce.name]))
                         f_args.append('Btwxt::Method performance_interpolation_method = Btwxt::Method::LINEAR')
-                        Calculate_performance_overload(f_ret, f_args, '', entry, n_ret)
+                        CalculatePerformanceOverload(f_ret, f_args, '', entry, n_ret)
             else:
                 self._add_performance_overloads(entry)
 

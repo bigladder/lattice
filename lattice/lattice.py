@@ -12,7 +12,8 @@ from .file_io import check_dir, make_dir, load, dump, get_file_basename, get_bas
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import HugoWeb, DocumentFile
-from .header_entries import H_translator
+from .header_entries import HeaderTranslator
+from .cpp_entries import CPPTranslator
 
 class SchemaFile: # pylint:disable=R0902
     """Parse the components of a schema file."""
@@ -114,6 +115,14 @@ class SchemaFile: # pylint:disable=R0902
     @cpp_header_path.setter
     def cpp_header_path(self, value):
         self._cpp_header_path = Path(value).absolute()
+
+    @property
+    def cpp_source_path(self): # pylint:disable=C0116
+        return self._cpp_source_path
+
+    @cpp_source_path.setter
+    def cpp_source_path(self, value):
+        self._cpp_source_path = Path(value).absolute()
 
 class Lattice: # pylint:disable=R0902
     """
@@ -330,11 +339,15 @@ class Lattice: # pylint:disable=R0902
         self.cpp_output_dir = Path(self.build_directory) / "cpp"
         make_dir(self.cpp_output_dir)
         for schema in self.schemas:
-            schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name}.h"
+            schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.h"
+            schema.cpp_source_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.cpp"
 
     def generate_cpp_headers(self):
         """Generate CPP header and source files"""
-        h = H_translator()
+        h = HeaderTranslator()
+        c = CPPTranslator()
         for schema in self.schemas:
             h.translate(schema.path, self.root_directory.name)
             dump(str(h), schema.cpp_header_path)
+            c.translate(self.root_directory.name, h)
+            dump(str(c), schema.cpp_source_path)
