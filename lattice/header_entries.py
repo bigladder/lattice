@@ -511,8 +511,6 @@ class HeaderTranslator:
 
         self._contents = load(input_file_path)
 
-        self._fundamental_base_class = schema_base_class_name if schema_base_class_name else 'RSInstanceBase'
-
         # Load meta info first (assuming that base level tag == Schema means object type == Meta)
         self._load_meta_info(self._contents['Schema'])
         self._add_include_guard(snake_style(self._schema_name))
@@ -548,14 +546,11 @@ class HeaderTranslator:
                                              'Description')
         for base_level_tag in (
             [tag for tag in self._contents if self._contents[tag].get('Object Type') in self._data_group_types]):
-            if base_level_tag == self._root_data_group if self._root_data_group else self._schema_name:
-                s = Struct(base_level_tag, self._namespace, superclass=self._fundamental_base_class)
-                self._add_member_headers(s)
-                self._add_function_overrides(s, self._fundamental_base_class)
-            else:
-                base_class_name = ''.join(self._contents[base_level_tag].get('Object Type').split()) + 'Base'
-                s = Struct(base_level_tag, self._namespace, superclass=base_class_name)
-                self._add_member_headers(s)
+            s = Struct(base_level_tag, self._namespace)
+            self._add_member_headers(s)
+            # When there is a base class, add overrides:
+            #self._add_function_overrides(s, self._fundamental_base_class)
+
             # elif self._contents[base_level_tag].get('Object Type') == 'Grid Variables':
             #     s = Struct(base_level_tag, self._namespace, superclass='GridVariablesBase')
             #     self._add_member_headers(s)
@@ -616,8 +611,6 @@ class HeaderTranslator:
                 # objects might be included and used from elsewhere.
                 ObjectSerializationDeclaration(base_level_tag, self._namespace)
 
-        return self._fundamental_base_class
-
     # .............................................................................................
     def _add_include_guard(self, header_name):
         s1 = f'#ifndef {header_name.upper()}_H_'
@@ -644,9 +637,6 @@ class HeaderTranslator:
                 include = f'#include <{snake_style(m.group(1))}.h>\n'
                 if include not in self._preamble:
                     self._preamble.append(include)
-                # This is a perfect opportunity to cache the fundamental base class owned by the
-                # top-level container
-                self._fundamental_base_class = m.group(1)
         if data_element.superclass:
             include = f'#include <{snake_style(data_element.superclass)}.h>\n'
             if include not in self._preamble:
