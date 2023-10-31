@@ -4,6 +4,7 @@ Specifics for setting up schema tables.
 from copy import deepcopy
 import io
 import re
+from typing import Callable, Optional
 
 from .grid_table import write_table
 
@@ -27,7 +28,8 @@ def process_string_types(string_types):
         new_item = deepcopy(str_typ)
         if 'Is Regex' in new_item and new_item['Is Regex']:
             new_item['JSON Schema Pattern'] = '(Not applicable)'
-        new_item['JSON Schema Pattern'] = new_item['JSON Schema Pattern'].replace('*',r'\*').replace(r'(?','\n'r'(?').replace(r'-[','\n'r'-[')
+        new_item['JSON Schema Pattern'] = new_item['JSON Schema Pattern'].replace(
+            '*', r'\*').replace(r'(?', '\n'r'(?').replace(r'-[', '\n'r'-[')
         new_list.append(new_item)
     return new_list
 
@@ -44,7 +46,8 @@ def compress_notes(a_dict):
     notes = "Notes"
     if notes in a_dict:
         if isinstance(a_dict[notes], list):
-            a_dict[notes] = "\n\n".join([f"- {note}" for note in a_dict[notes]])
+            a_dict[notes] = "\n\n".join(
+                [f"- {note}" for note in a_dict[notes]])
 
 
 def data_elements_dict_from_data_groups(data_groups):
@@ -59,21 +62,23 @@ def data_elements_dict_from_data_groups(data_groups):
             new_obj = data_groups[dat_gr]["Data Elements"][element]
             new_obj["Name"] = f"`{element}`"
             if 'Required' in new_obj:
-                if new_obj["Required"] == True:
-                    check = u'\N{check mark}'
-                    new_obj["Req"] = f"${check}$" if new_obj["Required"] else ''
-                elif new_obj["Required"] == False:
-                    new_obj["Req"] = ''
+                if isinstance(new_obj["Required"], bool):
+                    if new_obj["Required"]:
+                        check = '\N{check mark}'
+                        new_obj["Req"] = f"${check}$" if new_obj["Required"] else ''
+                    else:
+                        new_obj["Req"] = ''
                 else:
                     new_obj["Req"] = f"`{new_obj['Required']}`"
                     new_obj.pop('Required')
             new_obj['Data Type'] = f"`{new_obj['Data Type']}`"
             if 'Constraints' in new_obj:
-                gte = u'\N{GREATER-THAN OR EQUAL TO}'
-                lte = u'\N{LESS-THAN OR EQUAL TO}'
-                if type(new_obj["Constraints"]) is list:
+                gte = '\N{GREATER-THAN OR EQUAL TO}'
+                lte = '\N{LESS-THAN OR EQUAL TO}'
+                if isinstance(new_obj["Constraints"], list):
                     new_obj["Constraints"] = ", ".join(new_obj["Constraints"])
-                new_obj["Constraints"] = f"`{new_obj['Constraints'].replace('<=',lte).replace('>=',gte)}`"
+                new_obj["Constraints"] = (
+                    f"`{new_obj['Constraints'].replace('<=',lte).replace('>=',gte)}`")
             if 'Units' in new_obj:
                 if new_obj['Units'] == '-':
                     new_obj['Units'] = r'\-'
@@ -177,7 +182,7 @@ def create_table_from_list(
     """
     if len(data_list) == 0:
         return ""
-    data = {col:[] for col in columns}
+    data = {col: [] for col in columns}
     for col in columns:
         data[col] = []
         for item in data_list:
@@ -199,12 +204,12 @@ def data_types_table(data_types, caption=None, add_training_ws=True):
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
-            columns=[
-                "Data Type", "Description", "JSON Schema Type", "Examples"],
-            data_list=data_types,
-            defaults=None,
-            caption=caption,
-            add_training_ws=add_training_ws)
+        columns=[
+            "Data Type", "Description", "JSON Schema Type", "Examples"],
+        data_list=data_types,
+        defaults=None,
+        caption=caption,
+        add_training_ws=add_training_ws)
 
 
 def string_types_table(string_types, caption=None, add_training_ws=True):
@@ -215,13 +220,13 @@ def string_types_table(string_types, caption=None, add_training_ws=True):
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
-            columns=[
-                "String Type", "Description", "JSON Schema Pattern",
-                "Examples"],
-            data_list=string_types,
-            caption=caption,
-            add_training_ws=add_training_ws,
-            defaults=None)
+        columns=[
+            "String Type", "Description", "JSON Schema Pattern",
+            "Examples"],
+        data_list=string_types,
+        caption=caption,
+        add_training_ws=add_training_ws,
+        defaults=None)
 
 
 def enumerators_table(enumerators, caption=None, add_training_ws=True):
@@ -232,11 +237,11 @@ def enumerators_table(enumerators, caption=None, add_training_ws=True):
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
-            columns=["Enumerator", "Description", "Notes"],
-            data_list=enumerators,
-            caption=caption,
-            add_training_ws=add_training_ws,
-            defaults={"Notes": ""})
+        columns=["Enumerator", "Description", "Notes"],
+        data_list=enumerators,
+        caption=caption,
+        add_training_ws=add_training_ws,
+        defaults={"Notes": ""})
 
 
 def data_groups_table(data_elements, caption=None, add_training_ws=True):
@@ -247,65 +252,81 @@ def data_groups_table(data_elements, caption=None, add_training_ws=True):
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
-            columns=[
-                "Name", "Description", "Data Type", "Units", "Constraints",
-                "Req", "Notes"],
-            data_list=data_elements,
-            caption=caption,
-            add_training_ws=add_training_ws,
-            defaults={"Notes": "", "Req": "", "Units": "", "Constraints": ""})
+        columns=[
+            "Name", "Description", "Data Type", "Units", "Constraints",
+            "Req", "Notes"],
+        data_list=data_elements,
+        caption=caption,
+        add_training_ws=add_training_ws,
+        defaults={"Notes": "", "Req": "", "Units": "", "Constraints": ""})
+
+#pylint: disable-next=too-many-arguments
+def _write_table_and_caption(output_file: io.StringIO,
+                             make_headers: bool,
+                             table_from_struct, # array or dict
+                             table_write: Callable[[list, Optional[str], Optional[bool]], str],
+                             table_title: str,
+                             base_level: int):
+    """Helper function to write parts of the data model"""
+    if make_headers:
+        output_file.writelines(write_header(table_title, base_level))
+        caption = None
+    else:
+        caption = table_title
+    output_file.writelines(table_write(table_from_struct, caption, None))
 
 def write_data_model(instance, make_headers=False, base_level=1):
-  struct = load_structure_from_object(instance)
-  output = None
-  with io.StringIO() as output_file:
-    # Data Types
-    table_type = 'data_types'
-    if len(struct[table_type]) > 0:
-      table_title = "Data Types"
-      if make_headers:
-        output_file.writelines(write_header(table_title, base_level))
-        caption = None
-      else:
-        caption = table_title
-      output_file.writelines(data_types_table(struct[table_type], caption=caption))
-    # String Types
-    table_type = 'string_types'
-    if len(struct[table_type]) > 0:
-      table_title = "String Types"
-      if make_headers:
-        output_file.writelines(write_header(table_title, base_level))
-        caption = None
-      else:
-        caption = table_title
-      output_file.writelines(string_types_table(struct[table_type], caption=caption))
-    # Enumerations
-    output_file.writelines(write_header("Enumerations", base_level))
-    table_type = 'enumerations'
-    if len(struct[table_type]) > 0:
-      for enum, enumerators in struct[table_type].items():
-        table_title = enum
-        if make_headers:
-            output_file.writelines(write_header(table_title, base_level + 1))
-            caption = None
+    """
+    - instance:
+    - make_headers:
+    - base_level:
+    """
+    struct = load_structure_from_object(instance)
+    output = None
+    with io.StringIO() as output_file:
+        # Data Types
+        table_type = 'data_types'
+        if len(struct[table_type]) > 0:
+            _write_table_and_caption(output_file,
+                                     make_headers,
+                                     struct[table_type],
+                                     data_types_table,
+                                     "Data Types",
+                                     base_level)
+        # String Types
+        table_type = 'string_types'
+        if len(struct[table_type]) > 0:
+            _write_table_and_caption(output_file,
+                                     make_headers,
+                                     struct[table_type],
+                                     string_types_table,
+                                     "String Types",
+                                     base_level)
+        # Enumerations
+        output_file.writelines(write_header("Enumerations", base_level))
+        table_type = 'enumerations'
+        if len(struct[table_type]) > 0:
+            for enum, enumerators in struct[table_type].items():
+                _write_table_and_caption(output_file,
+                                         make_headers,
+                                         enumerators,
+                                         enumerators_table,
+                                         enum,
+                                         base_level+1)
         else:
-            caption = table_title
-        output_file.writelines(enumerators_table(enumerators, caption=caption))
-    else:
-      output_file.writelines(["None.","\n"*2])
-    # Data Groups
-    output_file.writelines(write_header("Data Groups", base_level))
-    table_type = 'data_groups'
-    if len(struct[table_type]) > 0:
-      for dg, data_elements in struct[table_type].items():
-        table_title = dg
-        if make_headers:
-            output_file.writelines(write_header(table_title, base_level + 1))
-            caption = None
+            output_file.writelines(["None.", "\n"*2])
+        # Data Groups
+        output_file.writelines(write_header("Data Groups", base_level))
+        table_type = 'data_groups'
+        if len(struct[table_type]) > 0:
+            for dg, data_elements in struct[table_type].items():
+                _write_table_and_caption(output_file,
+                                         make_headers,
+                                         data_elements,
+                                         data_groups_table,
+                                         dg,
+                                         base_level+1)
         else:
-            caption = table_title
-        output_file.writelines(data_groups_table(data_elements, caption=caption))
-    else:
-      output_file.writelines(["None.","\n"*2])
-    output = output_file.getvalue()
-  return output
+            output_file.writelines(["None.", "\n"*2])
+        output = output_file.getvalue()
+    return output

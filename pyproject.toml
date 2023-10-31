@@ -26,3 +26,7 @@ tomlkit = "0.11.8"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[[tool.mypy.overrides]]
+module = "lattice.*"
+disable_error_code = ["annotation-unchecked","import"]

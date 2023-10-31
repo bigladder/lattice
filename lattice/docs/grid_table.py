@@ -16,6 +16,7 @@ def flatten(list_of_lists):
         for item in sublist]
 
 
+# pylint: disable-next=too-many-branches
 def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
     """
     - text: string, the text to wrap
@@ -109,7 +110,12 @@ def write_row(content, sizes, is_header=False):
     return table
 
 
-def get_column_sizes(content, is_bold=False, has_spacing=True, preferred_sizes=None, full_width=100):
+# pylint: disable-next=too-many-branches, too-many-locals
+def get_column_sizes(content,
+                     is_bold=False,
+                     has_spacing=True,
+                     preferred_sizes=None,
+                     full_width=100):
     """
     - content: (Array string), the column content
     - is_bold: Bool, True if the column content must be surrounded with '**'
@@ -152,23 +158,23 @@ def get_column_sizes(content, is_bold=False, has_spacing=True, preferred_sizes=N
     if sum(full_sizes) < full_width:
         # full text will fit on one line, no need to make anything smaller
         return full_sizes
-    elif sum(sizes) >= full_width:
+    if sum(sizes) >= full_width:
         # Sizes are too big already...things will be too tight to make any changes
         return sizes
-    else:
-        # Relax some sizes to fill in full width
-        # Weigh towards columns with more text
-        remaining_space = full_width - sum(sizes)
-        total_diff = sum(size_diff)
-        for col_num in range(len(sizes)):
-            sizes[col_num] += size_diff[col_num]*remaining_space//total_diff
-        # Check remaining size
-        remaining_space = full_width - sum(sizes)
-        if remaining_space > 0:
-            # Add remaining space to column with largest size diff
-            sizes[max_diff_col] += remaining_space
 
-        return sizes
+    # Relax some sizes to fill in full width
+    # Weigh towards columns with more text
+    remaining_space = full_width - sum(sizes)
+    total_diff = sum(size_diff)
+    for col_num, _ in enumerate(sizes):
+        sizes[col_num] += size_diff[col_num]*remaining_space//total_diff
+    # Check remaining size
+    remaining_space = full_width - sum(sizes)
+    if remaining_space > 0:
+        # Add remaining space to column with largest size diff
+        sizes[max_diff_col] += remaining_space
+
+    return sizes
 
 def check_dict_of_arrays(doa, columns):
     """
