@@ -17,7 +17,5 @@ RatingTemplate:
 SchemaType:
   Object Type: "Enumeration"
   Enumerators:
-    TYPE1:
-      Description: "Type 1"
-    TYPE2:
-      Description: "Type 2"
+    RATING:
+      Description: "Rating"
