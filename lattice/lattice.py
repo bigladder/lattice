@@ -187,7 +187,6 @@ class Lattice: # pylint:disable=R0902
         # Collect list of schema files
         self.schemas: List[SchemaFile] = []
         for file_name in sorted(list(self.schema_directory_path.iterdir())):
-            #file_path = self.schema_directory_path / file_name
             if fnmatch(file_name, "*.schema.yaml") or fnmatch(file_name, "*.schema.yml"):
                 self.schemas.append(SchemaFile(file_name))
 
@@ -281,7 +280,6 @@ class Lattice: # pylint:disable=R0902
         self.examples = []
         if self.example_directory_path is not None:
             for file_name in sorted(list(self.example_directory_path.iterdir())):
-                #file_path = self.example_directory_path / file_name
                 if file_name.is_file():
                     self.examples.append(file_name.absolute())
 
@@ -346,7 +344,7 @@ class Lattice: # pylint:disable=R0902
         """Generate CPP header and source files"""
         h = HeaderTranslator()
         c = CPPTranslator()
-        for schema in self.schemas:
+        for schema in self.schemas + [SchemaFile(Path(__file__).with_name("core.schema.yaml"))]:
             h.translate(schema.path, self.root_directory.name)
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
