@@ -171,6 +171,8 @@ class Lattice: # pylint:disable=R0902
             self.generate_json_schemas()
             self.validate_example_files()
 
+        self.collect_cpp_schemas()
+
         self.setup_cpp_source_files()
 
     def collect_schemas(self):
@@ -332,11 +334,15 @@ class Lattice: # pylint:disable=R0902
         else:
             warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 
+    def collect_cpp_schemas(self):
+        """Collect source schemas into list of SchemaFiles"""
+        self.cpp_schemas = self.schemas + [SchemaFile(Path(__file__).with_name("core.schema.yaml"))]
+
     def setup_cpp_source_files(self):
         """Create directories for generated CPP source"""
         self.cpp_output_dir = Path(self.build_directory) / "cpp"
         make_dir(self.cpp_output_dir)
-        for schema in self.schemas:
+        for schema in self.cpp_schemas:
             schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.h"
             schema.cpp_source_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.cpp"
 
@@ -344,8 +350,8 @@ class Lattice: # pylint:disable=R0902
         """Generate CPP header and source files"""
         h = HeaderTranslator()
         c = CPPTranslator()
-        for schema in self.schemas + [SchemaFile(Path(__file__).with_name("core.schema.yaml"))]:
-            h.translate(schema.path, self.root_directory.name)
+        for schema in self.cpp_schemas:
+            h.translate(schema.path, self.root_directory.name, self.schema_directory_path)
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)

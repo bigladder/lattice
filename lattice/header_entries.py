@@ -1,7 +1,9 @@
 import os
 import re
-from .file_io import load
+from .file_io import load, get_base_stem
 from .util import snake_style
+from typing import Optional
+import pathlib
 
 def remove_prefix(text, prefix):
     return text[len(prefix):] if text.startswith(prefix) else text
@@ -460,7 +462,7 @@ class HeaderTranslator:
         self._doxynotes = '/// @note  This class has been auto-generated. Local changes will not be saved!\n'
         self._epilogue = list()
         self._data_group_types = ['Data Group']
-
+        self._forward_declaration_dir: Optional[pathlib.Path] = None
 
     # .............................................................................................
     def __str__(self):
@@ -500,15 +502,16 @@ class HeaderTranslator:
         return swapped
 
     # .............................................................................................
-    def translate(self, input_file_path, container_class_name, schema_base_class_name=None):
+    def translate(self, input_file_path, top_namespace: str, forward_declarations_path: pathlib.Path):
         '''X'''
         self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
+        self._forward_declaration_dir = forward_declarations_path
         self._schema_name = os.path.splitext(os.path.splitext(os.path.basename(input_file_path))[0])[0]
         self._references.clear()
         self._fundamental_data_types.clear()
         self._preamble.clear()
         self._epilogue.clear()
-
+    
         self._contents = load(input_file_path)
 
         # Load meta info first (assuming that base level tag == Schema means object type == Meta)
@@ -517,7 +520,7 @@ class HeaderTranslator:
         self._add_included_headers(self._contents['Schema'].get('References'))
 
         # Create "root" node(s)
-        self._top_namespace = HeaderEntry(f'{container_class_name}')
+        self._top_namespace = HeaderEntry(top_namespace)
         self._namespace = HeaderEntry(f'{snake_style(self._schema_name)}_ns', parent=self._top_namespace)
 
         # First, assemble typedefs
@@ -612,6 +615,36 @@ class HeaderTranslator:
                 ObjectSerializationDeclaration(base_level_tag, self._namespace)
 
     # .............................................................................................
+    def _load_meta_info(self, schema_section):
+        '''Store the global/common types and the types defined by any named references.'''
+        self._root_data_group = schema_section.get('Root Data Group')
+        refs = {f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml'),
+                'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml')}
+        if 'References' in schema_section:
+            for ref in schema_section['References']:
+                refs.update({f'{ref}' : os.path.join(self._source_dir, ref + '.schema.yaml')})
+        if (self._schema_name == "core"
+            and self._forward_declaration_dir
+            and self._forward_declaration_dir.is_dir()):
+            for file in self._forward_declaration_dir.iterdir():
+                ref = get_base_stem(file)
+                refs.update({ref : file})
+
+        for ref_file in refs:
+            ext_dict = load(refs[ref_file])
+            self._data_group_types.extend([name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
+            self._references[ref_file] = [name for name in ext_dict if ext_dict[name]['Object Type'] in self._data_group_types + ['Enumeration']]
+
+            cpp_types = {'integer' : 'int',
+                         'string' : 'std::string',
+                         'number' : 'double',
+                         'boolean': 'bool'}
+            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
+                self._fundamental_data_types[base_item] = cpp_types.get(ext_dict[base_item]['JSON Schema Type'])
+            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'String Type']:
+                self._fundamental_data_types[base_item] = 'std::string'
+
+    # .............................................................................................
     def _add_include_guard(self, header_name):
         s1 = f'#ifndef {header_name.upper()}_H_'
         s2 = f'#define {header_name.upper()}_H_'
@@ -641,31 +674,6 @@ class HeaderTranslator:
             include = f'#include <{snake_style(data_element.superclass)}.h>\n'
             if include not in self._preamble:
                 self._preamble.append(include)
-
-    # .............................................................................................
-    def _load_meta_info(self, schema_section):
-        '''Store the global/common types and the types defined by any named references.'''
-        self._root_data_group = schema_section.get('Root Data Group')
-        refs = {f'{self._schema_name}' : os.path.join(self._source_dir, f'{self._schema_name}.schema.yaml'),
-                'core' : os.path.join(os.path.dirname(__file__),'core.schema.yaml')}
-        if 'References' in schema_section:
-            for ref in schema_section['References']:
-                refs.update({f'{ref}' : os.path.join(self._source_dir, ref + '.schema.yaml')})
-        # refs.insert(0,self._schema_name) # prepend the current file to references list so that
-        #                                  # objects are found locally first
-        for ref_file in refs:
-            ext_dict = load(refs[ref_file])
-            self._data_group_types.extend([name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Group Template'])
-            self._references[ref_file] = [name for name in ext_dict if ext_dict[name]['Object Type'] in self._data_group_types + ['Enumeration']]
-            cpp_types = {'integer' : 'int',
-                         'string' : 'std::string',
-                         'number' : 'double',
-                         'boolean': 'bool'}
-            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'Data Type']:
-                self._fundamental_data_types[base_item] = cpp_types.get(ext_dict[base_item]['JSON Schema Type'])
-            for base_item in [name for name in ext_dict if ext_dict[name]['Object Type'] == 'String Type']:
-                self._fundamental_data_types[base_item] = 'std::string'
-            #print(self._fundamental_data_types)
 
     # .............................................................................................
     def _add_function_overrides(self, parent_node, base_class_name):
