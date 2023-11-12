@@ -1,7 +1,7 @@
 import os
 import re
 from .file_io import load, get_base_stem
-from .util import snake_style
+from .util import snake_style, bigladder_filename_style
 from typing import Optional
 import pathlib
 
@@ -600,7 +600,7 @@ class HeaderTranslator:
                                                  'Name')
         HeaderTranslator.modified_insertion_sort(self._namespace.child_entries)
         # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
-        self._add_performance_overloads()
+        #self._add_performance_overloads()
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in (
@@ -657,21 +657,21 @@ class HeaderTranslator:
         if ref_list:
             includes = ''
             for r in ref_list:
-                includes += f'#include <{snake_style(r)}.h>'
+                includes += f'#include <{bigladder_filename_style(r)}.h>'
                 includes += '\n'
             self._preamble.append(includes)
-        self._preamble.append('#include <string>\n#include <vector>\n#include <nlohmann/json.hpp>\n#include <typeinfo_205.h>\n')
+        self._preamble.append('#include <string>\n#include <vector>\n#include <nlohmann/json.hpp>\n#include <enum-info.h>\n')
 
     # .............................................................................................
     def _add_member_headers(self, data_element):
         if 'unique_ptr' in data_element.type:
             m = re.search(r'\<(.*)\>', data_element.type)
             if m:
-                include = f'#include <{snake_style(m.group(1))}.h>\n'
+                include = f'#include <{bigladder_filename_style(m.group(1))}.h>\n'
                 if include not in self._preamble:
                     self._preamble.append(include)
         if data_element.superclass:
-            include = f'#include <{snake_style(data_element.superclass)}.h>\n'
+            include = f'#include <{bigladder_filename_style(data_element.superclass)}.h>\n'
             if include not in self._preamble:
                 self._preamble.append(include)
 
@@ -680,7 +680,7 @@ class HeaderTranslator:
         '''Get base class virtual functions to be overridden.'''
         base_class = os.path.join(os.path.dirname(__file__),
                                   'src',
-                                  f'{snake_style(base_class_name)}.h')
+                                  f'{bigladder_filename_style(base_class_name)}.h')
         try:
             with open(base_class) as b:
                 for line in b:

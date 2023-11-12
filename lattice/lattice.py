@@ -14,6 +14,7 @@ from .schema_to_json import generate_json_schema, validate_file, postvalidate_fi
 from .docs import HugoWeb, DocumentFile
 from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
+from lattice.cpp.generate_support_headers import generate_support_headers
 
 class SchemaFile: # pylint:disable=R0902
     """Parse the components of a schema file."""
@@ -355,3 +356,4 @@ class Lattice: # pylint:disable=R0902
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)
+        generate_support_headers(self.root_directory.name, schema.cpp_header_path.parent)
