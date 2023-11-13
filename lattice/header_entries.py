@@ -1,7 +1,7 @@
 import os
 import re
 from .file_io import load, get_base_stem
-from .util import snake_style, bigladder_filename_style
+from .util import snake_style, hyphen_separated_lowercase_style
 from typing import Optional
 import pathlib
 
@@ -657,7 +657,7 @@ class HeaderTranslator:
         if ref_list:
             includes = ''
             for r in ref_list:
-                includes += f'#include <{bigladder_filename_style(r)}.h>'
+                includes += f'#include <{hyphen_separated_lowercase_style(r)}.h>'
                 includes += '\n'
             self._preamble.append(includes)
         self._preamble.append('#include <string>\n#include <vector>\n#include <nlohmann/json.hpp>\n#include <enum-info.h>\n')
@@ -667,11 +667,11 @@ class HeaderTranslator:
         if 'unique_ptr' in data_element.type:
             m = re.search(r'\<(.*)\>', data_element.type)
             if m:
-                include = f'#include <{bigladder_filename_style(m.group(1))}.h>\n'
+                include = f'#include <{hyphen_separated_lowercase_style(m.group(1))}.h>\n'
                 if include not in self._preamble:
                     self._preamble.append(include)
         if data_element.superclass:
-            include = f'#include <{bigladder_filename_style(data_element.superclass)}.h>\n'
+            include = f'#include <{hyphen_separated_lowercase_style(data_element.superclass)}.h>\n'
             if include not in self._preamble:
                 self._preamble.append(include)
 
@@ -680,7 +680,7 @@ class HeaderTranslator:
         '''Get base class virtual functions to be overridden.'''
         base_class = os.path.join(os.path.dirname(__file__),
                                   'src',
-                                  f'{bigladder_filename_style(base_class_name)}.h')
+                                  f'{hyphen_separated_lowercase_style(base_class_name)}.h')
         try:
             with open(base_class) as b:
                 for line in b:

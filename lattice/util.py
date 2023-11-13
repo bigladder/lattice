@@ -5,5 +5,5 @@ def snake_style(s):
     a = re.compile('((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))')
     return a.sub(r'_\1', s).lower()
 
-def bigladder_filename_style(s):
+def hyphen_separated_lowercase_style(s):
     return "-".join(snake_style(s).split("_"))
