@@ -101,6 +101,26 @@ def task_generate_markdown():
       'clean': True
     }
 
+def task_generate_cpp_code():
+    '''Generate CPP headers and source for example schema.'''
+    for example in examples:
+        name = os.path.basename(example.root_directory)
+        yield {
+          'name': name,
+          'task_dep': [f"validate_schemas:{name}"],
+          'file_dep': [schema.path for schema in example.cpp_schemas] +
+                      [schema.meta_schema_path for schema in example.schemas] +
+                      [CORE_SCHEMA_PATH,
+                      BASE_META_SCHEMA_PATH,
+                      os.path.join(SOURCE_PATH, "header_entries.py")],
+          'targets': [schema.cpp_header_path for schema in example.cpp_schemas] +
+                     [schema.cpp_source_path for schema in example.cpp_schemas],
+          'actions': [
+            (example.generate_cpp_headers, [])
+          ],
+          'clean': True
+        }
+
 def task_generate_web_docs():
   '''Generate markdown documentation from templates'''
   for example in examples:
@@ -121,23 +141,3 @@ def task_test():
   return {
     'actions': ['pytest -v test']
   }
-
-def task_generate_cpp_code():
-    '''Generate CPP headers and source for example schema.'''
-    for example in examples:
-        name = os.path.basename(example.root_directory)
-        yield {
-          'name': name,
-          'task_dep': [f"validate_schemas:{name}"],
-          'file_dep': [schema.path for schema in example.schemas] +
-                      [schema.meta_schema_path for schema in example.schemas] +
-                      [CORE_SCHEMA_PATH,
-                      BASE_META_SCHEMA_PATH,
-                      os.path.join(SOURCE_PATH, "header_entries.py")],
-          'targets': [schema.cpp_header_path for schema in example.schemas] +
-                     [schema.cpp_source_path for schema in example.schemas],
-          'actions': [
-            (example.generate_cpp_headers, [])
-          ],
-          'clean': True
-        }

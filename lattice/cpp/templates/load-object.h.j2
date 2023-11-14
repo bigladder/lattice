@@ -1,0 +1,33 @@
+#ifndef LOAD_OBJECT_H_
+#define LOAD_OBJECT_H_
+
+#include <nlohmann/json.hpp>
+#include <courierr/courierr.h>
+
+namespace {{namespace}} {
+
+    template<class T>
+    void json_get(nlohmann::json j, 
+                  Courierr::Courierr& logger, 
+                  const char *subnode, 
+                  T& object, 
+                  bool& object_is_set, 
+                  bool required = false)
+    {
+		try 
+        {
+            object = j.at(subnode).get<T>();
+            object_is_set = true;
+        }
+		catch (nlohmann::json::out_of_range & ex)
+        {
+            object_is_set = false;
+            if (required)
+            {
+                logger.warning(ex.what());
+            }
+        }
+    }
+}
+
+#endif

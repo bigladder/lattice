@@ -394,4 +394,4 @@ class CPPTranslator:
     # .............................................................................................
     def _add_included_headers(self, main_header):
         self._preamble.clear()
-        self._preamble.append(f'#include <{snake_style(main_header)}.h>\n#include <loadobject_205.h>\n')
+        self._preamble.append(f'#include <{snake_style(main_header)}.h>\n#include <load-object.h>\n')
