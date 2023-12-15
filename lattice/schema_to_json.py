@@ -754,7 +754,7 @@ def postvalidate_references(input_file: Path, input_schema: Path):
             level for level in ref.split(".") if level not in ["properties", "items"]
         ]
         reference_scope = get_reference_value(data, lineage)
-        if reference_scope is not None and reference_scope not in ids:
+        if reference_scope and reference_scope not in ids:
             raise ValueError(
                 f"Scope mismatch in {input_file}; {reference_scope} not in ID scope list {ids}."
             )
