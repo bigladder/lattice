@@ -451,11 +451,11 @@ class Schema:
                     object_name, self.source_dictionary[object_name], self
                 )
             elif object_type == "String Type":
-                self.data_types[object_name] = CommonStringType(
+                self.string_types[object_name] = CommonStringType(
                     object_name, self.source_dictionary[object_name], self
                 )
             elif object_type == "Data Group Template":
-                self.data_types[object_name] = DataGroupTemplate(
+                self.data_group_templates[object_name] = DataGroupTemplate(
                     object_name, self.source_dictionary[object_name], self
                 )
         #    else:
