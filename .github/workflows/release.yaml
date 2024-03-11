@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Python ${{ matrix.python-version }}
         uses: bigladder/github-actions/setup-python-poetry@main
         with:
@@ -28,14 +28,11 @@ jobs:
         uses: ./.github/actions/setup-hugo
       - name: Build and publish package
         run: |
-          source $VENV
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
           poetry version $(git describe --tags --abbrev=0)
           poetry publish --build
       - name: Build web docs
-        run: |
-          source $VENV
-          poetry run doit generate_web_docs
+        run: poetry run doit generate_web_docs
       - name: Deploy to GitHub pages
         uses: peaceiris/actions-gh-pages@v3
         with:
