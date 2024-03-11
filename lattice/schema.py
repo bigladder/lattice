@@ -113,34 +113,28 @@ _value_pattern = RegularExpressionPattern(f"(({NumericType.value_pattern})|"
 
 # Constraints
 
-@dataclass
 class Constraint:
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
         self.parent_data_element = parent_data_element
 
 
-@dataclass
 class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
 
 
-@dataclass
 class MultipleConstraint(Constraint):
     pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
 
 
-@dataclass
 class SetConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]")
 
 
-@dataclass
 class SelectorConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"{_data_element_names}\({EnumerationType.value_pattern}(, ?{EnumerationType.value_pattern})*\)")
 
 
-@dataclass
 class StringPatternConstraint(Constraint):
     pattern = RegularExpressionPattern('".*"')
 
@@ -152,7 +146,6 @@ class StringPatternConstraint(Constraint):
             raise Exception(f"Invalid regular expression: {text}") # pylint:disable=W0707
 
 
-@dataclass
 class DataElementValueConstraint(Constraint):
     pattern = RegularExpressionPattern(f"({_data_element_names})=({_value_pattern})")
 
@@ -167,7 +160,6 @@ class DataElementValueConstraint(Constraint):
         self.data_element_value = match.group(5)  # TODO: Named groups?
 
 
-@dataclass
 class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]")
 
@@ -181,7 +173,6 @@ _constraint_list = [
     DataElementValueConstraint,
     ArrayLengthLimitsConstraint,
 ]
-
 
 def _constraint_factory(input: str, parent_data_element: DataElement):
     number_of_matches = 0
@@ -200,7 +191,6 @@ def _constraint_factory(input: str, parent_data_element: DataElement):
     raise Exception(f"Multiple matches found for constraint, {input}")
 
 # Required
-
 
 class DataElement:
     pattern = _data_element_names
@@ -241,7 +231,7 @@ class DataElement:
     def resolve(self):
         self.data_type.resolve()
 
-@dataclass
+
 class FundamentalDataType:
     def __init__(self, name: str, data_type_dictionary: dict, parent_schema: Schema):
         self.name = name
@@ -249,7 +239,6 @@ class FundamentalDataType:
         self.parent_schema = parent_schema
 
 
-@dataclass
 class CommonStringType:
     def __init__(self, name: str, string_type_dictionary: dict, parent_schema: Schema):
         self.name = name
@@ -274,7 +263,6 @@ class CommonStringType:
         parent_schema.add_data_type(self.data_type_class)
 
 
-@dataclass
 class DataGroup:
     def __init__(self, name, data_group_dictionary, parent_schema: Schema):
         self.name = name
@@ -291,7 +279,6 @@ class DataGroup:
             data_element.resolve()
 
 
-@dataclass
 class Enumerator:
     pattern = EnumerationType.value_pattern
 
@@ -301,7 +288,6 @@ class Enumerator:
         self.parent_enumeration = parent_enumeration
 
 
-@dataclass
 class Enumeration:
     def __init__(self, name, enumeration_dictionary, parent_schema: Schema):
         self.name = name
@@ -313,7 +299,6 @@ class Enumeration:
                 Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self))
 
 
-@dataclass
 class DataGroupTemplate:
     def __init__(self, name: str, data_group_template_dictionary: dict, parent_schema: Schema):
         self.name = name
@@ -321,7 +306,6 @@ class DataGroupTemplate:
         self.parent_schema = parent_schema
 
 
-@dataclass
 class SchemaPatterns:
     # TODO: Remove in favor of class members of respective classes?
     numeric = NumericType.value_pattern
