@@ -3,7 +3,6 @@ from __future__ import (
 )  # Needed for type hinting classes that are not yet fully defined
 import pathlib
 import re
-from dataclasses import dataclass
 from .file_io import load, get_file_basename
 
 core_schema_path = pathlib.Path(pathlib.Path(__file__).parent, "core.schema.yaml")
@@ -31,13 +30,11 @@ class RegularExpressionPattern:
     def anchor(pattern_text: str):
         return f"^{pattern_text}$"
 
-
 # Attributes
 
 # Data Types
 _type_base_names = RegularExpressionPattern("[A-Z]([A-Z]|[a-z]|[0-9])*")
 _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
-
 
 class DataType:
     def __init__(self, text, parent_data_element: DataElement):
@@ -53,7 +50,6 @@ class DataType:
     def resolve(self):
         pass
 
-
 class IntegerType(DataType):
     pattern = RegularExpressionPattern("(Integer)")
     value_pattern = RegularExpressionPattern("([-+]?[0-9]+)")
@@ -63,25 +59,20 @@ class NumericType(DataType):
     pattern = RegularExpressionPattern("(Numeric)")
     value_pattern = RegularExpressionPattern("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
 
-
 class BooleanType(DataType):
     pattern = RegularExpressionPattern("(Boolean)")
     value_pattern = RegularExpressionPattern("True|False")
-
 
 class StringType(DataType):
     pattern = RegularExpressionPattern("(String)")
     value_pattern = RegularExpressionPattern("\".*\"")
 
-
 class PatternType(DataType):
     pattern = RegularExpressionPattern("(Pattern)")
     value_pattern = RegularExpressionPattern("\".*\"")
 
-
 class ArrayType(DataType):
     pattern = RegularExpressionPattern(r"\[(\S+)]")
-
 
 class DataGroupType(DataType):
     pattern = RegularExpressionPattern(rf"\{{({_type_base_names})\}}")
@@ -101,7 +92,6 @@ class EnumerationType(DataType):
     pattern = RegularExpressionPattern(rf"<{_type_base_names}>")
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
 
-
 class AlternativeType(DataType):
     pattern = RegularExpressionPattern(r"\(([^\s,]+)((, ?([^\s,]+))+)\)")
 
@@ -112,7 +102,6 @@ _value_pattern = RegularExpressionPattern(f"(({NumericType.value_pattern})|"
                                           f"({BooleanType.value_pattern}))")
 
 # Constraints
-
 class Constraint:
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
@@ -122,18 +111,14 @@ class Constraint:
 class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
 
-
 class MultipleConstraint(Constraint):
     pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
-
 
 class SetConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]")
 
-
 class SelectorConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"{_data_element_names}\({EnumerationType.value_pattern}(, ?{EnumerationType.value_pattern})*\)")
-
 
 class StringPatternConstraint(Constraint):
     pattern = RegularExpressionPattern('".*"')
@@ -144,7 +129,6 @@ class StringPatternConstraint(Constraint):
             re.compile(text)
         except:
             raise Exception(f"Invalid regular expression: {text}") # pylint:disable=W0707
-
 
 class DataElementValueConstraint(Constraint):
     pattern = RegularExpressionPattern(f"({_data_element_names})=({_value_pattern})")
@@ -159,10 +143,8 @@ class DataElementValueConstraint(Constraint):
         self.data_element_name = match.group(1)  # TODO: Named groups?
         self.data_element_value = match.group(5)  # TODO: Named groups?
 
-
 class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]")
-
 
 _constraint_list = [
     RangeConstraint,
@@ -184,17 +166,14 @@ def _constraint_factory(input: str, parent_data_element: DataElement):
 
     if number_of_matches == 1:
         return match_type(input, parent_data_element)
-
     if number_of_matches == 0:
         raise Exception(f"No matching constraint for {input}.")
-
     raise Exception(f"Multiple matches found for constraint, {input}")
 
 # Required
 
 class DataElement:
     pattern = _data_element_names
-
     def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):
         self.name = name
         self.dictionary = data_element_dictionary
@@ -231,13 +210,11 @@ class DataElement:
     def resolve(self):
         self.data_type.resolve()
 
-
 class FundamentalDataType:
     def __init__(self, name: str, data_type_dictionary: dict, parent_schema: Schema):
         self.name = name
         self.dictionary = data_type_dictionary
         self.parent_schema = parent_schema
-
 
 class CommonStringType:
     def __init__(self, name: str, string_type_dictionary: dict, parent_schema: Schema):
@@ -262,7 +239,6 @@ class CommonStringType:
 
         parent_schema.add_data_type(self.data_type_class)
 
-
 class DataGroup:
     def __init__(self, name, data_group_dictionary, parent_schema: Schema):
         self.name = name
@@ -278,15 +254,12 @@ class DataGroup:
         for data_element in self.data_elements.values():
             data_element.resolve()
 
-
 class Enumerator:
     pattern = EnumerationType.value_pattern
-
     def __init__(self, name, enumerator_dictionary, parent_enumeration: Enumeration) -> None:
         self.name = name
         self.dictionary = enumerator_dictionary
         self.parent_enumeration = parent_enumeration
-
 
 class Enumeration:
     def __init__(self, name, enumeration_dictionary, parent_schema: Schema):
@@ -297,7 +270,6 @@ class Enumeration:
         for enumerator in self.dictionary["Enumerators"]:
             self.enumerators[enumerator] = (
                 Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self))
-
 
 class DataGroupTemplate:
     def __init__(self, name: str, data_group_template_dictionary: dict, parent_schema: Schema):
@@ -532,7 +504,6 @@ class Schema:
 
         if number_of_matches == 1:
             return match_type(input, parent_data_element)
-
         if number_of_matches == 0:
             raise Exception(f"No matching data type for {input}.")
         else:
