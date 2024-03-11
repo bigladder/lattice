@@ -114,7 +114,8 @@ def task_generate_cpp_code():
                       BASE_META_SCHEMA_PATH,
                       os.path.join(SOURCE_PATH, "header_entries.py")],
           'targets': [schema.cpp_header_path for schema in example.cpp_schemas] +
-                     [schema.cpp_source_path for schema in example.cpp_schemas],
+                     [schema.cpp_source_path for schema in example.cpp_schemas] +
+                     example.cpp_support_headers(),
           'actions': [
             (example.generate_cpp_headers, [])
           ],
