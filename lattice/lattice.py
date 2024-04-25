@@ -14,12 +14,12 @@ from .schema_to_json import generate_json_schema, validate_file, postvalidate_fi
 from .docs import HugoWeb, DocumentFile
 from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
-from lattice.cpp.generate_support_headers import generate_support_headers
+from lattice.cpp.generate_support_headers import generate_support_headers, support_header_pathnames
 
 class SchemaFile: # pylint:disable=R0902
     """Parse the components of a schema file."""
 
-    def __init__(self, path):
+    def __init__(self, path) -> None:
         """Open and parse source schema"""
 
         self.path = Path(path).absolute()
@@ -270,7 +270,7 @@ class Lattice: # pylint:disable=R0902
                 f'Unable to find matching schema, "{schema_type}", for file, "{input_path}".'
             )
 
-    def collect_example_files(self):
+    def collect_example_files(self) -> None:
         """Collect data model instances from examples subdirectory"""
 
         example_directory_path = self.root_directory / "examples"
@@ -347,13 +347,19 @@ class Lattice: # pylint:disable=R0902
             schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.h"
             schema.cpp_source_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.cpp"
 
+    def cpp_support_headers(self) -> list[Path]:
+        return support_header_pathnames(self.cpp_output_dir)
+
     def generate_cpp_headers(self):
         """Generate CPP header and source files"""
         h = HeaderTranslator()
         c = CPPTranslator()
+        root_groups = []
         for schema in self.cpp_schemas:
             h.translate(schema.path, self.root_directory.name, self.schema_directory_path)
+            if h._root_data_group is not None:
+                root_groups.append(h._root_data_group)
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)
-        generate_support_headers(self.root_directory.name, schema.cpp_header_path.parent)
+        generate_support_headers(self.root_directory.name, root_groups, self.cpp_output_dir)
