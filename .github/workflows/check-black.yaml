@@ -11,4 +11,4 @@ jobs:
         with:
             options: "--check --verbose --line-length=120"
             src: "./lattice"
-            version: "~= 23.0"
+            version: "~= 24.0"
