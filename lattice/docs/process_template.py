@@ -2,6 +2,7 @@
 Functionality to render Jinja templates with an add_schema_table hook to generate
 schema tables in Markdown.
 """
+
 import re
 import os
 import traceback

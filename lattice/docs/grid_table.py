@@ -1,6 +1,7 @@
 """
 Markdown grid-table creation utilities
 """
+
 import copy
 import io
 import stringcase

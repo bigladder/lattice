@@ -245,9 +245,9 @@ class HugoWeb:  # pylint: disable=too-many-instance-attributes
             content = load(schema.json_schema_path)
             output_path = os.path.join(schema_assets_directory, get_file_basename(schema.json_schema_path))
             shutil.copy(schema.json_schema_path, output_path)
-            references[
-                reference_counter
-            ] = f"/{self.git_repo_name}/{os.path.relpath(output_path, self.static_directory_path)}"
+            references[reference_counter] = (
+                f"/{self.git_repo_name}/{os.path.relpath(output_path, self.static_directory_path)}"
+            )
             schema_files["Schema"].append(f"[{content['title']}][{reference_counter}]")
             reference_string += f"\n[{reference_counter}]: {references[reference_counter]}"
             reference_counter += 1

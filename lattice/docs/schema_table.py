@@ -1,6 +1,7 @@
 """
 Specifics for setting up schema tables.
 """
+
 from copy import deepcopy
 import io
 import re
