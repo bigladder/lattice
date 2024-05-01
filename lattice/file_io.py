@@ -18,60 +18,60 @@ def get_extension(file) -> str:
 def get_file_basename(file, depth=0) -> str:
     """Return file's base name; i.e. the name with 'depth' suffixes removed"""
     basename = os.path.basename(file)
-    for i in range(depth): #pylint: disable=unused-variable
+    for i in range(depth):  # pylint: disable=unused-variable
         basename = os.path.splitext(basename)[0]
     return basename
 
 
 def get_base_stem(file: Path) -> str:
     """Return the file's base name, with all suffixes removed"""
-    return file.name.partition('.')[0]
+    return file.name.partition(".")[0]
 
 
 def load(input_file_path) -> dict:
     """Return the contents of data file"""
     ext = get_extension(input_file_path).lower()
-    if ext == '.json':
-        with open(input_file_path, 'r', encoding='utf-8') as input_file:
+    if ext == ".json":
+        with open(input_file_path, "r", encoding="utf-8") as input_file:
             return json.load(input_file)
-    elif ext == '.cbor':
-        with open(input_file_path, 'rb', encoding='utf-8') as input_file:
+    elif ext == ".cbor":
+        with open(input_file_path, "rb", encoding="utf-8") as input_file:
             return cbor2.load(input_file)
-    elif ext in ['.yaml', '.yml']:
-        with open(input_file_path, 'r', encoding='utf-8') as input_file:
+    elif ext in [".yaml", ".yml"]:
+        with open(input_file_path, "r", encoding="utf-8") as input_file:
             return yaml.load(input_file, Loader=yaml.FullLoader)
     else:
-        raise ValueError(f"Unsupported input \"{ext}\".")
+        raise ValueError(f'Unsupported input "{ext}".')
 
 
 def dump(content, output_file_path):
     """Write a dictionary as a data file"""
     ext = get_extension(output_file_path).lower()
-    if ext == '.json':
-        with open(output_file_path, 'w', encoding='utf-8') as output_file:
+    if ext == ".json":
+        with open(output_file_path, "w", encoding="utf-8") as output_file:
             json.dump(content, output_file, indent=4)
-    elif ext == '.cbor':
-        with open(output_file_path, 'wb') as output_file:
+    elif ext == ".cbor":
+        with open(output_file_path, "wb") as output_file:
             cbor2.dump(content, output_file)
-    elif ext in ['.yaml', '.yml']:
-        with open(output_file_path, 'w', encoding='utf-8') as out_file:
+    elif ext in [".yaml", ".yml"]:
+        with open(output_file_path, "w", encoding="utf-8") as out_file:
             yaml.dump(content, out_file, sort_keys=False)
-    elif ext in ['.h','.cpp']:
-        with open(output_file_path, 'w', encoding='utf-8') as src:
+    elif ext in [".h", ".cpp"]:
+        with open(output_file_path, "w", encoding="utf-8") as src:
             src.write(content)
-            src.write('\n')
+            src.write("\n")
 
     else:
-        raise ValueError(f"Unsupported output \"{ext}\".")
+        raise ValueError(f'Unsupported output "{ext}".')
 
 
-def dump_to_string(content, output_type='json'):
+def dump_to_string(content, output_type="json"):
     """Write a dictionary as a string"""
-    if output_type == 'json':
+    if output_type == "json":
         return json.dumps(content, indent=4)
-    if output_type in ['yaml', 'yml']:
+    if output_type in ["yaml", "yml"]:
         return yaml.dump(content, sort_keys=False)
-    raise ValueError(f"Unsupported output \"{output_type}\".")
+    raise ValueError(f'Unsupported output "{output_type}".')
 
 
 def translate(input_file, output_file):
@@ -98,14 +98,12 @@ def remove_dir(dir_path):
 def check_dir(dir_path, dir_description="Directory"):
     """Returns if a path both exists and is a directory"""
     if not os.path.exists(dir_path):
-        raise FileNotFoundError(f"{dir_description}, \"{dir_path}\", does not exist.")
+        raise FileNotFoundError(f'{dir_description}, "{dir_path}", does not exist.')
     if not os.path.isdir(dir_path):
-        raise FileNotFoundError(
-            f"{dir_description}, \"{dir_path}\", is not a directory.")
+        raise FileNotFoundError(f'{dir_description}, "{dir_path}", is not a directory.')
 
 
 def check_executable(name, install_url):
     """Return if the named executable exists in system paths."""
     if shutil.which(name) is None:
-        raise FileNotFoundError(
-            f"Unable to find \"{name}\". To install, go to {install_url}.")
+        raise FileNotFoundError(f'Unable to find "{name}". To install, go to {install_url}.')

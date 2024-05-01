@@ -10,18 +10,22 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNot
 import yaml
 
 from .schema_table import (
-    load_structure_from_object, data_types_table, string_types_table,
-    enumerators_table, data_groups_table, write_data_model
+    load_structure_from_object,
+    data_types_table,
+    string_types_table,
+    enumerators_table,
+    data_groups_table,
+    write_data_model,
 )
 from .grid_table import write_table
+
 
 def make_args_string(args_dict):
     """
     - args_dict: dict, the dictionary of local variable to value such as returned by locals()
     RETURN: string, all arguments in a string
     """
-    return ", ".join(
-            [f"{k}={repr(v)}" for k, v in reversed(list(args_dict.items()))])
+    return ", ".join([f"{k}={repr(v)}" for k, v in reversed(list(args_dict.items()))])
 
 
 def log_error(error, log):
@@ -41,8 +45,7 @@ def make_error_string(msg, args_str):
     - args_str: string, original arguments
     RETURN: string, an error message
     """
-    return ("\n---\nERROR\n" + msg +
-            f"\nin call to `add_schema_table({args_str})`\n---\n")
+    return "\n---\nERROR\n" + msg + f"\nin call to `add_schema_table({args_str})`\n---\n"
 
 
 def render_header(level_and_content):
@@ -70,9 +73,7 @@ def canonicalize_string(name):
     - name: string, the table name
     RETURN: string, the name in canonical format
     """
-    return "_".join([
-        item.lower().strip()
-        for item in re.split('\\s+', name.strip())])
+    return "_".join([item.lower().strip() for item in re.split("\\s+", name.strip())])
 
 
 def fetch_key_canonically(the_dict, canonical_key, default=None):
@@ -97,21 +98,22 @@ def extract_target_data(struct, table_name):
         - If there is no error, the target data is passed back; else None if an error
         - If there is no error, we pass back the table type
     """
-    if table_name in {'data_types', 'string_types'}:
+    if table_name in {"data_types", "string_types"}:
         return (None, struct[table_name], table_name)
-    for tbl in ['enumerations', 'data_groups']:
+    for tbl in ["enumerations", "data_groups"]:
         table_type = tbl
         target = fetch_key_canonically(struct[tbl], table_name)
         if target is not None:
             break
     if target is None:
         return (
-                f"`table_name` \"{table_name}\" was not `data_types` or `string_types`\n" +
-                "and did not match any enumerators or data_groups in file!\n" +
-                f"Possible enumerators: {', '.join(struct['enumerations'].keys())}\n" +
-                f"Possible data_groups: {', '.join(struct['data_groups'].keys())}",
-                None,
-                None)
+            f'`table_name` "{table_name}" was not `data_types` or `string_types`\n'
+            + "and did not match any enumerators or data_groups in file!\n"
+            + f"Possible enumerators: {', '.join(struct['enumerations'].keys())}\n"
+            + f"Possible data_groups: {', '.join(struct['data_groups'].keys())}",
+            None,
+            None,
+        )
     return (None, target, table_type)
 
 
@@ -122,9 +124,7 @@ def determine_schema_dir(schema_dir):
     """
     if schema_dir is None:
         # determine default path to package resources
-        schema_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-                'schema-source')
+        schema_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "schema-source")
     return schema_dir
 
 
@@ -138,14 +138,10 @@ def load_yaml_source(schema_dir, source, args_str):
     RETURN: (string or None, None or dict), tuple of the error string if didn't
             load or the data to return
     """
-    src_path = os.path.join(schema_dir, source + '.schema.yaml')
+    src_path = os.path.join(schema_dir, source + ".schema.yaml")
     if not os.path.exists(src_path):
-        return (
-                make_error_string(
-                    f"Schema source \"{source}\" (\"{src_path}\") doesn't exist!",
-                    args_str),
-                None)
-    with open(src_path, encoding='utf-8', mode='r') as input_file:
+        return (make_error_string(f'Schema source "{source}" ("{src_path}") doesn\'t exist!', args_str), None)
+    with open(src_path, encoding="utf-8", mode="r") as input_file:
         data = yaml.load(input_file, Loader=yaml.FullLoader)
     return (None, data)
 
@@ -166,43 +162,31 @@ def make_add_schema_table(schema_dir=None, error_log=None):
         RETURN: string, returns a string representation of the given table
     """
     schema_dir = determine_schema_dir(schema_dir)
-    def add_schema_table(
-            source,
-            table_name,
-            caption=None,
-            header_level_and_content=None):
+
+    def add_schema_table(source, table_name, caption=None, header_level_and_content=None):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
         struct = load_structure_from_object(data)
-        err, target, table_type = extract_target_data(
-                struct,
-                canonicalize_string(table_name))
+        err, target, table_type = extract_target_data(struct, canonicalize_string(table_name))
         if err is not None:
-            return log_error(
-                    make_error_string(err, args_str),
-                    error_log)
+            return log_error(make_error_string(err, args_str), error_log)
         table_type_to_fn = {
-                'data_types': data_types_table,
-                'string_types': string_types_table,
-                'enumerations': enumerators_table,
-                'data_groups': data_groups_table,
-                }
+            "data_types": data_types_table,
+            "string_types": string_types_table,
+            "enumerations": enumerators_table,
+            "data_groups": data_groups_table,
+        }
         gen_table = table_type_to_fn.get(table_type, None)
         if gen_table is None:
-            return log_error(
-                    make_error_string(
-                        f"Unhandled table type \"{table_name}\"!",
-                        args_str),
-                    error_log)
+            return log_error(make_error_string(f'Unhandled table type "{table_name}"!', args_str), error_log)
         if caption is None:
             caption = table_name
-        return render_header(header_level_and_content) + gen_table(
-                target,
-                caption=caption,
-                add_training_ws=False)
+        return render_header(header_level_and_content) + gen_table(target, caption=caption, add_training_ws=False)
+
     return add_schema_table
+
 
 def make_add_yaml_table():
     """
@@ -211,9 +195,8 @@ def make_add_yaml_table():
         - caption: None or string, the table caption if desired
         RETURN: string, returns a string representation of the given table
     """
-    def add_yaml_table(
-            content,
-            caption=None):
+
+    def add_yaml_table(content, caption=None):
         table_data = yaml.load(content, Loader=yaml.FullLoader)
         columns = table_data["Headers"]
         data = {}
@@ -222,6 +205,7 @@ def make_add_yaml_table():
             for row in table_data["Data"]:
                 data[column].append(row[i])
         return write_table(data, columns, caption)
+
     return add_yaml_table
 
 
@@ -236,12 +220,14 @@ def make_add_data_model(schema_dir, error_log):
         RETURN: string, returns a string representation of the given data models
     """
     schema_dir = determine_schema_dir(schema_dir)
+
     def add_data_model(source, make_headers=True, base_level=1):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
         return write_data_model(data, make_headers, base_level)
+
     return add_data_model
 
 
@@ -260,22 +246,25 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
     template_dir = os.path.abspath(os.path.join(template_path, os.pardir))
     env = Environment(
         loader=FileSystemLoader(template_dir),
-        autoescape=select_autoescape(['html', 'xml']),
+        autoescape=select_autoescape(["html", "xml"]),
         trim_blocks=True,
         lstrip_blocks=True,
         comment_start_string="{##",
-        comment_end_string="##}")
-    errs = None # errors
+        comment_end_string="##}",
+    )
+    errs = None  # errors
     if log_file is not None:
         errs = []
     try:
         temp = env.get_template(os.path.basename(template_path))
-        with open(output_path, encoding='utf-8', mode='w') as handle:
+        with open(output_path, encoding="utf-8", mode="w") as handle:
             handle.write(
-                    temp.render(
-                        add_schema_table=make_add_schema_table(schema_dir, errs),
-                        add_yaml_table=make_add_yaml_table(),
-                        add_data_model=make_add_data_model(schema_dir, errs)))
+                temp.render(
+                    add_schema_table=make_add_schema_table(schema_dir, errs),
+                    add_yaml_table=make_add_yaml_table(),
+                    add_data_model=make_add_data_model(schema_dir, errs),
+                )
+            )
     except TemplateNotFound as exc:
         print(f"Could not find main template {template_path}")
         print(f"template_path = {template_path}")
@@ -285,7 +274,7 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
         print(exc)
         traceback.print_exc()
     if log_file is not None:
-        with open(log_file, 'w', encoding='utf-8') as handle:
+        with open(log_file, "w", encoding="utf-8") as handle:
             if len(errs) > 0:
                 for err in errs:
                     handle.write(err.strip())
