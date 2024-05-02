@@ -17,11 +17,7 @@ class RegularExpressionPattern:
         return self.pattern.pattern
 
     def match(self, test_string: str, anchored: bool = False):
-        return (
-            self.pattern.match(test_string)
-            if not anchored
-            else self.anchored_pattern.match(test_string)
-        )
+        return self.pattern.match(test_string) if not anchored else self.anchored_pattern.match(test_string)
 
     def anchored(self):
         return self.anchored_pattern.pattern
@@ -30,11 +26,13 @@ class RegularExpressionPattern:
     def anchor(pattern_text: str):
         return f"^{pattern_text}$"
 
+
 # Attributes
 
 # Data Types
 _type_base_names = RegularExpressionPattern("[A-Z]([A-Z]|[a-z]|[0-9])*")
 _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
+
 
 class DataType:
     def __init__(self, text, parent_data_element: DataElement):
@@ -42,13 +40,16 @@ class DataType:
         self.parent_data_element = parent_data_element
 
     def get_path(self) -> str:
-        return (f"{self.parent_data_element.parent_data_group.parent_schema.name}."
-                f"{self.parent_data_element.parent_data_group.name}."
-                f"{self.parent_data_element.name}."
-                f"Data Type")
+        return (
+            f"{self.parent_data_element.parent_data_group.parent_schema.name}."
+            f"{self.parent_data_element.parent_data_group.name}."
+            f"{self.parent_data_element.name}."
+            f"Data Type"
+        )
 
     def resolve(self):
         pass
+
 
 class IntegerType(DataType):
     pattern = RegularExpressionPattern("(Integer)")
@@ -59,20 +60,25 @@ class NumericType(DataType):
     pattern = RegularExpressionPattern("(Numeric)")
     value_pattern = RegularExpressionPattern("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
 
+
 class BooleanType(DataType):
     pattern = RegularExpressionPattern("(Boolean)")
     value_pattern = RegularExpressionPattern("True|False")
 
+
 class StringType(DataType):
     pattern = RegularExpressionPattern("(String)")
-    value_pattern = RegularExpressionPattern("\".*\"")
+    value_pattern = RegularExpressionPattern('".*"')
+
 
 class PatternType(DataType):
     pattern = RegularExpressionPattern("(Pattern)")
-    value_pattern = RegularExpressionPattern("\".*\"")
+    value_pattern = RegularExpressionPattern('".*"')
+
 
 class ArrayType(DataType):
     pattern = RegularExpressionPattern(r"\[(\S+)]")
+
 
 class DataGroupType(DataType):
     pattern = RegularExpressionPattern(rf"\{{({_type_base_names})\}}")
@@ -80,26 +86,28 @@ class DataGroupType(DataType):
     def __init__(self, text, parent_data_element):
         super().__init__(text, parent_data_element)
         self.data_group_name = self.pattern.match(text).group(1)
-        self.data_group = None # only valid once resolve() is called
+        self.data_group = None  # only valid once resolve() is called
 
     def resolve(self):
-        self.data_group = (self.parent_data_element.
-                                parent_data_group.
-                                parent_schema.
-                                get_data_group(self.data_group_name))
+        self.data_group = self.parent_data_element.parent_data_group.parent_schema.get_data_group(self.data_group_name)
+
 
 class EnumerationType(DataType):
     pattern = RegularExpressionPattern(rf"<{_type_base_names}>")
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
 
+
 class AlternativeType(DataType):
     pattern = RegularExpressionPattern(r"\(([^\s,]+)((, ?([^\s,]+))+)\)")
 
 
-_value_pattern = RegularExpressionPattern(f"(({NumericType.value_pattern})|"
-                                          f"({StringType.value_pattern})|"
-                                          f"({EnumerationType.value_pattern})|"
-                                          f"({BooleanType.value_pattern}))")
+_value_pattern = RegularExpressionPattern(
+    f"(({NumericType.value_pattern})|"
+    f"({StringType.value_pattern})|"
+    f"({EnumerationType.value_pattern})|"
+    f"({BooleanType.value_pattern}))"
+)
+
 
 # Constraints
 class Constraint:
@@ -111,14 +119,20 @@ class Constraint:
 class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
 
+
 class MultipleConstraint(Constraint):
     pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
+
 
 class SetConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]")
 
+
 class SelectorConstraint(Constraint):
-    pattern = RegularExpressionPattern(rf"{_data_element_names}\({EnumerationType.value_pattern}(, ?{EnumerationType.value_pattern})*\)")
+    pattern = RegularExpressionPattern(
+        rf"{_data_element_names}\({EnumerationType.value_pattern}(, ?{EnumerationType.value_pattern})*\)"
+    )
+
 
 class StringPatternConstraint(Constraint):
     pattern = RegularExpressionPattern('".*"')
@@ -128,23 +142,23 @@ class StringPatternConstraint(Constraint):
         try:
             re.compile(text)
         except:
-            raise Exception(f"Invalid regular expression: {text}") # pylint:disable=W0707
+            raise Exception(f"Invalid regular expression: {text}")  # pylint:disable=W0707
+
 
 class DataElementValueConstraint(Constraint):
     pattern = RegularExpressionPattern(f"({_data_element_names})=({_value_pattern})")
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
-        self.pattern = (parent_data_element.
-                        parent_data_group.
-                        parent_schema.
-                        schema_patterns.data_element_value_constraint)
+        self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
         match = self.pattern.match(self.text)
         self.data_element_name = match.group(1)  # TODO: Named groups?
         self.data_element_value = match.group(5)  # TODO: Named groups?
 
+
 class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]")
+
 
 _constraint_list = [
     RangeConstraint,
@@ -155,6 +169,7 @@ _constraint_list = [
     DataElementValueConstraint,
     ArrayLengthLimitsConstraint,
 ]
+
 
 def _constraint_factory(input: str, parent_data_element: DataElement):
     number_of_matches = 0
@@ -170,10 +185,13 @@ def _constraint_factory(input: str, parent_data_element: DataElement):
         raise Exception(f"No matching constraint for {input}.")
     raise Exception(f"Multiple matches found for constraint, {input}")
 
+
 # Required
+
 
 class DataElement:
     pattern = _data_element_names
+
     def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):
         self.name = name
         self.dictionary = data_element_dictionary
@@ -185,9 +203,9 @@ class DataElement:
             elif attribute == "Units":
                 self.units = self.dictionary[attribute]
             elif attribute == "Data Type":
-                self.data_type = (self.parent_data_group.
-                                       parent_schema.
-                                       data_type_factory(self.dictionary[attribute], self))
+                self.data_type = self.parent_data_group.parent_schema.data_type_factory(
+                    self.dictionary[attribute], self
+                )
             elif attribute == "Constraints":
                 self.set_constraints(self.dictionary[attribute])
             elif attribute == "Required":
@@ -195,10 +213,12 @@ class DataElement:
             elif attribute == "Notes":
                 self.notes = self.dictionary[attribute]
             else:
-                raise Exception(f"Unrecognized attribute, \"{attribute}\"."
-                                f"Schema={self.parent_data_group.parent_schema.file_path},"
-                                f"Data Group={self.parent_data_group.name},"
-                                f"Data Element={self.name}")
+                raise Exception(
+                    f'Unrecognized attribute, "{attribute}".'
+                    f"Schema={self.parent_data_group.parent_schema.file_path},"
+                    f"Data Group={self.parent_data_group.name},"
+                    f"Data Element={self.name}"
+                )
 
     def set_constraints(self, constraints_input):
         if not isinstance(constraints_input, list):
@@ -210,11 +230,13 @@ class DataElement:
     def resolve(self):
         self.data_type.resolve()
 
+
 class FundamentalDataType:
     def __init__(self, name: str, data_type_dictionary: dict, parent_schema: Schema):
         self.name = name
         self.dictionary = data_type_dictionary
         self.parent_schema = parent_schema
+
 
 class CommonStringType:
     def __init__(self, name: str, string_type_dictionary: dict, parent_schema: Schema):
@@ -239,6 +261,7 @@ class CommonStringType:
 
         parent_schema.add_data_type(self.data_type_class)
 
+
 class DataGroup:
     def __init__(self, name, data_group_dictionary, parent_schema: Schema):
         self.name = name
@@ -254,12 +277,15 @@ class DataGroup:
         for data_element in self.data_elements.values():
             data_element.resolve()
 
+
 class Enumerator:
     pattern = EnumerationType.value_pattern
+
     def __init__(self, name, enumerator_dictionary, parent_enumeration: Enumeration) -> None:
         self.name = name
         self.dictionary = enumerator_dictionary
         self.parent_enumeration = parent_enumeration
+
 
 class Enumeration:
     def __init__(self, name, enumeration_dictionary, parent_schema: Schema):
@@ -268,8 +294,8 @@ class Enumeration:
         self.parent_schema = parent_schema
         self.enumerators = {}
         for enumerator in self.dictionary["Enumerators"]:
-            self.enumerators[enumerator] = (
-                Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self))
+            self.enumerators[enumerator] = Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self)
+
 
 class DataGroupTemplate:
     def __init__(self, name: str, data_group_template_dictionary: dict, parent_schema: Schema):
@@ -316,18 +342,15 @@ class SchemaPatterns:
 
         self.data_group_types = DataGroupType.pattern
         self.enumeration_types = EnumerationType.pattern
-        single_type = (
-            rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
-        )
+        single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
         arrays = rf"\[({single_type})\](\[\d*\.*\d*\])?"
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
-        self.values = RegularExpressionPattern(f"(({self.numeric})|"
-                                               f"({self.string})|"
-                                               f"({self.enumerator})|"
-                                               f"({self.boolean}))")
+        self.values = RegularExpressionPattern(
+            f"(({self.numeric})|" f"({self.string})|" f"({self.enumerator})|" f"({self.boolean}))"
+        )
 
         # Constraints
         alpha_array = "([A-Z]{[1-9]+})"
@@ -339,12 +362,14 @@ class SchemaPatterns:
         reference_scope = f":{_type_base_names}:"
         self.selector_constraint = SelectorConstraint.pattern
 
-        self.constraints = RegularExpressionPattern(f"({alpha_array}|{numeric_array}|{self.range_constraint})|"  # pylint:disable=C0301
-                                                    f"({self.multiple_constraint})|"
-                                                    f"({sets})|"
-                                                    f"({self.data_element_value_constraint})|"
-                                                    f"({reference_scope})|"
-                                                    f"({self.selector_constraint})")
+        self.constraints = RegularExpressionPattern(
+            f"({alpha_array}|{numeric_array}|{self.range_constraint})|"  # pylint:disable=C0301
+            f"({self.multiple_constraint})|"
+            f"({sets})|"
+            f"({self.data_element_value_constraint})|"
+            f"({reference_scope})|"
+            f"({self.selector_constraint})"
+        )
 
         # Conditional Requirements
         self.conditional_requirements = RegularExpressionPattern(
@@ -395,13 +420,9 @@ class Schema:
         for object_name in self.source_dictionary:
             object_type = self.source_dictionary[object_name]["Object Type"]
             if object_type == "Data Group":
-                self.data_groups[object_name] = DataGroup(
-                    object_name, self.source_dictionary[object_name], self
-                )
+                self.data_groups[object_name] = DataGroup(object_name, self.source_dictionary[object_name], self)
             elif object_type == "Enumeration":
-                self.enumerations[object_name] = Enumeration(
-                    object_name, self.source_dictionary[object_name], self
-                )
+                self.enumerations[object_name] = Enumeration(object_name, self.source_dictionary[object_name], self)
             elif object_type == "Data Type":
                 self.data_types[object_name] = FundamentalDataType(
                     object_name, self.source_dictionary[object_name], self
@@ -450,9 +471,7 @@ class Schema:
             parent_directory = self.file_path.parent
             for reference in self.source_dictionary["Schema"]["References"]:
                 if reference == "core":
-                    raise Exception(
-                        f"Illegal reference schema name, {reference}. This name is reserved."
-                    )
+                    raise Exception(f"Illegal reference schema name, {reference}. This name is reserved.")
                 self.set_reference_schema(
                     reference,
                     pathlib.Path(parent_directory, f"{reference}.schema.yaml"),
@@ -488,9 +507,7 @@ class Schema:
                 matching_schemas.append(reference_schema)
 
         if len(matching_schemas) == 0:
-            raise Exception(
-                f'Data Group "{data_group_name}" not found in "{self.file_path}" or its referenced schemas'
-            )
+            raise Exception(f'Data Group "{data_group_name}" not found in "{self.file_path}" or its referenced schemas')
 
         return matching_schemas[0].data_groups[data_group_name]
 

@@ -16,7 +16,8 @@ from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
 from lattice.cpp.generate_support_headers import generate_support_headers, support_header_pathnames
 
-class SchemaFile: # pylint:disable=R0902
+
+class SchemaFile:  # pylint:disable=R0902
     """Parse the components of a schema file."""
 
     def __init__(self, path) -> None:
@@ -42,30 +43,22 @@ class SchemaFile: # pylint:disable=R0902
             if self._root_data_group in self._content:
                 # Get metadata
                 if "Data Elements" not in self._content[self._root_data_group]:
-                    raise Exception(
-                        f'Root Data Group, "{self._root_data_group}" '
-                        'does not contain "Data Elements".'
-                    )
+                    raise Exception(f'Root Data Group, "{self._root_data_group}" ' 'does not contain "Data Elements".')
                 if "metadata" in self._content[self._root_data_group]["Data Elements"]:
                     self._get_schema_constraints()
                 else:
                     pass  # Warning?
             else:
                 raise Exception(
-                    f'Root Data Group, "{self._root_data_group}", '
-                    f'not found in schema file, "{self.path}"'
+                    f'Root Data Group, "{self._root_data_group}", ' f'not found in schema file, "{self.path}"'
                 )
 
             # TODO: Version? # pylint: disable=fixme
 
-
     def _get_schema_constraints(self):
         """Populate instance variables from schema constraints"""
 
-        constraints = self._content[self._root_data_group][
-                                        "Data Elements"][
-                                            "metadata"].get(
-                                                "Constraints")
+        constraints = self._content[self._root_data_group]["Data Elements"]["metadata"].get("Constraints")
         data_element_pattern = "([a-z]+)(_([a-z]|[0-9])+)*"
         enumerator_pattern = "([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*"
         constraint_pattern = re.compile(
@@ -79,12 +72,12 @@ class SchemaFile: # pylint:disable=R0902
                 if match.group(1) == "schema_author":
                     self.schema_author = match.group(5)
                 else:
-                    pass # Warning?
+                    pass  # Warning?
 
                 if match.group(1) == "schema":
                     self.schema_type = match.group(5)
                 else:
-                    pass # Warning?
+                    pass  # Warning?
 
                 if match.group("data_element") == "schema":
                     self.schema_type = match.group("enumerator")
@@ -110,7 +103,7 @@ class SchemaFile: # pylint:disable=R0902
         self._json_schema_path = Path(json_schema_path).absolute()
 
     @property
-    def cpp_header_path(self): # pylint:disable=C0116
+    def cpp_header_path(self):  # pylint:disable=C0116
         return self._cpp_header_path
 
     @cpp_header_path.setter
@@ -118,14 +111,15 @@ class SchemaFile: # pylint:disable=R0902
         self._cpp_header_path = Path(value).absolute()
 
     @property
-    def cpp_source_path(self): # pylint:disable=C0116
+    def cpp_source_path(self):  # pylint:disable=C0116
         return self._cpp_source_path
 
     @cpp_source_path.setter
     def cpp_source_path(self, value):
         self._cpp_source_path = Path(value).absolute()
 
-class Lattice: # pylint:disable=R0902
+
+class Lattice:  # pylint:disable=R0902
     """
     Main class that provides schema transformations for the schema-based data model framework.
     """
@@ -202,9 +196,7 @@ class Lattice: # pylint:disable=R0902
         self.meta_schema_directory = Path(self.build_directory) / "meta_schema"
         make_dir(self.meta_schema_directory)
         for schema in self.schemas:
-            meta_schema_path = (
-                self.meta_schema_directory / f"{schema.file_base_name}.meta.schema.json"
-            )
+            meta_schema_path = self.meta_schema_directory / f"{schema.file_base_name}.meta.schema.json"
             schema.meta_schema_path = meta_schema_path
 
     def generate_meta_schemas(self):
@@ -249,7 +241,7 @@ class Lattice: # pylint:disable=R0902
         if schema_type is None:
             if len(self.schemas) > 1:
                 raise Exception(
-                    f'Multiple schemas defined, and no schema type provided. '
+                    f"Multiple schemas defined, and no schema type provided. "
                     f'Unable to validate file, "{input_path}".'
                 )
             validate_file(input_path, self.schemas[0].json_schema_path)
@@ -262,13 +254,9 @@ class Lattice: # pylint:disable=R0902
                         validate_file(input_path, schema.json_schema_path)
                         postvalidate_file(input_path, schema.json_schema_path)
                     except RefResolutionError as e:
-                        raise Exception(
-                            f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}"
-                        ) from e
+                        raise Exception(f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}") from e
                     return
-            raise Exception(
-                f'Unable to find matching schema, "{schema_type}", for file, "{input_path}".'
-            )
+            raise Exception(f'Unable to find matching schema, "{schema_type}", for file, "{input_path}".')
 
     def collect_example_files(self) -> None:
         """Collect data model instances from examples subdirectory"""
@@ -305,24 +293,21 @@ class Lattice: # pylint:disable=R0902
         self.doc_templates = []
         if self.doc_templates_directory_path is not None:
             for file_name in list(self.doc_templates_directory_path.iterdir()):
-                #file_path = self.doc_templates_directory_path / file_name
+                # file_path = self.doc_templates_directory_path / file_name
                 if file_name.is_file() and ".md" in file_name.name:
                     self.doc_templates.append(DocumentFile(file_name))
         self.doc_output_dir = self.build_directory / "docs"
         if len(self.doc_templates) > 0:
             make_dir(self.doc_output_dir)
             for template in self.doc_templates:
-                markdown_path = (
-                    self.doc_output_dir / f"{get_file_basename(template.path, depth=1)}")
+                markdown_path = self.doc_output_dir / f"{get_file_basename(template.path, depth=1)}"
                 template.markdown_output_path = markdown_path
 
     def generate_markdown_documents(self):
         """Generate markdown from doc templates"""
 
         for template in self.doc_templates:
-            process_template(
-                template.path, template.markdown_output_path, self.schema_directory_path
-            )
+            process_template(template.path, template.markdown_output_path, self.schema_directory_path)
 
     def generate_web_documentation(self):
         """Generate web docs from doc templates"""

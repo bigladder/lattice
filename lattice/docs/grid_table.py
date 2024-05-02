@@ -1,19 +1,18 @@
 """
 Markdown grid-table creation utilities
 """
+
 import copy
 import io
 import stringcase
+
 
 def flatten(list_of_lists):
     """
     - list_of_lists: (list (list *)), a list of lists
     RETURN: (List *), the list flattened
     """
-    return [
-        item
-        for sublist in list_of_lists
-        for item in sublist]
+    return [item for sublist in list_of_lists for item in sublist]
 
 
 # pylint: disable-next=too-many-branches
@@ -29,23 +28,21 @@ def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
     """
     verbose = False
     if len(text) > 0:
-        if text[0:1] in ['+ ','- ','* ']:
-            text = '\\' + text
+        if text[0:1] in ["+ ", "- ", "* "]:
+            text = "\\" + text
     if "\n" in text:
-        return flatten([
-            wrap_text_to_lines(t, width, bold, left_space, right_space)
-            for t in text.split("\n")])
+        return flatten([wrap_text_to_lines(t, width, bold, left_space, right_space) for t in text.split("\n")])
     atoms = text.split(" ")
     if bold:
-        atoms[0] = '**' + atoms[0]
-        atoms[-1] = atoms[-1] + '**'
+        atoms[0] = "**" + atoms[0]
+        atoms[-1] = atoms[-1] + "**"
     longest_atom = max([len(s) for s in atoms])
     if longest_atom + left_space + right_space > width:
         print("Warning! Need to hyphenate atoms!")
     lines = []
     atom_idx = 0
     first = True
-    line = ' '*left_space
+    line = " " * left_space
     num_atoms = len(atoms)
     while atom_idx < num_atoms:
         if verbose:
@@ -57,15 +54,15 @@ def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
             new_line = line + atoms[atom_idx]
             first = False
         else:
-            new_line = line + ' ' + atoms[atom_idx]
+            new_line = line + " " + atoms[atom_idx]
         if len(new_line) + right_space <= width:
             line = new_line
         else:
-            lines.append(line + ' '*right_space)
-            line = (' '*left_space) + atoms[atom_idx]
+            lines.append(line + " " * right_space)
+            line = (" " * left_space) + atoms[atom_idx]
         atom_idx += 1
     if len(line) > 0:
-        lines.append(line + ' '*right_space)
+        lines.append(line + " " * right_space)
     if verbose:
         print(f"line    : {line}")
         print(f"lines   : {lines}")
@@ -81,7 +78,7 @@ def get_line_row(lines, row):
     """
     if row < len(lines):
         return lines[row]
-    return ''
+    return ""
 
 
 def write_rule(sizes, is_header=False):
@@ -89,21 +86,19 @@ def write_rule(sizes, is_header=False):
     - sizes: (Array int), the column widths (of contents)
     RETURN: string
     """
-    mark = '=' if is_header else '-'
-    return '+' + ''.join([(mark*n + '+') for n in sizes]) + '\n'
+    mark = "=" if is_header else "-"
+    return "+" + "".join([(mark * n + "+") for n in sizes]) + "\n"
 
 
 def write_row(content, sizes, is_header=False):
     """
     RETURN: string
     """
-    assert len(content) == len(sizes), 'len(content) must equal len(sizes)'
-    table = write_rule(sizes) if is_header else ''
-    list_of_lines = [
-            wrap_text_to_lines(text=content[n], width=sizes[n], bold=is_header)
-            for n in range(len(content))]
+    assert len(content) == len(sizes), "len(content) must equal len(sizes)"
+    table = write_rule(sizes) if is_header else ""
+    list_of_lines = [wrap_text_to_lines(text=content[n], width=sizes[n], bold=is_header) for n in range(len(content))]
     for row_num in range(max([len(lines) for lines in list_of_lines])):
-        table_line = '|' + ''.join(['{:' + str(n)  + 's}|' for n in sizes]) + '\n'
+        table_line = "|" + "".join(["{:" + str(n) + "s}|" for n in sizes]) + "\n"
         texts = [get_line_row(lines, row_num) for lines in list_of_lines]
         table += table_line.format(*texts)
     table += write_rule(sizes, is_header=is_header)
@@ -111,11 +106,7 @@ def write_row(content, sizes, is_header=False):
 
 
 # pylint: disable-next=too-many-branches, too-many-locals
-def get_column_sizes(content,
-                     is_bold=False,
-                     has_spacing=True,
-                     preferred_sizes=None,
-                     full_width=100):
+def get_column_sizes(content, is_bold=False, has_spacing=True, preferred_sizes=None, full_width=100):
     """
     - content: (Array string), the column content
     - is_bold: Bool, True if the column content must be surrounded with '**'
@@ -136,7 +127,7 @@ def get_column_sizes(content,
     assert len(content) == len(sizes), "len(content) must equal len(sizes)"
     for col_num, col_content in enumerate(content):
         full_size = len(col_content)
-        atoms = col_content.replace('\n',' ').split(' ')
+        atoms = col_content.replace("\n", " ").split(" ")
         longest_atom = max([len(s) for s in atoms])
         if is_bold:
             num_atoms = len(atoms)
@@ -167,7 +158,7 @@ def get_column_sizes(content,
     remaining_space = full_width - sum(sizes)
     total_diff = sum(size_diff)
     for col_num, _ in enumerate(sizes):
-        sizes[col_num] += size_diff[col_num]*remaining_space//total_diff
+        sizes[col_num] += size_diff[col_num] * remaining_space // total_diff
     # Check remaining size
     remaining_space = full_width - sum(sizes)
     if remaining_space > 0:
@@ -175,6 +166,7 @@ def get_column_sizes(content,
         sizes[max_diff_col] += remaining_space
 
     return sizes
+
 
 def check_dict_of_arrays(doa, columns):
     """
@@ -196,9 +188,7 @@ def check_dict_of_arrays(doa, columns):
             except TypeError:
                 issues.append(f"could not take length of doa['{col}']")
         elif len(doa[col]) != length:
-            issues.append(
-                    f"len(doa['{col}']) = {len(doa[col])} != {length}," +
-                    " the length of other columns")
+            issues.append(f"len(doa['{col}']) = {len(doa[col])} != {length}," + " the length of other columns")
     return issues
 
 
@@ -250,15 +240,14 @@ def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blan
     assert_doa_valid(doa, columns)
     full_width = 100
     sizes = get_column_sizes(
-            columns, is_bold=True, has_spacing=True,
-            preferred_sizes=preferred_sizes,full_width=full_width)
+        columns, is_bold=True, has_spacing=True, preferred_sizes=preferred_sizes, full_width=full_width
+    )
     num_rows = len(doa[columns[0]])
     rows = []
     for row_num in range(num_rows):
         row = [doa[c][row_num] for c in columns]
         rows.append(row)
-        sizes = get_column_sizes(
-                row, is_bold=False, has_spacing=True, preferred_sizes=sizes, full_width=full_width)
+        sizes = get_column_sizes(row, is_bold=False, has_spacing=True, preferred_sizes=sizes, full_width=full_width)
     table = write_row(columns, sizes, True)
     for row in rows:
         table += write_row(row, sizes, False)
@@ -279,8 +268,7 @@ def write_table(dat, columns, caption=None, preferred_sizes=None):
         preferred_sizes = [0] * len(columns)
     the_str = ""
     with io.StringIO() as handle:
-        handle.write(make_table_from_dict_of_arrays(
-            dat, columns=columns, preferred_sizes=preferred_sizes))
+        handle.write(make_table_from_dict_of_arrays(dat, columns=columns, preferred_sizes=preferred_sizes))
         if caption is not None:
             handle.write(f"\nTable: {caption} {{#tbl:{stringcase.snakecase(caption)}}}\n")
         the_str = handle.getvalue()
@@ -301,7 +289,5 @@ def write_out_table(dat, columns, path, caption, preferred_sizes=None):
     RETURN: None
     SIDE_EFFECT: create table and write it to path as a pandoc grid table
     """
-    with open(path, 'w', encoding='utf-8') as handle:
-        handle.write(
-                write_table(
-                    dat, columns, caption, preferred_sizes))
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(write_table(dat, columns, caption, preferred_sizes))
