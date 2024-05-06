@@ -137,7 +137,7 @@ class ElementSerialization(ImplementationEntry):
     def __init__(self, parent, header_entry: DataElement):
         super().__init__(header_entry.name, parent)
         self._func = [
-            f'a205_json_get<{header_entry.type}>(j, "{self._name}", {self._name}, {self._name}_is_set, {"true" if header_entry.is_required else "false"});'
+            f'json_get<{header_entry.type}>(j, "{self._name}", {self._name}, {self._name}_is_set, {"true" if header_entry.is_required else "false"});'
         ]
 
     # .............................................................................................
@@ -154,7 +154,7 @@ class OwnedElementSerialization(ElementSerialization):
     def __init__(self, parent, header_entry: DataElement):
         super().__init__(parent, header_entry)
         self._func = [
-            f'a205_json_get<{header_entry.type}>(j, "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if header_entry.is_required else "false"});'
+            f'json_get<{header_entry.type}>(j, "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if header_entry.is_required else "false"});'
         ]
 
 
