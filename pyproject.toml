@@ -23,6 +23,7 @@ markdown-grid-tables = "*"
 pytest = "^7.1.3"
 doit = "*"
 pylint = "*"
+black = "*"
 tomli = "2.0.1"
 
 [build-system]
