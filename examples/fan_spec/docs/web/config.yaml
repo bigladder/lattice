@@ -8,6 +8,5 @@ specifications:
   - RS0006
   - RS0007
 colors:
-  primary: "#b75532"
-  secondary: "#608883"
-  menu_text: "#fff"
+  primary: deep orange
+  accent: blue grey
