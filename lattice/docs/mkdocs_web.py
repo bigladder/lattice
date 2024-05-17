@@ -53,7 +53,7 @@ class DocumentFile:
 
 
 class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
-    """Class that uses the hugo package to produce web documentation from schema"""
+    """Class that uses the mkdocs package to produce web documentation from schema"""
 
     def __init__(self, lattice):
         """Set up location and formatting parameters"""
