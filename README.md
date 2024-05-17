@@ -12,7 +12,7 @@ A Python package that provides support for a schema-based building data model fr
 - Data model validation: Ensures the YAML schema source files are well-formed.
 - Schema generation: Translates the YAML schema source files into equivalent JSON Schema.
 - Data file validation: Validates data files against the generated JSON Schema and additional validation requirements not supported by JSON Schema (e.g., reference checking).
-- Data model documentation: Generates web documentation of the data model from the YAML schema source files and templated markdown files (requires [Go](https://go.dev/), [Hugo](https://gohugo.io/installation/), and [Node.js](https://nodejs.org/en/download/)). This web documentation can be automatically deployed to GitHub pages.
+- Data model documentation: Generates web documentation of the data model from the YAML schema source files and templated markdown files. This web documentation can be automatically deployed to GitHub pages.
 
 Future additions under development include:
 
@@ -26,12 +26,6 @@ Installing
 To install Lattice, simply:
 
 `pip install lattice`
-
-To generate data model documentation, you'll also need to install:
-
-- [Go](https://go.dev/)
-- [Hugo](https://gohugo.io/installation/)
-- [Node.js](https://nodejs.org/en/download/)
 
 Example Usage
 -------------
