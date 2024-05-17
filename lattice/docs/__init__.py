@@ -2,4 +2,4 @@
 Documentation package helpers.
 """
 
-from .hugo_web import HugoWeb, DocumentFile
+from .mkdocs_web import MkDocsWeb, DocumentFile

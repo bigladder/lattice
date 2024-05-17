@@ -11,7 +11,7 @@ from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, dump, get_file_basename, get_base_stem
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
-from .docs import HugoWeb, DocumentFile
+from .docs import MkDocsWeb, DocumentFile
 from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
 from lattice.cpp.generate_support_headers import generate_support_headers, support_header_pathnames
@@ -316,7 +316,7 @@ class Lattice:  # pylint:disable=R0902
         make_dir(self.web_docs_directory_path)
 
         if self.doc_templates_directory_path:
-            HugoWeb(self).build()
+            MkDocsWeb(self).build()
         else:
             warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
 
