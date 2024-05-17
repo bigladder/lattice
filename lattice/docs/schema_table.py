@@ -5,7 +5,7 @@ Specifics for setting up schema tables.
 from copy import deepcopy
 import io
 import re
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Dict, Union
 
 from .grid_table import write_table
 
@@ -158,22 +158,13 @@ def load_structure_from_object(instance):
     }
 
 
-def trailing_ws(flag):
-    """
-    - flag: bool, if True, return two newlines
-    RETURN: string
-    """
-    return "\n\n" if flag else ""
-
-
-def create_table_from_list(columns, data_list, defaults=None, caption=None, add_training_ws=True):
+def create_table_from_list(columns, data_list, defaults=None, caption=None):
     """
     - columns: array of string, the column headers
     - data_list: array of dict with keys corresponding to columns array
     - defaults: None or dict from string to value, the defaults to use for a
       column if data missing
     - caption: None or string, if specified, adds a caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
     RETURN: string, the table in Pandoc markdown grid table format
     """
     if len(data_list) == 0:
@@ -188,14 +179,13 @@ def create_table_from_list(columns, data_list, defaults=None, caption=None, add_
                 data[col].append(defaults[col])
             else:
                 raise Exception(f"Expected item to have key `{col}`: `{item}`")
-    return write_table(data, columns, caption) + trailing_ws(add_training_ws)
+    return write_table(data, columns, caption) + "\n\n"
 
 
-def data_types_table(data_types, caption=None, add_training_ws=True):
+def data_types_table(data_types, caption=None):
     """
     - data_types: array of ..., the data types
     - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
@@ -203,54 +193,47 @@ def data_types_table(data_types, caption=None, add_training_ws=True):
         data_list=data_types,
         defaults=None,
         caption=caption,
-        add_training_ws=add_training_ws,
     )
 
 
-def string_types_table(string_types, caption=None, add_training_ws=True):
+def string_types_table(string_types, caption=None):
     """
     - string_types: array of ..., the string types
     - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
         columns=["String Type", "Description", "JSON Schema Pattern", "Examples"],
         data_list=string_types,
         caption=caption,
-        add_training_ws=add_training_ws,
         defaults=None,
     )
 
 
-def enumerators_table(enumerators, caption=None, add_training_ws=True):
+def enumerators_table(enumerators, caption=None):
     """
     - enumerators: array of ..., the enumerators array
     - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
         columns=["Enumerator", "Description", "Notes"],
         data_list=enumerators,
         caption=caption,
-        add_training_ws=add_training_ws,
         defaults={"Notes": ""},
     )
 
 
-def data_groups_table(data_elements, caption=None, add_training_ws=True):
+def data_groups_table(data_elements, caption=None):
     """
     - data_elements: array of ..., the data elements
     - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
         columns=["Name", "Description", "Data Type", "Units", "Constraints", "Req", "Notes"],
         data_list=data_elements,
         caption=caption,
-        add_training_ws=add_training_ws,
         defaults={"Notes": "", "Req": "", "Units": "", "Constraints": ""},
     )
 
@@ -259,18 +242,18 @@ def data_groups_table(data_elements, caption=None, add_training_ws=True):
 def _write_table_and_caption(
     output_file: io.StringIO,
     make_headers: bool,
-    table_from_struct,  # array or dict
-    table_write: Callable[[list, Optional[str], Optional[bool]], str],
+    table_from_struct: Union[Dict, List],
+    table_write: Callable[[list, Optional[str]], str],
     table_title: str,
     base_level: int,
-):
+) -> None:
     """Helper function to write parts of the data model"""
     if make_headers:
         output_file.writelines(write_header(table_title, base_level))
         caption = None
     else:
         caption = table_title
-    output_file.writelines(table_write(table_from_struct, caption, None))
+    output_file.writelines(table_write(table_from_struct, caption))
 
 
 def write_data_model(instance, make_headers=False, base_level=1):
