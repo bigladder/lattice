@@ -6,7 +6,7 @@ from .header_entries import (
     DataElementStaticMetainfo,
     MemberFunctionOverride,
     ObjectSerializationDeclaration,
-    CalculatePerformanceOverload,
+    InlineDependency
 )
 from .util import snake_style
 from collections import defaultdict
@@ -31,23 +31,19 @@ class ImplementationEntry:
         else:
             self._lineage = [name]
 
-    # .............................................................................................
     def _add_child_entry(self, child):
         self._child_entries.append(child)
 
-    # .............................................................................................
     def _get_level(self, level=0):
         if self._parent_entry:
             return self._parent_entry._get_level(level + 1)
         else:
             return level
 
-    # .............................................................................................
     @property
     def level(self):
         return self._get_level()
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self.level * "\t" + self._type + " " + self._name + " " + " " + self._opener + "\n"
@@ -74,7 +70,18 @@ class DataElementStaticInitialization(ImplementationEntry):
             ]
         )
 
-    # .............................................................................................
+    @property
+    def value(self):
+        entry = self.level * "\t" + self._func + "\n"
+        return entry
+
+
+# -------------------------------------------------------------------------------------------------
+class DependencyInitialization(ImplementationEntry):
+    def __init__(self, header_entry: InlineDependency, parent: ImplementationEntry = None):
+        super().__init__(None, parent)
+        self._func = f'void set_{header_entry.name} ({header_entry.type} value) {{ {header_entry.name} = std::move(value); }}'
+
     @property
     def value(self):
         entry = self.level * "\t" + self._func + "\n"
@@ -87,7 +94,6 @@ class FreeFunctionDefinition(ImplementationEntry):
         super().__init__(None, parent)
         self._func = f"void {header_entry.fname}{header_entry.args}"
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self.level * "\t" + self._func + " " + self._opener + "\n"
@@ -106,7 +112,6 @@ class MemberFunctionDefinition(ImplementationEntry):
             args = "(" + ", ".join([a.split("=")[0] for a in header_entry.args_as_list]) + ")"
         self._func = f"{header_entry.ret_type} {header_entry.parent.name}::{header_entry.fname}{args}"
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self.level * "\t" + self._func + " " + self._opener + "\n"
@@ -122,7 +127,6 @@ class StructSerialization(ImplementationEntry):
         super().__init__(name, parent)
         self._func = f"void from_json(const nlohmann::json& j, {name}& x)"
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self.level * "\t" + self._func + " " + self._opener + "\n"
@@ -137,10 +141,9 @@ class ElementSerialization(ImplementationEntry):
     def __init__(self, parent, header_entry: DataElement):
         super().__init__(header_entry.name, parent)
         self._func = [
-            f'json_get<{header_entry.type}>(j, "{self._name}", {self._name}, {self._name}_is_set, {"true" if header_entry.is_required else "false"});'
+            f'json_get<{header_entry.type}>(j, logger.get(), "{self._name}", {self._name}, {self._name}_is_set, {"true" if header_entry.is_required else "false"});'
         ]
 
-    # .............................................................................................
     @property
     def value(self):
         entry = ""
@@ -154,7 +157,7 @@ class OwnedElementSerialization(ElementSerialization):
     def __init__(self, parent, header_entry: DataElement):
         super().__init__(parent, header_entry)
         self._func = [
-            f'json_get<{header_entry.type}>(j, "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if header_entry.is_required else "false"});'
+            f'json_get<{header_entry.type}>(j, logger.get(), "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if header_entry.is_required else "false"});'
         ]
 
 
@@ -199,7 +202,6 @@ class SerializeFromInitFunction(ElementSerialization):
         super().__init__(parent, header_entry)
         self._func = "x.initialize(j);\n"
 
-    # .............................................................................................
     @property
     def value(self):
         return self.level * "\t" + self._func
@@ -214,7 +216,6 @@ class PerformanceMapImplementation(ElementSerialization):
         else:
             self._func = f"x.{self._name}.populate_performance_map(&x);\n"
 
-    # .............................................................................................
     @property
     def value(self):
         return self.level * "\t" + self._func
@@ -226,7 +227,6 @@ class GridAxisImplementation(ImplementationEntry):
         super().__init__(name, parent)
         self._func = [f"add_grid_axis(performance_map, {name});\n"]
 
-    # .............................................................................................
     @property
     def value(self):
         entry = ""
@@ -241,7 +241,6 @@ class GridAxisFinalize(ImplementationEntry):
         super().__init__(name, parent)
         self._func = [f"performance_map->finalize_grid();\n"]
 
-    # .............................................................................................
     @property
     def value(self):
         entry = ""
@@ -256,7 +255,6 @@ class DataTableImplementation(ImplementationEntry):
         super().__init__(name, parent)
         self._func = [f"add_data_table(performance_map, {name});\n"]
 
-    # .............................................................................................
     @property
     def value(self):
         entry = ""
@@ -265,22 +263,22 @@ class DataTableImplementation(ImplementationEntry):
         return entry
 
 
-# -------------------------------------------------------------------------------------------------
-class PerformanceOverloadImplementation(ElementSerialization):
-    def __init__(self, header_entry, parent):
-        super().__init__(None, None, parent, None)
-        self._func = []
-        args = ", ".join([f"{a[1]}" for a in [arg.split(" ") for arg in header_entry.args_as_list[:-1]]])
-        self._func.append(f"std::vector<double> target {{{args}}};")
-        self._func.append(
-            "auto v = PerformanceMapBase::calculate_performance(target, performance_interpolation_method);"
-        )
-        init_str = f"{header_entry.ret_type} s {{"
-        for i in range(header_entry.n_return_values):
-            init_str += f"v[{i}], "
-        init_str += "};"
-        self._func.append(init_str)
-        self._func.append("return s;")
+# # -------------------------------------------------------------------------------------------------
+# class PerformanceOverloadImplementation(ElementSerialization):
+#     def __init__(self, header_entry, parent):
+#         super().__init__(None, None, parent, None)
+#         self._func = []
+#         args = ", ".join([f"{a[1]}" for a in [arg.split(" ") for arg in header_entry.args_as_list[:-1]]])
+#         self._func.append(f"std::vector<double> target {{{args}}};")
+#         self._func.append(
+#             "auto v = PerformanceMapBase::calculate_performance(target, performance_interpolation_method);"
+#         )
+#         init_str = f"{header_entry.ret_type} s {{"
+#         for i in range(header_entry.n_return_values):
+#             init_str += f"v[{i}], "
+#         init_str += "};"
+#         self._func.append(init_str)
+#         self._func.append("return s;")
 
 
 # -------------------------------------------------------------------------------------------------
@@ -289,7 +287,6 @@ class SimpleReturnProperty(ImplementationEntry):
         super().__init__(name, parent)
         self._func = f'return "{name}";'
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self.level * "\t" + self._func + "\n"
@@ -306,7 +303,6 @@ class CPPTranslator:
         self._implementations["lookup_variables_base"] = DataTableImplementation
         self._implementations["performance_map_base"] = ElementSerialization
 
-    # .............................................................................................
     def __str__(self):
         s = ""
         for p in self._preamble:
@@ -316,7 +312,6 @@ class CPPTranslator:
         s += "\n"
         return s
 
-    # .............................................................................................
     def translate(self, container_class_name, header_tree):
         """X"""
         self._add_included_headers(header_tree._schema_name)
@@ -327,7 +322,6 @@ class CPPTranslator:
 
         self._get_items_to_serialize(header_tree.root)
 
-    # .............................................................................................
     def _get_items_to_serialize(self, header_tree):
         for entry in header_tree.child_entries:
             # Shortcut to avoid creating "from_json" entries for the main class, but create them
@@ -349,6 +343,8 @@ class CPPTranslator:
             # Initialize static members
             if isinstance(entry, DataElementStaticMetainfo):
                 DataElementStaticInitialization(entry, self._namespace)
+            if isinstance(entry, InlineDependency):
+                DependencyInitialization(entry, self._namespace)
             # Initialize and Populate overrides (Currently the only Member_function_override is the Initialize override)
             if isinstance(entry, MemberFunctionOverride):
                 # Create the override function definition (header) using the declaration's signature
@@ -362,31 +358,31 @@ class CPPTranslator:
                         if "unique_ptr" in data_element_entry.type:
                             ClassFactoryCreation(m, data_element_entry)
                             self._preamble.append(f"#include <{data_element_entry.name}_factory.h>\n")
-                        else:
-                            if entry.parent.superclass == "GridVariablesBase":
-                                GridAxisImplementation(data_element_entry.name, m)
-                            elif entry.parent.superclass == "LookupVariablesBase":
-                                DataTableImplementation(data_element_entry.name, m)
-                            elif entry.parent.superclass == "PerformanceMapBase":
-                                ElementSerialization(
-                                    data_element_entry.name, data_element_entry.type, m, data_element_entry._is_required
-                                )
-                            else:
-                                ElementSerialization(
-                                    data_element_entry.name, data_element_entry.type, m, data_element_entry._is_required
-                                )
-                            if entry.parent.superclass == "PerformanceMapBase":
-                                PerformanceMapImplementation(data_element_entry.name, m, populates_self=True)
-                # Special case of grid_axis_base needs a finalize function after all grid axes
-                # are added
-                if entry.parent.superclass == "GridVariablesBase":
-                    GridAxisFinalize("", m)
-            if isinstance(entry, CalculatePerformanceOverload):
-                m = MemberFunctionDefinition(entry, self._namespace)
-                for data_element_entry in [c for c in entry.parent.child_entries if isinstance(c, DataElement)]:
-                    # Build internals of Calculate_performance function
-                    if data_element_entry.name == "grid_variables":
-                        PerformanceOverloadImplementation(entry, m)
+                        # else:
+                        #     if entry.parent.superclass == "GridVariablesBase":
+                        #         GridAxisImplementation(data_element_entry.name, m)
+                        #     elif entry.parent.superclass == "LookupVariablesBase":
+                        #         DataTableImplementation(data_element_entry.name, m)
+                        #     elif entry.parent.superclass == "PerformanceMapBase":
+                        #         ElementSerialization(
+                        #             data_element_entry.name, data_element_entry.type, m, data_element_entry._is_required
+                        #         )
+                        #     else:
+                        #         ElementSerialization(
+                        #             data_element_entry.name, data_element_entry.type, m, data_element_entry._is_required
+                        #         )
+                        #     if entry.parent.superclass == "PerformanceMapBase":
+                        #         PerformanceMapImplementation(data_element_entry.name, m, populates_self=True)
+                # # Special case of grid_axis_base needs a finalize function after all grid axes
+                # # are added
+                # if entry.parent.superclass == "GridVariablesBase":
+                #     GridAxisFinalize("", m)
+            # if isinstance(entry, CalculatePerformanceOverload):
+            #     m = MemberFunctionDefinition(entry, self._namespace)
+            #     for data_element_entry in [c for c in entry.parent.child_entries if isinstance(c, DataElement)]:
+            #         # Build internals of Calculate_performance function
+            #         if data_element_entry.name == "grid_variables":
+            #             PerformanceOverloadImplementation(entry, m)
             # Lastly, handle the special case of objects that need both serialization
             # and initialization (currently a bit of a hack specific to this project)
             if isinstance(entry, ObjectSerializationDeclaration) and entry.name in self._namespace._name:
@@ -395,7 +391,6 @@ class CPPTranslator:
             else:
                 self._get_items_to_serialize(entry)
 
-    # .............................................................................................
     def _add_included_headers(self, main_header):
         self._preamble.clear()
         self._preamble.append(f"#include <{snake_style(main_header)}.h>\n#include <load-object.h>\n")

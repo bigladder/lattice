@@ -31,7 +31,6 @@ class HeaderEntry:
         if parent:
             self._parent_entry._add_child_entry(self)
 
-    # .............................................................................................
     def __lt__(self, other):
         """Rich-comparison method to allow sorting.
 
@@ -40,7 +39,6 @@ class HeaderEntry:
         """
         return self._less_than(other)
 
-    # .............................................................................................
     def _less_than(self, other):
         """ """
         lt = False
@@ -58,15 +56,12 @@ class HeaderEntry:
                 lt = self._less_than(c)
         return lt
 
-    # .............................................................................................
     def __gt__(self, other):
         return other < self
 
-    # .............................................................................................
     def _add_child_entry(self, child):
         self._child_entries.append(child)
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self._level * "\t" + self.type + " " + self.name
@@ -78,24 +73,20 @@ class HeaderEntry:
         entry += self._level * "\t" + self._closure
         return entry
 
-    # .............................................................................................
     @property
     def parent(self):
         return self._parent_entry
 
-    # .............................................................................................
     @property
     def child_entries(self):
         return self._child_entries
 
-    # .............................................................................................
     def _get_level(self, level=0):
         if self._parent_entry:
             return self._parent_entry._get_level(level + 1)
         else:
             return level
 
-    # .............................................................................................
     @property
     def _level(self):
         return self._get_level()
@@ -108,7 +99,6 @@ class Typedef(HeaderEntry):
         self.type = "typedef"
         self._typedef = typedef
 
-    # .............................................................................................
     @property
     def value(self):
         return self._level * "\t" + self.type + " " + self._typedef + " " + self.name + ";"
@@ -122,7 +112,6 @@ class Enumeration(HeaderEntry):
         self._closure = "};"
         self._enumerants: dict = item_dict
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self._level * "\t" + self.type + " " + self.name + " " + self._opener + "\n"
@@ -155,7 +144,6 @@ class EnumSerializationDeclaration(HeaderEntry):
         self._closure = "})"
         self._enumerants: list = ["UNKNOWN"] + (list(item_dict.keys()))
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self._level * "\t" + self.type + " " + self._opener + "\n"
@@ -190,7 +178,6 @@ class DataElement(HeaderEntry):
 
         self._create_type_entry(element, find_func)
 
-    # .............................................................................................
     @property
     def value(self):
         return self._level * "\t" + self.type + " " + self.name + self._closure
@@ -200,7 +187,6 @@ class DataElement(HeaderEntry):
     def selector(self):
         return self._selector
 
-    # .............................................................................................
     def _create_type_entry(self, parent_dict, type_finder=None):
         """Create type node."""
         try:
@@ -235,17 +221,17 @@ class DataElement(HeaderEntry):
                     # the _selector dictionary would have a form like:
                     # { operation_speed_control_type : { CONTINUOUS : PerformanceMapContinuous, DISCRETE : PerformanceMapDiscrete} }
                     self._selector[oneof_selection_key] = dict(zip(selectors, types))
-                    # TODO: the following assumes the data element name is an exact match for its base class type; e.g. performance_map -> PerformanceMapBase
-                    # Possibly need a better assumption
-                    classname_from_name = "".join(word.title() for word in self.name.split("_"))  # CamelCase it
-                    self.type = f"std::unique_ptr<{classname_from_name}Base>"
+
+                    # The elements of 'types' are Data Groups that derive from a Data Group Template.
+                    # The template is a verbatim "base class," which is what makes the selector
+                    # polymorphism possible
+                    self.type = f"std::unique_ptr<{type_finder(types[0]) if type_finder else None}>"
                 else:
                     # 1. 'type' entry
                     self.type = self._get_simple_type(parent_dict["Data Type"])
         except KeyError as ke:
             pass
 
-    # .............................................................................................
     def _get_simple_type(self, type_str):
         """Return the internal type described by type_str.
 
@@ -293,7 +279,6 @@ class DataElement(HeaderEntry):
             print("Type not processed:", type_str)
         return simple_type
 
-    # .............................................................................................
     def _get_simple_minmax(self, range_str, target_dict):
         """Process Range into min and max fields."""
         if range_str is not None:
@@ -334,7 +319,6 @@ class DataElement(HeaderEntry):
 #         if superclass:
 #             self.superclass = superclass
 
-#     # .............................................................................................
 #     @property
 #     def value(self):
 #         entry = self._level*'\t' + self.type + ' ' + self.name
@@ -360,7 +344,6 @@ class DataIsSetElement(HeaderEntry):
     def __init__(self, name, parent):
         super().__init__(name, parent)
 
-    # .............................................................................................
     @property
     def value(self):
         return self._level * "\t" + "bool " + self.name + "_is_set;"
@@ -376,10 +359,23 @@ class DataElementStaticMetainfo(HeaderEntry):
         self.name = self.name + "_" + meta_key.lower()
         self._closure = ";"
 
-    # .............................................................................................
     @property
     def value(self):
         return self._level * "\t" + self._type_specifier + " " + self.type + " " + self.name + self._closure
+
+
+# -------------------------------------------------------------------------------------------------
+class InlineDependency(HeaderEntry):
+
+    def __init__(self, name, parent, dependency_type):
+        super().__init__(name, parent)
+        self._type_specifier = 'inline'
+        self.type = dependency_type
+        self._closure = ';'
+
+    @property
+    def value(self):
+        return self._level*"\t" + self._type_specifier + " " + self.type + " " + self.name + self._closure
 
 
 # -------------------------------------------------------------------------------------------------
@@ -391,7 +387,6 @@ class FunctionalHeaderEntry(HeaderEntry):
         self.args = f_args
         self._closure = ";"
 
-    # .............................................................................................
     @property
     def value(self):
         return self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
@@ -430,7 +425,6 @@ class InitializeFunction(FunctionalHeaderEntry):
 #         for key in item_dict:
 #             self._enumerants.append(f'{key}_index')
 
-#     # .............................................................................................
 #     @property
 #     def value(self):
 #         enums = self._enumerants
@@ -443,19 +437,18 @@ class InitializeFunction(FunctionalHeaderEntry):
 #         return entry
 
 
-# -------------------------------------------------------------------------------------------------
-class CalculatePerformanceOverload(FunctionalHeaderEntry):
-    def __init__(self, f_ret, f_args, name, parent, n_return_values):
-        super().__init__(f_ret, "calculate_performance", "(" + ", ".join(f_args) + ")", name, parent)
-        self.args_as_list = f_args
-        self.n_return_values = n_return_values
+# # -------------------------------------------------------------------------------------------------
+# class CalculatePerformanceOverload(FunctionalHeaderEntry):
+#     def __init__(self, f_ret, f_args, name, parent, n_return_values):
+#         super().__init__(f_ret, "calculate_performance", "(" + ", ".join(f_args) + ")", name, parent)
+#         self.args_as_list = f_args
+#         self.n_return_values = n_return_values
 
-    # .............................................................................................
-    @property
-    def value(self):
-        complete_decl = self._level * "\t" + "using PerformanceMapBase::calculate_performance;\n"
-        complete_decl += self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
-        return complete_decl
+#     @property
+#     def value(self):
+#         complete_decl = self._level * "\t" + "using PerformanceMapBase::calculate_performance;\n"
+#         complete_decl += self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
+#         return complete_decl
 
 
 # -------------------------------------------------------------------------------------------------
@@ -469,7 +462,6 @@ class HeaderTranslator:
         self._data_group_types = ["Data Group"]
         self._forward_declaration_dir: Optional[pathlib.Path] = None
 
-    # .............................................................................................
     def __str__(self):
         s = ""
         for p in self._preamble:
@@ -487,7 +479,6 @@ class HeaderTranslator:
     def root(self):
         return self._top_namespace
 
-    # .............................................................................................
     @staticmethod
     def modified_insertion_sort(obj_list):
         """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
@@ -506,7 +497,6 @@ class HeaderTranslator:
             obj_list[j + 1] = item_to_insert
         return swapped
 
-    # .............................................................................................
     def translate(self, input_file_path, top_namespace: str, forward_declarations_path: pathlib.Path):
         """X"""
         self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
@@ -531,21 +521,39 @@ class HeaderTranslator:
         # First, assemble typedefs
         for base_level_tag in [tag for tag in self._contents if self._contents[tag]["Object Type"] == "String Type"]:
             Typedef(base_level_tag, self._namespace, "std::string")
+
         # Second, enumerations
         for base_level_tag in [
             tag for tag in self._contents if self._contents[tag].get("Object Type") == "Enumeration"
         ]:
             Enumeration(base_level_tag, self._namespace, self._contents[base_level_tag]["Enumerators"])
+
+        # Namespace-level dependencies
+        InlineDependency("logger", self._namespace, "std::shared_ptr<Courier::Courier>")
+
         # Collect member objects and their children
-        for base_level_tag in [tag for tag in self._contents if self._contents[tag].get("Object Type") == "Meta"]:
+        for base_level_tag in [
+                tag for tag in self._contents if self._contents[tag].get("Object Type") == "Meta"
+            ]:
             s = Struct(base_level_tag, self._namespace)
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Title")
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Version")
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Description")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Title")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Version")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Description")
         for base_level_tag in [
             tag for tag in self._contents if self._contents[tag].get("Object Type") in self._data_group_types
         ]:
-            s = Struct(base_level_tag, self._namespace)
+            s = Struct(base_level_tag,
+                       self._namespace,
+                       superclass=self._contents[base_level_tag].get("Data Group Template", ""))
             self._add_member_headers(s)
             # When there is a base class, add overrides:
             # self._add_function_overrides(s, self._fundamental_base_class)
@@ -656,7 +664,7 @@ class HeaderTranslator:
                 includes += "\n"
             self._preamble.append(includes)
         self._preamble.append(
-            "#include <string>\n#include <vector>\n#include <nlohmann/json.hpp>\n#include <enum-info.h>\n"
+            "#include <string>\n#include <vector>\n#include <nlohmann/json.hpp>\n#include <enum-info.h>\n#include <courier/courier.h>\n"
         )
 
     # .............................................................................................
@@ -722,9 +730,17 @@ class HeaderTranslator:
                 self._add_performance_overloads(entry)
 
     # .............................................................................................
-    def _search_nodes_for_datatype(self, data_element):
+    def _search_nodes_for_datatype(self, data_element) -> str:
+        """
+        If data_element exists, return its data type; else return the data group's 'data type,' which
+        is the Data Group Template. Hacky overload.
+        """
         for listing in self._contents:
             if "Data Elements" in self._contents[listing]:
+                if "Data Group Template" in self._contents[listing] and listing in data_element:
+                    return self._contents[listing]["Data Group Template"]
+
                 for element in self._contents[listing]["Data Elements"]:
                     if element == data_element and "Data Type" in self._contents[listing]["Data Elements"][element]:
                         return self._contents[listing]["Data Elements"][element]["Data Type"]
+        return "Template" # Placeholder base class

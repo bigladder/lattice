@@ -53,6 +53,7 @@ namespace {{namespace}} {
 
     template<class T>
     void json_get(nlohmann::json j,
+                  Courierr::Courierr* logger,
                   const char *subnode,
                   T& object,
                   bool& object_is_set,
@@ -68,7 +69,7 @@ namespace {{namespace}} {
             object_is_set = false;
             if (required)
             {
-                logger.warning(ex.what());
+                logger->send_warning(ex.what());
             }
         }
     }
