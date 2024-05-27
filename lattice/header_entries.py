@@ -101,7 +101,7 @@ class Typedef(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         return f"{self._level * tab}{self.type} {self._typedef} {self.name};"
 
 
@@ -115,7 +115,7 @@ class Enumeration(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
         for e in self._enumerants:
             entry += f"{(self._level + 1) * tab}{e},\n"
@@ -123,13 +123,14 @@ class Enumeration(HeaderEntry):
 
         # Incorporate an enum_info map into this object
         map_type = f"const static std::unordered_map<{self.name}, enum_info>"
-        entry += (f"\n"
-                  f"{self._level * tab}{map_type} {self.name}_info {self._opener}\n")
+        entry += f"\n" f"{self._level * tab}{map_type} {self.name}_info {self._opener}\n"
         for e in self._enumerants:
             display_text = self._enumerants[e].get("Display Text", e)
             description = self._enumerants[e].get("Description")
-            entry += f"{(self._level + 1) * tab}{{{self.name}::{e}, {{\"{e}\", \"{display_text}\", \"{description}\"}}}},\n"
-        entry += f"{(self._level + 1) * tab}{{{self.name}::UNKNOWN, {{\"UNKNOWN\", \"None\", \"None\"}}}}\n"
+            entry += (
+                f"{(self._level + 1) * tab}" f'{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
+            )
+        entry += f"{(self._level + 1) * tab}" f'{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
         entry += f"{self._level * tab}{self._closure}"
 
         return entry
@@ -180,7 +181,7 @@ class DataElement(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         return f"{self._level * tab}{self.type} {self.name}{self._closure}"
 
     # .............................................................................................
@@ -347,7 +348,7 @@ class DataIsSetElement(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         return f"{self._level * tab}bool {self.name}_is_set;"
 
 
@@ -363,7 +364,7 @@ class DataElementStaticMetainfo(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         return f"{self._level * tab}{self._type_specifier} {self.type} {self.name}{self._closure}"
 
 
@@ -378,7 +379,7 @@ class InlineDependency(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         return f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
 
 
@@ -393,7 +394,7 @@ class FunctionalHeaderEntry(HeaderEntry):
 
     @property
     def value(self):
-        tab = '\t'
+        tab = "\t"
         return f"{self._level * tab}{' '.join([self.ret_type, self.fname, self.args])}{self._closure}"
 
 
@@ -495,6 +496,7 @@ class HeaderTranslator:
             obj_list[j + 1] = item_to_insert
         return swapped
 
+    # fmt: off
     def translate(self, input_file_path, top_namespace: str, forward_declarations_path: pathlib.Path):
         """X"""
         self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
@@ -532,9 +534,18 @@ class HeaderTranslator:
         # Collect member objects and their children
         for base_level_tag in [tag for tag in self._contents if self._contents[tag].get("Object Type") == "Meta"]:
             s = Struct(base_level_tag, self._namespace)
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Title")
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Version")
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Description")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Title")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Version")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Description")
         for base_level_tag in [
             tag for tag in self._contents if self._contents[tag].get("Object Type") in self._data_group_types
         ]:
@@ -579,15 +590,24 @@ class HeaderTranslator:
                 d = DataIsSetElement(data_element, s)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Units"
+                    data_element,
+                    s,
+                    self._contents[base_level_tag]["Data Elements"][data_element],
+                    "Units"
                 )
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Description"
+                    data_element,
+                    s,
+                    self._contents[base_level_tag]["Data Elements"][data_element],
+                    "Description"
                 )
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Name"
+                    data_element,
+                    s,
+                    self._contents[base_level_tag]["Data Elements"][data_element],
+                    "Name"
                 )
         HeaderTranslator.modified_insertion_sort(self._namespace.child_entries)
         # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
@@ -595,17 +615,22 @@ class HeaderTranslator:
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in [
-            tag for tag in self._contents if self._contents[tag].get("Object Type") == "Enumeration"
+            tag for tag in self._contents
+                if self._contents[tag].get("Object Type") == "Enumeration"
         ]:
-            EnumSerializationDeclaration(base_level_tag, self._namespace, self._contents[base_level_tag]["Enumerators"])
+            EnumSerializationDeclaration(base_level_tag,
+                                         self._namespace,
+                                         self._contents[base_level_tag]["Enumerators"])
         for base_level_tag in [
-            tag for tag in self._contents if self._contents[tag].get("Object Type") in self._data_group_types
+            tag for tag in self._contents
+                if self._contents[tag].get("Object Type") in self._data_group_types
         ]:
             # from_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
 
-    # .............................................................................................
+    # fmt: on
+
     def _load_meta_info(self, schema_section):
         """Store the global/common types and the types defined by any named references."""
         self._root_data_group = schema_section.get("Root Data Group")
@@ -616,7 +641,7 @@ class HeaderTranslator:
         if "References" in schema_section:
             for ref in schema_section["References"]:
                 refs.update({f"{ref}": os.path.join(self._source_dir, ref + ".schema.yaml")})
-        if self._schema_name == "core" and self._forward_declaration_dir and self._forward_declaration_dir.is_dir():
+        if self._schema_name == ("core" and self._forward_declaration_dir and self._forward_declaration_dir.is_dir()):
             for file in self._forward_declaration_dir.iterdir():
                 ref = get_base_stem(file)
                 refs.update({ref: file})
@@ -636,7 +661,6 @@ class HeaderTranslator:
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
 
-    # .............................................................................................
     def _add_include_guard(self, header_name):
         s1 = f"#ifndef {header_name.upper()}_H_"
         s2 = f"#define {header_name.upper()}_H_"
@@ -644,7 +668,6 @@ class HeaderTranslator:
         self._preamble.extend([s1, s2])
         self._epilogue.append(s3)
 
-    # .............................................................................................
     def _add_standard_dependency_headers(self, ref_list):
         if ref_list:
             includes = ""
@@ -652,14 +675,15 @@ class HeaderTranslator:
                 include = f"#include <{hyphen_separated_lowercase_style(r)}.h>"
                 self._preamble.append(include)
         self._preamble.extend(
-            ["#include <string>",
-             "#include <vector>",
-             "#include <nlohmann/json.hpp>",
-             "#include <enum-info.h>",
-             "#include <courier/courier.h>"]
+            [
+                "#include <string>",
+                "#include <vector>",
+                "#include <nlohmann/json.hpp>",
+                "#include <enum-info.h>",
+                "#include <courier/courier.h>",
+            ]
         )
 
-    # .............................................................................................
     def _add_member_headers(self, data_element):
         if "unique_ptr" in data_element.type:
             m = re.search(r"\<(.*)\>", data_element.type)
@@ -672,7 +696,6 @@ class HeaderTranslator:
             if include not in self._preamble:
                 self._preamble.append(include)
 
-    # .............................................................................................
     def _add_function_overrides(self, parent_node, base_class_name):
         """Get base class virtual functions to be overridden."""
         base_class = os.path.join(
@@ -691,7 +714,6 @@ class HeaderTranslator:
         except:
             pass
 
-    # .............................................................................................
     def _add_performance_overloads(self, parent_node=None):
         """ """
         if not parent_node:
@@ -721,7 +743,6 @@ class HeaderTranslator:
             else:
                 self._add_performance_overloads(entry)
 
-    # .............................................................................................
     def _search_nodes_for_datatype(self, data_element) -> str:
         """
         If data_element exists, return its data type; else return the data group's 'data type,' which
