@@ -6,7 +6,7 @@ from .header_entries import (
     DataElementStaticMetainfo,
     MemberFunctionOverride,
     ObjectSerializationDeclaration,
-    InlineDependency
+    InlineDependency,
 )
 from .util import snake_style
 from collections import defaultdict
@@ -80,7 +80,9 @@ class DataElementStaticInitialization(ImplementationEntry):
 class DependencyInitialization(ImplementationEntry):
     def __init__(self, header_entry: InlineDependency, parent: ImplementationEntry = None):
         super().__init__(None, parent)
-        self._func = f'void set_{header_entry.name} ({header_entry.type} value) {{ {header_entry.name} = std::move(value); }}'
+        self._func = (
+            f"void set_{header_entry.name} ({header_entry.type} value) {{ {header_entry.name} = std::move(value); }}"
+        )
 
     @property
     def value(self):

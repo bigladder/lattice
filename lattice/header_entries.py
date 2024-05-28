@@ -195,7 +195,7 @@ class DataElement(HeaderEntry):
             # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
             m = re.findall(r"\[(.*?)\]", parent_dict["Data Type"])
             if m:
-                self.type = "std::vector<" + self._get_simple_type(m[0]) + ">"
+                self.type = f"std::vector<{self._get_simple_type(m[0])}>"
             else:
                 # If the type is oneOf a set
                 m = re.match(r"\((.*)\)", parent_dict["Data Type"])
@@ -242,44 +242,36 @@ class DataElement(HeaderEntry):
         """
         enum_or_def = r"(\{|\<)(.*)(\}|\>)"
         internal_type = None
-        nested_type = None
+        # nested_type = None
         m = re.match(enum_or_def, type_str)
         if m:
-            # Find the internal type. It might be inside nested-type syntax, but more likely
-            # is a simple definition or enumeration.
-            m_nested = re.match(r".*?\((.*)\)", m.group(2))
-            if m_nested:
-                # Rare case of a nested specification e.g. 'ASHRAE205(RS_ID=RS0005)'
-                internal_type = m.group(2).split("(")[0]
-                nested_type = m_nested.group(1)
-            else:
-                internal_type = m.group(2)
+            # # Find the internal type. It might be inside nested-type syntax, but more likely
+            # # is a simple definition or enumeration.
+            # m_nested = re.match(r".*?\((.*)\)", m.group(2))
+            # if m_nested:
+            #     # Rare case of a nested specification e.g. 'ASHRAE205(RS_ID=RS0005)'
+            #     internal_type = m.group(2).split("(")[0]
+            #     nested_type = m_nested.group(1)
+            # else:
+            #     internal_type = m.group(2)
+            internal_type = m.group(2)
         else:
             internal_type = type_str
         # Look through the references to assign a source to the type. 'key' is generally a
         # schema name; its value will be a list of matchable data object names
+        print(internal_type, self._refs)
         for key in self._refs:
             if internal_type in self._refs[key]:
-                simple_type = f"{snake_style(key)}_ns::{internal_type}"
-                # simple_type = internal_type
-                # #
-                # if key == internal_type:
-                #     simple_type = f'{key}_ns::{internal_type}'
-                if nested_type:
-                    # e.g. 'ASHRAE205' from the composite 'ASHRAE205(RS_ID=RSXXXX)'
-                    # simple_type = f'std::shared_ptr<{internal_type}>'
-                    simple_type = f"{internal_type}"
-                return simple_type
+                return f"{snake_style(key)}_ns::{internal_type}"
 
         try:
             if "/" in type_str:
                 # e.g. "Numeric/Null"
-                simple_type = self._datatypes[type_str.split("/")[0]]
+                return self._datatypes[type_str.split("/")[0]]
             else:
-                simple_type = self._datatypes[type_str]
+                return self._datatypes[type_str]
         except KeyError:
             print("Type not processed:", type_str)
-        return simple_type
 
     def _get_simple_minmax(self, range_str, target_dict):
         """Process Range into min and max fields."""
@@ -577,6 +569,7 @@ class HeaderTranslator:
             #     s = Struct(base_level_tag, self._namespace)
 
             for data_element in self._contents[base_level_tag]["Data Elements"]:
+                print(data_element)
                 d = DataElement(
                     data_element,
                     s,
@@ -629,7 +622,6 @@ class HeaderTranslator:
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
 
-    # fmt: on
 
     def _load_meta_info(self, schema_section):
         """Store the global/common types and the types defined by any named references."""
@@ -641,7 +633,9 @@ class HeaderTranslator:
         if "References" in schema_section:
             for ref in schema_section["References"]:
                 refs.update({f"{ref}": os.path.join(self._source_dir, ref + ".schema.yaml")})
-        if self._schema_name == ("core" and self._forward_declaration_dir and self._forward_declaration_dir.is_dir()):
+        if (self._schema_name == "core" and
+            self._forward_declaration_dir and
+            self._forward_declaration_dir.is_dir()):
             for file in self._forward_declaration_dir.iterdir():
                 ref = get_base_stem(file)
                 refs.update({ref: file})
@@ -660,6 +654,8 @@ class HeaderTranslator:
                 self._fundamental_data_types[base_item] = cpp_types.get(ext_dict[base_item]["JSON Schema Type"])
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
+
+    # fmt: on
 
     def _add_include_guard(self, header_name):
         s1 = f"#ifndef {header_name.upper()}_H_"
