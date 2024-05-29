@@ -127,7 +127,7 @@ class Lattice:  # pylint:disable=R0902
     def __init__(
         self,
         root_directory: Path = Path.cwd(),
-        build_directory: Union[Path | None] = None,
+        build_directory: Union[Path, None] = None,
         build_output_directory_name: Path = Path(".lattice"),
         build_validation: bool = True,
     ) -> None:
