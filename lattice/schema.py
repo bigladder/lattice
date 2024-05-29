@@ -1,8 +1,10 @@
 from __future__ import (
     annotations,
 )  # Needed for type hinting classes that are not yet fully defined
+from typing import List
 import pathlib
 import re
+
 from .file_io import load, get_file_basename
 
 core_schema_path = pathlib.Path(pathlib.Path(__file__).parent, "core.schema.yaml")
@@ -160,7 +162,7 @@ class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]")
 
 
-_constraint_list = [
+_constraint_list: List[Constraint] = [
     RangeConstraint,
     MultipleConstraint,
     SetConstraint,
@@ -171,7 +173,7 @@ _constraint_list = [
 ]
 
 
-def _constraint_factory(input: str, parent_data_element: DataElement):
+def _constraint_factory(input: str, parent_data_element: DataElement) -> Constraint:
     number_of_matches = 0
     match_type = None
     for constraint in _constraint_list:
@@ -263,7 +265,7 @@ class CommonStringType:
 
 
 class DataGroup:
-    def __init__(self, name, data_group_dictionary, parent_schema: Schema):
+    def __init__(self, name: str, data_group_dictionary, parent_schema: Schema):
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
@@ -368,7 +370,8 @@ class SchemaPatterns:
             f"({sets})|"
             f"({self.data_element_value_constraint})|"
             f"({reference_scope})|"
-            f"({self.selector_constraint})"
+            f"({self.selector_constraint})|"
+            f"({StringPatternConstraint.pattern})"
         )
 
         # Conditional Requirements

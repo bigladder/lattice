@@ -5,6 +5,7 @@ from distutils.dir_util import copy_tree  # pylint: disable=deprecated-module
 import shutil
 from urllib.parse import urlparse
 from typing import List
+from datetime import datetime
 
 import pygit2
 from jinja2 import Environment, FileSystemLoader
@@ -74,6 +75,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.specification_counter = 1
         self.specification_templates: List[DocumentFile] = []
         self.navigation = []
+        self.timestamp = datetime.now()
 
     def setup_build_directory_structure(self):  # pylint: disable=missing-function-docstring
         self.content_directory_path = make_dir(Path(self.build_directory, "docs"))
@@ -100,9 +102,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             self.git_ref_name = "main"
         else:
             self.git_ref_name = self.git_repo.head.name
-        self.git_remote_url = (
-            rf"https://{self.git_repo_owner}.{self.git_repo_host}.com/{self.git_repo_owner}/{self.git_repo_name}"
-        )
+        self.git_remote_url = rf"https://{self.git_repo_host}.com/{self.git_repo_owner}/{self.git_repo_name}"
         self.base_url = rf"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/"
 
     # pylint: disable-next=missing-function-docstring, too-many-branches, too-many-statements
@@ -121,11 +121,12 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "site_url": self.base_url,
             "site_author": self.author,
             "site_description": self.description,
+            "copyright": f"&copy {self.timestamp.year} {self.author} All rights reserved",
             "theme": {"name": "material", "favicon": favicon, "logo": logo, "palette": self.colors},
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
-            "markdown_extensions": ["markdown_grid_tables", "def_list"],
+            "markdown_extensions": ["markdown_grid_tables", "pymdownx.smartsymbols", "def_list"],
         }
 
     def make_pages(self):
@@ -308,6 +309,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
     ):
         front_matter = {
             "title": title,
+            "build_date_utc": self.timestamp,
         }
 
         if content_type is not None:
@@ -350,6 +352,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         # Append front matter
         front_matter = {
             "title": title,
+            "build_date_utc": self.timestamp,
         }
 
         self.specification_counter += 1

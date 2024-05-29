@@ -4,7 +4,7 @@ import re
 import warnings
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import List
+from typing import List, Union
 from jsonschema.exceptions import RefResolutionError
 
 from lattice.docs.process_template import process_template
@@ -20,7 +20,7 @@ from lattice.cpp.generate_support_headers import generate_support_headers, suppo
 class SchemaFile:  # pylint:disable=R0902
     """Parse the components of a schema file."""
 
-    def __init__(self, path) -> None:
+    def __init__(self, path: Path) -> None:
         """Open and parse source schema"""
 
         self.path = Path(path).absolute()
@@ -126,11 +126,11 @@ class Lattice:  # pylint:disable=R0902
 
     def __init__(
         self,
-        root_directory=Path.cwd(),
-        build_directory: Path = None,
-        build_output_directory_name=".lattice",
-        build_validation=True,
-    ):
+        root_directory: Path = Path.cwd(),
+        build_directory: Union[Path, None] = None,
+        build_output_directory_name: Path = Path(".lattice"),
+        build_validation: bool = True,
+    ) -> None:
         """Set up file structure"""
 
         # Check if directories exists
