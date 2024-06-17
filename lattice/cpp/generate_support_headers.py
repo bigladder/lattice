@@ -23,6 +23,7 @@ def generate_support_headers(namespace_name: str, root_data_groups: list[str], o
                 Path(output_directory) / generated_file_name,
             )
 
+
 def generate_build_support(project_name: str, output_directory: Path):
     generated_file_name = "CMakeLists.txt"
 
