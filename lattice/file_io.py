@@ -56,7 +56,7 @@ def dump(content, output_file_path):
     elif ext in [".yaml", ".yml"]:
         with open(output_file_path, "w", encoding="utf-8") as out_file:
             yaml.dump(content, out_file, sort_keys=False)
-    elif ext in [".h", ".cpp"]:
+    elif ext in [".h", ".cpp", ".txt"]:
         with open(output_file_path, "w", encoding="utf-8") as src:
             src.write(content)
             src.write("\n")

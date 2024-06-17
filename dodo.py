@@ -109,7 +109,7 @@ def task_generate_cpp_code():
             + [CORE_SCHEMA_PATH, BASE_META_SCHEMA_PATH, Path(SOURCE_PATH, "header_entries.py"), Path(SOURCE_PATH, "cpp_entries.py")],
             "targets": [schema.cpp_header_path for schema in example.cpp_schemas]
             + [schema.cpp_source_path for schema in example.cpp_schemas]
-            + example.cpp_support_headers(),
+            + example.cpp_support_headers() + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
             "actions": [(example.generate_cpp_headers, [])],
             "clean": True,
         }

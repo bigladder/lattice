@@ -14,7 +14,7 @@ from .schema_to_json import generate_json_schema, validate_file, postvalidate_fi
 from .docs import MkDocsWeb, DocumentFile
 from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
-from lattice.cpp.generate_support_headers import generate_support_headers, support_header_pathnames
+from lattice.cpp.generate_support_headers import generate_support_headers, support_header_pathnames, generate_build_support
 
 
 class SchemaFile:  # pylint:disable=R0902
@@ -328,9 +328,12 @@ class Lattice:  # pylint:disable=R0902
         """Create directories for generated CPP source"""
         self.cpp_output_dir = Path(self.build_directory) / "cpp"
         make_dir(self.cpp_output_dir)
+        include_dir = make_dir(self.cpp_output_dir / "include")
+        include_dir = make_dir(include_dir / f"{self.root_directory.name}")
+        src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.h"
-            schema.cpp_source_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.cpp"
+            schema.cpp_header_path = include_dir / f"{schema.file_base_name.lower()}.h"
+            schema.cpp_source_path = src_dir / f"{schema.file_base_name.lower()}.cpp"
 
     def cpp_support_headers(self) -> list[Path]:
         return support_header_pathnames(self.cpp_output_dir)
@@ -348,3 +351,5 @@ class Lattice:  # pylint:disable=R0902
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)
         generate_support_headers(self.root_directory.name, root_groups, self.cpp_output_dir)
+        generate_build_support(self.root_directory.name, self.cpp_output_dir)
+
