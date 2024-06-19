@@ -681,6 +681,10 @@ class HeaderTranslator:
         )
 
     def _add_member_headers(self, data_element):
+        if "core_ns" in data_element.type:
+            include = f"#include <core.h>"
+            if include not in self._preamble:
+                self._preamble.append(include)
         if "unique_ptr" in data_element.type:
             m = re.search(r"\<(.*)\>", data_element.type)
             if m:
