@@ -235,8 +235,8 @@ class Lattice:  # pylint:disable=R0902
         instance = load(input_path)
         if schema_type is None:
             if "metadata" in instance:
-                if "schema" in instance["metadata"]:
-                    schema_type = instance["metadata"]["schema"]
+                if "schema_name" in instance["metadata"]:
+                    schema_type = instance["metadata"]["schema_name"]
 
         if schema_type is None:
             if len(self.schemas) > 1:

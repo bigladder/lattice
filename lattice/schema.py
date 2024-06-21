@@ -81,10 +81,6 @@ class PatternType(DataType):
     value_pattern = RegularExpressionPattern('".*"')
 
 
-class ArrayType(DataType):
-    pattern = RegularExpressionPattern(r"\[(\S+)]")
-
-
 class DataGroupType(DataType):
     pattern = RegularExpressionPattern(rf"\{{({_type_base_names})\}}")
 
@@ -102,6 +98,10 @@ class DataGroupType(DataType):
 class EnumerationType(DataType):
     pattern = RegularExpressionPattern(rf"<{_type_base_names}>")
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
+
+
+class ArrayType(DataType):
+    pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
 
 
 class AlternativeType(DataType):
@@ -252,7 +252,7 @@ class CommonStringType:
         self.name = name
         self.dictionary = string_type_dictionary
         self.parent_schema = parent_schema
-        self.value_pattern = self.dictionary["JSON Schema Pattern"]
+        self.value_pattern = self.dictionary["Regular Expression Pattern"]
 
         # Make new DataType class
         def init_method(self, text, parent_data_element):
@@ -353,7 +353,7 @@ class SchemaPatterns:
         self.enumeration_types = EnumerationType.pattern
         single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
-        arrays = rf"\[({single_type})\](\[\d*\.*\d*\])?"
+        arrays = ArrayType.pattern
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
@@ -362,23 +362,24 @@ class SchemaPatterns:
         )
 
         # Constraints
-        alpha_array = "([A-Z]{[1-9]+})"
-        numeric_array = "([0-9]{[1-9]+})"
         self.range_constraint = RangeConstraint.pattern
         self.multiple_constraint = MultipleConstraint.pattern
         self.data_element_value_constraint = DataElementValueConstraint.pattern
         sets = SetConstraint.pattern
         reference_scope = f":{_type_base_names}:"
         self.selector_constraint = SelectorConstraint.pattern
+        array_limits = ArrayLengthLimitsConstraint.pattern
+        string_patterns = StringPatternConstraint.pattern
 
         self.constraints = RegularExpressionPattern(
-            f"({alpha_array}|{numeric_array}|{self.range_constraint})|"  # pylint:disable=C0301
+            f"({self.range_constraint})|"  # pylint:disable=C0301
             f"({self.multiple_constraint})|"
             f"({sets})|"
             f"({self.data_element_value_constraint})|"
             f"({reference_scope})|"
             f"({self.selector_constraint})|"
-            f"({StringPatternConstraint.pattern})"
+            f"({array_limits})|"
+            f"({string_patterns})"
         )
 
         # Conditional Requirements

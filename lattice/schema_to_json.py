@@ -428,7 +428,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                         {
                             tag: {
                                 "type": "string",
-                                "pattern": entry["JSON Schema Pattern"],
+                                "pattern": entry["Regular Expression Pattern"],
                             }
                         }
                     )

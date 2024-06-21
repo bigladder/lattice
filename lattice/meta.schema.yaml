@@ -72,7 +72,7 @@ definitions:
         const: String Type
       Description:
         type: string
-      JSON Schema Pattern:
+      Regular Expression Pattern:
         type: string
       Examples:
         type: array
