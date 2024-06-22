@@ -31,9 +31,10 @@ TimeIntervals:
   Data Elements:
     id:
       Description: Reference identification
-      Data Type: ID
+      Data Type: String
       Constraints: ":TimeIntervals:"
       Required: true
+      ID: true
     starting_time:
       Description: Timestamp indicating the beginning of the data
       Data Type: Timestamp

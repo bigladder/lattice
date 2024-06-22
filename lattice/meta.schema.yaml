@@ -167,7 +167,7 @@ definitions:
     pattern: "**GENERATED**"
   DataElementAttributes:
     type: object
-    properties:
+    properties: # TODO: Need to allow custom attributes
       Description:
         type: string
       Data Type:
@@ -181,6 +181,8 @@ definitions:
         "$ref": meta.schema.json#/definitions/Required
       Notes:
         "$ref": meta.schema.json#/definitions/Notes
+      ID:
+        type: boolean
   DataGroup:
     type: object
     properties:

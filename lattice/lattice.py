@@ -25,7 +25,7 @@ class SchemaFile:  # pylint:disable=R0902
 
         self.path = Path(path).absolute()
         self.file_base_name = get_base_stem(self.path)
-        self.schema_type = self.file_base_name  # Overwritten if it is actually specified
+        self.schema_author = self.file_base_name  # Overwritten if it is actually specified
 
         self._content: dict = load(self.path)
         self._meta_schema_path: Path = None
@@ -39,7 +39,7 @@ class SchemaFile:  # pylint:disable=R0902
         self.schema_author = None
         if "Root Data Group" in self._content["Schema"]:
             self._root_data_group = self._content["Schema"]["Root Data Group"]
-            self.schema_type = self._root_data_group
+            self.schema_author = self._root_data_group
             if self._root_data_group in self._content:
                 # Get metadata
                 if "Data Elements" not in self._content[self._root_data_group]:
@@ -74,13 +74,13 @@ class SchemaFile:  # pylint:disable=R0902
                 else:
                     pass  # Warning?
 
-                if match.group(1) == "schema":
-                    self.schema_type = match.group(5)
+                if match.group(1) == "schema_name":
+                    self.schema_author = match.group(5)
                 else:
                     pass  # Warning?
 
-                if match.group("data_element") == "schema":
-                    self.schema_type = match.group("enumerator")
+                if match.group("data_element") == "schema_name":
+                    self.schema_author = match.group("enumerator")
                 else:
                     pass  # Warning?
 
@@ -182,10 +182,10 @@ class Lattice:  # pylint:disable=R0902
             self.schema_directory_path = self.root_directory
 
         # Collect list of schema files
-        self.schemas: List[SchemaFile] = []
+        self.schemas: List[Schema] = []
         for file_name in sorted(list(self.schema_directory_path.iterdir())):
             if fnmatch(file_name, "*.schema.yaml") or fnmatch(file_name, "*.schema.yml"):
-                self.schemas.append(SchemaFile(file_name))
+                self.schemas.append(Schema(file_name))
 
         if len(self.schemas) == 0:
             raise Exception(f'No schemas found in "{self.schema_directory_path}".')
@@ -249,7 +249,7 @@ class Lattice:  # pylint:disable=R0902
         else:
             # Find corresponding schema
             for schema in self.schemas:
-                if schema.schema_type == schema_type:
+                if schema.schema_author == schema_type:
                     try:
                         validate_file(input_path, schema.json_schema_path)
                         postvalidate_file(input_path, schema.json_schema_path)

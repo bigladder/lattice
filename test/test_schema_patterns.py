@@ -48,7 +48,7 @@ def test_data_type_pattern():
             "[Numeric]",
             "{DataGroup}",
         ],
-        invalid_examples=["Wrong", "[String][1..]"],
+        invalid_examples=["Wrong", "[String][1..]", "ID"],
     )
 
 
