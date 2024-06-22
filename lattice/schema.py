@@ -100,12 +100,16 @@ class EnumerationType(DataType):
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
 
 
-class ArrayType(DataType):
-    pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
-
-
 class AlternativeType(DataType):
     pattern = RegularExpressionPattern(r"\(([^\s,]+)((, ?([^\s,]+))+)\)")
+
+
+class ReferenceType(DataType):
+    pattern = RegularExpressionPattern(rf":{_type_base_names}:")
+
+
+class ArrayType(DataType):
+    pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
 
 
 _value_pattern = RegularExpressionPattern(
@@ -206,6 +210,7 @@ class DataElement:
         self.dictionary = data_element_dictionary
         self.parent_data_group = parent_data_group
         self.constraints: List[Constraint] = []
+        self.is_id = False
         for attribute in self.dictionary:
             if attribute == "Description":
                 self.description = self.dictionary[attribute]
@@ -221,6 +226,16 @@ class DataElement:
                 self.required = self.dictionary[attribute]
             elif attribute == "Notes":
                 self.notes = self.dictionary[attribute]
+            elif attribute == "ID":
+                self.is_id = self.dictionary[attribute]
+                if self.is_id:
+                    if self.parent_data_group.id_data_element is None:
+                        self.parent_data_group.id_data_element = self
+                    else:
+                        raise RuntimeError(
+                            f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}': '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
+                        )
+
             else:
                 raise Exception(
                     f'Unrecognized attribute, "{attribute}".'
@@ -277,6 +292,7 @@ class DataGroup:
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
         self.data_elements = {}
+        self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
         for data_element in self.dictionary["Data Elements"]:
             self.data_elements[data_element] = DataElement(
                 data_element, self.dictionary["Data Elements"][data_element], self
@@ -351,14 +367,15 @@ class SchemaPatterns:
 
         self.data_group_types = DataGroupType.pattern
         self.enumeration_types = EnumerationType.pattern
-        single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
+        references = ReferenceType.pattern
+        single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types}|{references})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
         arrays = ArrayType.pattern
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
         self.values = RegularExpressionPattern(
-            f"(({self.numeric})|" f"({self.string})|" f"({self.enumerator})|" f"({self.boolean}))"
+            f"(({self.numeric})|({self.string})|({self.enumerator})|({self.boolean}))"
         )
 
         # Constraints
@@ -413,6 +430,7 @@ class Schema:
             DataGroupType,
             EnumerationType,
             AlternativeType,
+            ReferenceType,
         ]
 
         self.schema_patterns = SchemaPatterns(self.source_dictionary)
@@ -453,10 +471,10 @@ class Schema:
         self.root_data_group = None
         self.metadata = None
         self.schema_author = None
-        self.schema_type = self.name
+        self.schema_name = self.name
 
         if self.root_data_group_name is not None:
-            self.schema_type = self.root_data_group_name
+            self.schema_name = self.root_data_group_name
             self.root_data_group = self.get_data_group(self.root_data_group_name)
             self.metadata = (
                 self.root_data_group.data_elements["metadata"]
@@ -469,7 +487,7 @@ class Schema:
                         if constraint.data_element_name == "schema_author":
                             self.schema_author = constraint.data_element_value
                         elif constraint.data_element_name == "schema":
-                            self.schema_type = constraint.data_element_value
+                            self.schema_name = constraint.data_element_value
 
         for data_group in self.data_groups.values():
             data_group.resolve()

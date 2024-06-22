@@ -252,7 +252,7 @@ class DataElement(HeaderEntry):
         First, attempt to capture enum, definition, or special string type as references;
         then default to fundamental types with simple key "type".
         """
-        enum_or_def = r"(\{|\<)(.*)(\}|\>)"
+        enum_or_def = r"(\{|\<|:)(.*)(\}|\>|:)"
         internal_type = None
         nested_type = None
         m = re.match(enum_or_def, type_str)
@@ -284,11 +284,7 @@ class DataElement(HeaderEntry):
                 return simple_type
 
         try:
-            if "/" in type_str:
-                # e.g. "Numeric/Null"
-                simple_type = self._datatypes[type_str.split("/")[0]]
-            else:
-                simple_type = self._datatypes[type_str]
+            simple_type = self._datatypes[type_str]
         except KeyError:
             print("Type not processed:", type_str)
         return simple_type

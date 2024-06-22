@@ -32,7 +32,6 @@ TimeIntervals:
     id:
       Description: Reference identification
       Data Type: String
-      Constraints: ":TimeIntervals:"
       Required: true
       ID: true
     starting_time:
@@ -81,8 +80,7 @@ TimeSeries:
       Required: true
     value_time_intervals:
       Description: Reference to a `TimeInterval` data group associated with this time series
-      Data Type: Reference
-      Constraints: ":TimeIntervals:"
+      Data Type: ":TimeIntervals:"
       Required: true
     values:
       Description: Time series data values
