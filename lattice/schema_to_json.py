@@ -25,7 +25,7 @@ class DataGroup:  # pylint: disable=R0903
     # Parse ellipsis range-notation e.g. '[1..]'
     minmax_range_type = r"(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)"
 
-    enum_or_def = r"(\{|\<)(.*)(\}|\>)"
+    enum_or_def = r"(\{|\<|:)(.*)(\}|\>|:)"
     numeric_type = r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
     scope_constraint = r"^:(?P<scope>.*):"  # Lattice scope constraint for ID/Reference
     ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
@@ -179,11 +179,7 @@ class DataGroup:  # pylint: disable=R0903
                 target_dict_to_append["$ref"] = internal_type
                 return
         try:
-            if "/" in type_str:
-                # e.g. "Numeric/Null" becomes a list of 'type's
-                target_dict_to_append["type"] = [self._types[t] for t in type_str.split("/")]
-            else:
-                target_dict_to_append["type"] = self._types[type_str]
+            target_dict_to_append["type"] = self._types[type_str]
         except KeyError:
             raise KeyError(
                 f"Unknown type: {type_str} does not appear in referenced schema "
@@ -428,7 +424,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                         {
                             tag: {
                                 "type": "string",
-                                "pattern": entry["JSON Schema Pattern"],
+                                "pattern": entry["Regular Expression Pattern"],
                             }
                         }
                     )
