@@ -450,7 +450,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
         """Return the translated JSON schema dictionary"""
         return self._schema
 
-    def _load_meta_info(self, schema_section: dict):
+    def _load_meta_info(self, schema_section: dict) -> None:
         """Store the global/common types and the types defined by any named references."""
         self._schema["title"] = schema_section["Title"]
         self._schema["description"] = schema_section["Description"]
@@ -490,7 +490,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                 if ext_dict[base_item]["Object Type"] in self._schema_object_types | self._data_group_types
             ]
 
-    def _process_enumeration(self, name_key: str):
+    def _process_enumeration(self, name_key: str) -> dict:
         """Collect all Enumerators in an Enumeration block."""
         enums = self._contents[name_key]["Enumerators"]
         description = self._contents[name_key].get("Description")

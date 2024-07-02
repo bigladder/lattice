@@ -39,6 +39,7 @@ _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)
 class DataType:
     pattern: RegularExpressionPattern
     value_pattern: RegularExpressionPattern
+    json_schema_type: str
 
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
@@ -59,30 +60,36 @@ class DataType:
 class IntegerType(DataType):
     pattern = RegularExpressionPattern("(Integer)")
     value_pattern = RegularExpressionPattern("([-+]?[0-9]+)")
+    json_schema_type = "integer"
 
 
 class NumericType(DataType):
     pattern = RegularExpressionPattern("(Numeric)")
     value_pattern = RegularExpressionPattern("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
+    json_schema_type = "number"
 
 
 class BooleanType(DataType):
     pattern = RegularExpressionPattern("(Boolean)")
     value_pattern = RegularExpressionPattern("True|False")
+    json_schema_type = "boolean"
 
 
 class StringType(DataType):
     pattern = RegularExpressionPattern("(String)")
     value_pattern = RegularExpressionPattern('".*"')
+    json_schema_type = "string"
 
 
 class PatternType(DataType):
     pattern = RegularExpressionPattern("(Pattern)")
     value_pattern = RegularExpressionPattern('".*"')
+    json_schema_type = "string"
 
 
 class DataGroupType(DataType):
     pattern = RegularExpressionPattern(rf"\{{({_type_base_names})\}}")
+    json_schema_type = "object"
 
     def __init__(self, text, parent_data_element):
         super().__init__(text, parent_data_element)
@@ -98,18 +105,22 @@ class DataGroupType(DataType):
 class EnumerationType(DataType):
     pattern = RegularExpressionPattern(rf"<{_type_base_names}>")
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
+    json_schema_type = "string"
 
 
 class AlternativeType(DataType):
     pattern = RegularExpressionPattern(r"\(([^\s,]+)((, ?([^\s,]+))+)\)")
+    json_schema_type = "allOf"  # TODO: Maybe something else is more appropriate?
 
 
 class ReferenceType(DataType):
     pattern = RegularExpressionPattern(rf":{_type_base_names}:")
+    json_schema_type = "string"
 
 
 class ArrayType(DataType):
     pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
+    json_schema_type = "array"
 
 
 _value_pattern = RegularExpressionPattern(
@@ -200,34 +211,39 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 
 
 # Required
+class CondionallyRequired:
+    pattern: str
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        self.text = text
+        self.parent_data_element = parent_data_element
 
 
 class DataElement:
     pattern = _data_element_names
 
     def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):
-        self.name = name
-        self.dictionary = data_element_dictionary
-        self.parent_data_group = parent_data_group
+        self.name: str = name
+        self.dictionary: dict = data_element_dictionary
+        self.parent_data_group: DataGroup = parent_data_group
         self.constraints: List[Constraint] = []
         self.is_id = False
-        for attribute in self.dictionary:
+        self.required: Union[bool, CondionallyRequired] = False
+        for attribute, attribute_value in self.dictionary.items():
             if attribute == "Description":
-                self.description = self.dictionary[attribute]
+                self.description: str = attribute_value
             elif attribute == "Units":
-                self.units = self.dictionary[attribute]
+                self.units: str = attribute_value
             elif attribute == "Data Type":
-                self.data_type = self.parent_data_group.parent_schema.data_type_factory(
-                    self.dictionary[attribute], self
-                )
+                self.data_type: DataType = self.parent_data_group.parent_schema.data_type_factory(attribute_value, self)
             elif attribute == "Constraints":
-                self.set_constraints(self.dictionary[attribute])
+                self.set_constraints(attribute_value)
             elif attribute == "Required":
-                self.required = self.dictionary[attribute]
+                self.required = attribute_value
             elif attribute == "Notes":
-                self.notes = self.dictionary[attribute]
+                self.notes: Union[str, List[str]] = attribute_value
             elif attribute == "ID":
-                self.is_id = self.dictionary[attribute]
+                self.is_id = attribute_value
                 if self.is_id:
                     if self.parent_data_group.id_data_element is None:
                         self.parent_data_group.id_data_element = self
@@ -253,6 +269,12 @@ class DataElement:
 
     def resolve(self):
         self.data_type.resolve()
+
+    def to_json_schema(self) -> dict:
+        json_schema_dictionary = {"description": self.description}
+
+        {"type": self.data_type.json_schema_type}
+        return json_schema_dictionary
 
 
 class FundamentalDataType:
@@ -291,7 +313,7 @@ class DataGroup:
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
-        self.data_elements = {}
+        self.data_elements: Dict[str, DataElement] = {}
         self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
         for data_element in self.dictionary["Data Elements"]:
             self.data_elements[data_element] = DataElement(
@@ -302,6 +324,29 @@ class DataGroup:
         for data_element in self.data_elements.values():
             data_element.resolve()
 
+    def to_json_schema(self) -> dict:
+        json_schema_dictionary = {"type": "object", "properties": {}}
+        unconditionally_required = []
+        for name, data_element in self.data_elements.items():
+            json_schema_dictionary["properties"][name] = data_element.to_json_schema()
+            if isinstance(data_element.required, bool):
+                if data_element.required:
+                    unconditionally_required.append(name)
+
+        if len(unconditionally_required):
+            json_schema_dictionary["required"] = unconditionally_required
+
+        json_schema_dictionary["additionalProperties"] = False
+
+        return json_schema_dictionary
+
+    def walk(self, level=0):
+
+        for data_element in self.data_elements.values():
+            if isinstance(data_element.data_type, DataGroupType):
+                yield (data_element, level)
+                yield from data_element.data_type.data_group.walk(level=level + 1)
+
 
 class Enumerator:
     pattern = EnumerationType.value_pattern
@@ -310,6 +355,22 @@ class Enumerator:
         self.name = name
         self.dictionary = enumerator_dictionary
         self.parent_enumeration = parent_enumeration
+        self.notes = None
+        self.display_text = None
+        for attribute, attribute_value in self.dictionary.items():
+            if attribute == "Description":
+                self.description = attribute_value
+            elif attribute == "Display Text":
+                self.display_text = attribute_value
+            elif attribute == "Notes":
+                self.notes = attribute_value
+            else:
+                raise Exception(
+                    f'Unrecognized attribute, "{attribute}".'
+                    f"Schema={self.parent_enumeration.parent_schema.file_path},"
+                    f"Enumeration={self.parent_enumeration.name},"
+                    f"Enumerator={self.name}"
+                )
 
 
 class Enumeration:
@@ -317,9 +378,29 @@ class Enumeration:
         self.name = name
         self.dictionary = enumeration_dictionary
         self.parent_schema = parent_schema
-        self.enumerators = {}
+        self.enumerators: Dict[str, Enumerator] = {}
         for enumerator in self.dictionary["Enumerators"]:
             self.enumerators[enumerator] = Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self)
+
+    def to_json_schema(self):
+        enumerator_names = []
+        enumerator_descriptions = []
+        enumerator_display_text = []
+        enumerator_notes = []
+
+        for enumerator in self.enumerators.values():
+            enumerator_names.append(enumerator.name)
+            enumerator_descriptions.append(enumerator.description)
+            enumerator_display_text.append(enumerator.display_text)
+            enumerator_notes.append(enumerator.notes)
+
+        return {
+            "type": "string",
+            "enum": enumerator_names,
+            "display_text": enumerator_display_text,
+            "descriptions": enumerator_descriptions,
+            "note": enumerator_notes,
+        }
 
 
 class DataGroupTemplate:
@@ -406,7 +487,7 @@ class SchemaPatterns:
 
 
 class Schema:
-    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):
+    def __init__(self, file_path: pathlib.Path, parent_schema: Union[Schema, None] = None):
         self.file_path = file_path.absolute()
         self.source_dictionary = load(self.file_path)
         self.name = get_file_basename(self.file_path, depth=2)
@@ -414,10 +495,10 @@ class Schema:
             raise Exception(f'"Schema" node not found in {self.file_path}')
 
         self.parent_schema = parent_schema
-        self.data_types = {}
+        self.data_types: Dict[str, FundamentalDataType] = {}
         self.string_types = {}
-        self.enumerations = {}
-        self.data_groups = {}
+        self.enumerations: Dict[str, Enumeration] = {}
+        self.data_groups: Dict[str, DataGroup] = {}
         self.data_group_templates = {}
 
         self._data_type_list: List[Type[DataType]] = [
@@ -560,6 +641,36 @@ class Schema:
 
         if self.parent_schema is not None:
             self.parent_schema.add_data_type(data_type)
+
+    def walk(self):
+        if self.root_data_group is not None:
+            yield from self.root_data_group.walk(level=1)
+        else:
+            raise RuntimeError("Schema does not have a root data group.")
+
+    def to_json_schema(self) -> dict:
+        json_schema_dictionary = {}
+        if self.parent_schema is None:
+            # Add standard content
+            json_schema_dictionary["$schema"] = "http://json-schema.org/draft-07/schema#"
+            json_schema_dictionary["title"] = self.title
+            json_schema_dictionary["description"] = self.description
+            json_schema_dictionary["version"] = self.version
+
+        # TODO: Definitions aren't really needed if we expand the schema fully
+        definitions = {}
+
+        for name, enumeration in self.enumerations.items():
+            definitions[name] = enumeration.to_json_schema()
+
+        for name, data_group in self.data_groups.items():
+            definitions[name] = data_group.to_json_schema()
+
+        json_schema_dictionary["definitions"] = definitions
+
+        json_schema_dictionary.update(self.root_data_group.to_json_schema())
+
+        return json_schema_dictionary
 
 
 def get_types(schema):
