@@ -24,6 +24,7 @@ option(${PROJECT_NAME}_COVERAGE "Add ${PROJECT_NAME} coverage reports" OFF)
 #include(compiler-flags)
 
 add_subdirectory(src)
+add_subdirectory(vendor)
 
 if (${PROJECT_NAME}_BUILD_TESTING)
   enable_testing()

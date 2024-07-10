@@ -54,3 +54,57 @@ More complete examples of projects using the ASHRAE Standard 232P framework incl
 - [ASHRAE Standard 205](https://github.com/open205/schema-205) (transitioning to lattice)
 - [ASHRAE Standard 229](https://github.com/open229/ruleset-model-description-schema) (does not use lattice...yet)
 
+### C++ Library Code Generation
+
+#### Translations
+
+Schema can be converted into C++ classes with the following mappings:
+
+| Object Type           | C++ type   |
+|-------------------    | --------   |
+| Data Group            | `struct`     |
+| Data Element          | public data member |
+| Enumerator            | `enum`       |
+| Data Group Template   | base class*|
+|
+
+ *with optional methods, including initialize()
+
+| Data Type             | C++ type  |
+|-------------------    | --------  |
+| Integer               | `int`       |
+| Numeric               | `float`     |
+| String                | `std::string` |
+| {}                    | `struct`    |
+| <>                    | `enum`      |
+| []                    | `std::vector` |
+| list "(A,B)"          | `std::unique_ptr<BaseOfAB>`|
+|
+
+#### Inheritance
+
+The code generator will assume that *Data Group* schema elements with a *Data Group Template* parameter use that template as the element's superclass. However, the code for the superclass itself is _not_ generated; it must be provided by the **lattice** user. An `#include` statement for the expected superclass file is listed at the top of the schema's implemenation (cpp) file (note: see Big Ladder file naming conventions). If the superclass file is not found, building the project (see below) will produce a compiler error to that effect. Virtual functions in the superclass will appear as overridden function stubs in the subclassed *Data Group*'s struct.
+
+In the event that the source schema contains a *Data Element* with a "selector constraint" (i.e. a list of possible *Data Type*s combined with an associated list of possible enumerator values for the selector *Data Element*), the C++ generated code will assume that the *Data Type*s in the list all derive from a common base class, named by the *Data Group Template* of the first *Data Type* in the list. An `#include` statement for the base class will be generated, as above. The code that populates the *Data Group* (the struct's `from_json` function) will use a conditional statement to create a new object of the correct subclass and assign it to a member `unique_ptr`. The base class declaration requires an initialize() function, which must be provided by the superclass implementation with the following signature:
+
+> virtual void initialize(const nlohmann::json& j);
+
+or
+
+> virtual void initialize(const nlohmann::json& j) = 0; // must be subclassed
+
+and contents exactly mirroring `from_json` functions. (In future work this base class with its `initialize` method will be auto-generated.)
+
+Note: If the first *Data Type* in a selector constraint list does not have a *Data Group Template* tag in its schema, the `unique_ptr`'s base class will default to "MissingType."
+
+#### Build information
+
+In addition to `.h` and `.cpp` files containing translated schema data, the code generator adds Git repository and CMake build support to the schema code, creating most of the structure necessary to test-build the schema code as a library. Necessary submodules are also downloaded: [fmt](https://github.com/fmtlib/fmt.git), [json](https://github.com/nlohmann/json), and [courier](https://github.com/bigladder/courier.git). To build a generated project, navigate to your **lattice** project's build directory, cpp subdirectory (e.g. /.lattice/cpp), and use a standard cmake build sequence:
+
+> cmake -B build
+>
+> cmake --build build --config release
+
+
+
+

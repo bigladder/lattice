@@ -81,7 +81,7 @@ class DependencyInitialization(ImplementationEntry):
     def __init__(self, header_entry: InlineDependency, parent: ImplementationEntry = None):
         super().__init__(None, parent)
         self._func = (
-            f"void set_{header_entry.name} ({header_entry.type} value) {{ {header_entry.name} = std::move(value); }}"
+            f"void set_{header_entry.name} ({header_entry.type} value) {{ {header_entry.name} = value; }}"
         )
 
     @property

@@ -14,7 +14,7 @@ else ()
     add_library(${PROJECT_NAME} SHARED ${sources})
 endif ()
 
-#target_link_libraries({{project_name}} PUBLIC courierr fmt nlohmann_json)
+target_link_libraries({{project_name}} PUBLIC courier fmt nlohmann_json)
 target_include_directories({{project_name}} PUBLIC ${PROJECT_SOURCE_DIR}/include/{{project_name}})
 
 target_compile_options(${PROJECT_NAME} PRIVATE

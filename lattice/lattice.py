@@ -2,6 +2,8 @@
 
 import re
 import warnings
+import os
+import subprocess
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import List
@@ -333,16 +335,32 @@ class Lattice:  # pylint:disable=R0902
         self.cpp_output_dir = Path(self.build_directory) / "cpp"
         make_dir(self.cpp_output_dir)
         include_dir = make_dir(self.cpp_output_dir / "include")
-        include_dir = make_dir(include_dir / f"{self.root_directory.name}")
-        src_dir = make_dir(self.cpp_output_dir / "src")
+        self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
+        self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_path = include_dir / f"{schema.file_base_name.lower()}.h"
-            schema.cpp_source_path = src_dir / f"{schema.file_base_name.lower()}.cpp"
+            schema.cpp_header_path = self._cpp_output_include_dir / f"{schema.file_base_name.lower()}.h"
+            schema.cpp_source_path = self._cpp_output_src_dir / f"{schema.file_base_name.lower()}.cpp"
 
+    def setup_cpp_repository(self, submodules: list[str]):
+        """Initialize the CPP output directory as a Git repo."""
+        cwd = os.getcwd()
+        os.chdir(self.cpp_output_dir)
+        subprocess.run(["git", "init"])
+        vendor_dir = make_dir("vendor")
+        os.chdir(vendor_dir)
+        #subprocess.run(["git", "remote", "add", "-f -t", "main", "--no-tags", "origin_atheneum", "https://github.com/bigladder/atheneum.git"])
+        try:
+            for submodule in submodules:
+                subprocess.run(["git", "submodule", "add", submodule])
+        finally:
+            os.chdir(cwd)
+        os.chdir(cwd)
+
+    @property
     def cpp_support_headers(self) -> list[Path]:
         return support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_headers(self):
+    def generate_cpp_headers(self, submodules: list[str]):
         """Generate CPP header and source files"""
         h = HeaderTranslator()
         c = CPPTranslator()
@@ -354,5 +372,6 @@ class Lattice:  # pylint:disable=R0902
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)
-        generate_support_headers(self.root_directory.name, root_groups, self.cpp_output_dir)
-        generate_build_support(self.root_directory.name, self.cpp_output_dir)
+        self.setup_cpp_repository(submodules)
+        generate_support_headers(self.root_directory.name, root_groups, self._cpp_output_include_dir)
+        generate_build_support(self.root_directory.name, submodules, self.cpp_output_dir)

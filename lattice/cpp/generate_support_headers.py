@@ -24,7 +24,7 @@ def generate_support_headers(namespace_name: str, root_data_groups: list[str], o
             )
 
 
-def generate_build_support(project_name: str, output_directory: Path):
+def generate_build_support(project_name: str, submodules:list, output_directory: Path):
     generated_file_name = "CMakeLists.txt"
 
     project_cmake_file = Path(__file__).with_name("templates") / "project-cmake.txt.j2"
@@ -40,4 +40,13 @@ def generate_build_support(project_name: str, output_directory: Path):
         dump(
             enum_info.render(project_name=project_name),
             Path(output_directory) / "src" / generated_file_name,
+        )
+    vendor_cmake_file = Path(__file__).with_name("templates") / "project-vendor-cmake.txt.j2"
+    if vendor_cmake_file.exists():
+        enum_info = Template(vendor_cmake_file.read_text())
+        submodule_names = [Path(submodule).stem for submodule in submodules]
+        print(submodule_names)
+        dump(
+            enum_info.render(submodules=submodule_names),
+            Path(output_directory) / "vendor" / generated_file_name,
         )

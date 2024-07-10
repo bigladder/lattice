@@ -372,7 +372,9 @@ class InlineDependency(HeaderEntry):
     @property
     def value(self):
         tab = "\t"
-        return f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
+        return (f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
+               "\n"
+               f"{self._level * tab}void set_{self.name}({self.type} value);")
 
 
 # -------------------------------------------------------------------------------------------------
@@ -746,7 +748,7 @@ class HeaderTranslator:
     def _search_nodes_for_datatype(self, data_element) -> str:
         """
         If data_element exists, return its data type; else return the data group's 'data type,' which
-        is the Data Group Template. Hacky overload.
+        is the Data Group Template (base class type). Hacky overload.
         """
         for listing in self._contents:
             if "Data Elements" in self._contents[listing]:
@@ -756,4 +758,4 @@ class HeaderTranslator:
                 for element in self._contents[listing]["Data Elements"]:
                     if element == data_element and "Data Type" in self._contents[listing]["Data Elements"][element]:
                         return self._contents[listing]["Data Elements"][element]["Data Type"]
-        return "Template"  # Placeholder base class
+        return "MissingType"  # Placeholder base class
