@@ -372,9 +372,11 @@ class InlineDependency(HeaderEntry):
     @property
     def value(self):
         tab = "\t"
-        return (f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
-               "\n"
-               f"{self._level * tab}void set_{self.name}({self.type} value);")
+        return (
+            f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
+            "\n"
+            f"{self._level * tab}void set_{self.name}({self.type} value);"
+        )
 
 
 # -------------------------------------------------------------------------------------------------

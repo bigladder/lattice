@@ -24,7 +24,7 @@ def generate_support_headers(namespace_name: str, root_data_groups: list[str], o
             )
 
 
-def generate_build_support(project_name: str, submodules:list, output_directory: Path):
+def generate_build_support(project_name: str, submodules: list, output_directory: Path):
     generated_file_name = "CMakeLists.txt"
 
     project_cmake_file = Path(__file__).with_name("templates") / "project-cmake.txt.j2"
