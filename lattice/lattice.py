@@ -348,7 +348,7 @@ class Lattice:  # pylint:disable=R0902
         subprocess.run(["git", "init"])
         vendor_dir = make_dir("vendor")
         os.chdir(vendor_dir)
-        #subprocess.run(["git", "remote", "add", "-f -t", "main", "--no-tags", "origin_atheneum", "https://github.com/bigladder/atheneum.git"])
+        # subprocess.run(["git", "remote", "add", "-f -t", "main", "--no-tags", "origin_atheneum", "https://github.com/bigladder/atheneum.git"])
         try:
             for submodule in submodules:
                 subprocess.run(["git", "submodule", "add", submodule])
