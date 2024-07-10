@@ -17,9 +17,9 @@ from .docs import MkDocsWeb, DocumentFile
 from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
 from lattice.cpp.generate_support_headers import (
-    generate_support_headers,
+    render_support_headers,
     support_header_pathnames,
-    generate_build_support,
+    render_build_files,
 )
 
 
@@ -360,18 +360,18 @@ class Lattice:  # pylint:disable=R0902
     def cpp_support_headers(self) -> list[Path]:
         return support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_headers(self, submodules: list[str]):
-        """Generate CPP header and source files"""
+    def generate_cpp_project(self, submodules: list[str]):
+        """Generate CPP header files, source files, and build support files."""
         h = HeaderTranslator()
         c = CPPTranslator()
-        root_groups = []
+        # root_groups = []
         for schema in self.cpp_schemas:
             h.translate(schema.path, self.root_directory.name, self.schema_directory_path)
-            if h._root_data_group is not None:
-                root_groups.append(h._root_data_group)
+            # if h._root_data_group is not None:
+            #     root_groups.append(h._root_data_group)
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)
         self.setup_cpp_repository(submodules)
-        generate_support_headers(self.root_directory.name, root_groups, self._cpp_output_include_dir)
-        generate_build_support(self.root_directory.name, submodules, self.cpp_output_dir)
+        render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
+        render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
