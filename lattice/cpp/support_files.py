@@ -6,12 +6,15 @@ from lattice.util import snake_style, hyphen_separated_lowercase_style
 from pathlib import Path
 from lattice.header_entries import InitializeFunction, Struct
 
+
 def support_header_pathnames(output_directory: Path):
     """Return a list of the template-generated header file names."""
     return [
         output_directory / "-".join(snake_style(template.stem).split("_"))
-        for template in Path(__file__).with_name("templates").iterdir() if ".h" in template.suffixes
+        for template in Path(__file__).with_name("templates").iterdir()
+        if ".h" in template.suffixes
     ]
+
 
 def render_support_headers(namespace_name: str, output_directory: Path):
     """Generate the project-specific helper headers."""
@@ -23,6 +26,7 @@ def render_support_headers(namespace_name: str, output_directory: Path):
                 header.render(namespace=namespace_name),
                 Path(output_directory) / generated_file_name,
             )
+
 
 def render_build_files(project_name: str, submodules: list, output_directory: Path):
     """Generate the project-specific CMakeLists files."""
@@ -51,6 +55,7 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
             vendor_cmake.render(submodules=submodule_names),
             Path(output_directory) / "vendor" / generated_file_name,
         )
+
 
 def generate_superclass_header(superclass: str, output_directory: Path):
     s1 = f"#ifndef {superclass.upper()}_H_"

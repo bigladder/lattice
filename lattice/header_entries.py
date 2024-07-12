@@ -5,6 +5,7 @@ from .util import snake_style, hyphen_separated_lowercase_style
 from typing import Optional
 import pathlib
 
+
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
