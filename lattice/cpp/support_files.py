@@ -2,9 +2,9 @@ from jinja2 import Template
 import os
 import sys
 from lattice.file_io import dump
-from lattice.util import snake_style
+from lattice.util import snake_style, hyphen_separated_lowercase_style
 from pathlib import Path
-
+from lattice.header_entries import InitializeFunction, Struct
 
 def support_header_pathnames(output_directory: Path):
     """Return a list of the template-generated header file names."""
@@ -51,3 +51,17 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
             vendor_cmake.render(submodules=submodule_names),
             Path(output_directory) / "vendor" / generated_file_name,
         )
+
+def generate_superclass_header(superclass: str, output_directory: Path):
+    s1 = f"#ifndef {superclass.upper()}_H_"
+    s2 = f"#define {superclass.upper()}_H_"
+    s3 = f"#endif"
+
+    class_entry = Struct(superclass, None)
+    initialize_fn = InitializeFunction(None, class_entry)
+
+    superclass_contents = f"{s1}\n{s2}\n{class_entry.value}\n{s3}"
+
+    header = Path(output_directory / f"{hyphen_separated_lowercase_style(superclass)}.h")
+    if not header.exists():
+        dump(superclass_contents, header)

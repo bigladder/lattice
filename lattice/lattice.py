@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List
 from jsonschema.exceptions import RefResolutionError
 
+import lattice.cpp.support_files as support
 from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, dump, get_file_basename, get_base_stem
 from .meta_schema import generate_meta_schema, meta_validate_file
@@ -16,11 +17,6 @@ from .schema_to_json import generate_json_schema, validate_file, postvalidate_fi
 from .docs import MkDocsWeb, DocumentFile
 from .header_entries import HeaderTranslator
 from .cpp_entries import CPPTranslator
-from lattice.cpp.generate_support_headers import (
-    render_support_headers,
-    support_header_pathnames,
-    render_build_files,
-)
 
 
 class SchemaFile:  # pylint:disable=R0902
@@ -345,20 +341,21 @@ class Lattice:  # pylint:disable=R0902
         """Initialize the CPP output directory as a Git repo."""
         cwd = os.getcwd()
         os.chdir(self.cpp_output_dir)
-        subprocess.run(["git", "init"])
+        subprocess.run(["git", "init"], check=True)
         vendor_dir = make_dir("vendor")
         os.chdir(vendor_dir)
         # subprocess.run(["git", "remote", "add", "-f -t", "main", "--no-tags", "origin_atheneum", "https://github.com/bigladder/atheneum.git"])
         try:
             for submodule in submodules:
-                subprocess.run(["git", "submodule", "add", submodule])
+                subprocess.run(["git", "submodule", "add", submodule], check=False)
         finally:
             os.chdir(cwd)
         os.chdir(cwd)
 
     @property
     def cpp_support_headers(self) -> list[Path]:
-        return support_header_pathnames(self.cpp_output_dir)
+        """Wrap list of template-generated headers."""
+        return support.support_header_pathnames(self.cpp_output_dir)
 
     def generate_cpp_project(self, submodules: list[str]):
         """Generate CPP header files, source files, and build support files."""
@@ -373,5 +370,7 @@ class Lattice:  # pylint:disable=R0902
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)
         self.setup_cpp_repository(submodules)
-        render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
-        render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
+        support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
+        support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
+        for superclass in h.required_base_classes:
+            support.generate_superclass_header(superclass, self._cpp_output_include_dir)

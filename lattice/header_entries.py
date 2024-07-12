@@ -5,7 +5,6 @@ from .util import snake_style, hyphen_separated_lowercase_style
 from typing import Optional
 import pathlib
 
-
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
@@ -259,7 +258,6 @@ class DataElement(HeaderEntry):
             internal_type = type_str
         # Look through the references to assign a source to the type. 'key' is generally a
         # schema name; its value will be a list of matchable data object names
-        print(internal_type, self._refs)
         for key in self._refs:
             if internal_type in self._refs[key]:
                 return f"{snake_style(key)}_ns::{internal_type}"
@@ -409,7 +407,6 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
 
 # -------------------------------------------------------------------------------------------------
 class InitializeFunction(FunctionalHeaderEntry):
-    """Deprecated"""
 
     def __init__(self, name, parent):
         super().__init__("void", "initialize", "(const nlohmann::json& j)", name, parent)
@@ -463,6 +460,7 @@ class HeaderTranslator:
         self._epilogue = list()
         self._data_group_types = ["Data Group"]
         self._forward_declaration_dir: Optional[pathlib.Path] = None
+        self._required_base_classes = list()
 
     def __str__(self):
         s = "\n".join([p for p in self._preamble])
@@ -473,6 +471,10 @@ class HeaderTranslator:
     @property
     def root(self):
         return self._top_namespace
+
+    @property
+    def required_base_classes(self):
+        return self._required_base_classes
 
     @staticmethod
     def modified_insertion_sort(obj_list):
@@ -550,7 +552,7 @@ class HeaderTranslator:
                 self._namespace,
                 superclass=self._contents[base_level_tag].get("Data Group Template", ""),
             )
-            self._add_member_headers(s)
+            self._add_member_includes(s)
             # When there is a base class, add overrides:
             # self._add_function_overrides(s, self._fundamental_base_class)
 
@@ -582,7 +584,7 @@ class HeaderTranslator:
                     self._references,
                     self._search_nodes_for_datatype,
                 )
-                self._add_member_headers(d)
+                self._add_member_includes(d)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataIsSetElement(data_element, s)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
@@ -684,7 +686,7 @@ class HeaderTranslator:
             ]
         )
 
-    def _add_member_headers(self, data_element):
+    def _add_member_includes(self, data_element):
         if "core_ns" in data_element.type:
             include = f"#include <core.h>"
             if include not in self._preamble:
@@ -695,10 +697,12 @@ class HeaderTranslator:
                 include = f"#include <{hyphen_separated_lowercase_style(m.group(1))}.h>"
                 if include not in self._preamble:
                     self._preamble.append(include)
+                    self._required_base_classes.append(m.group(1))
         if data_element.superclass:
             include = f"#include <{hyphen_separated_lowercase_style(data_element.superclass)}.h>"
             if include not in self._preamble:
                 self._preamble.append(include)
+                self._required_base_classes.append(data_element.superclass)
 
     def _add_function_overrides(self, parent_node, base_class_name):
         """Get base class virtual functions to be overridden."""
