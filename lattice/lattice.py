@@ -361,11 +361,8 @@ class Lattice:  # pylint:disable=R0902
         """Generate CPP header files, source files, and build support files."""
         h = HeaderTranslator()
         c = CPPTranslator()
-        # root_groups = []
         for schema in self.cpp_schemas:
             h.translate(schema.path, self.root_directory.name, self.schema_directory_path)
-            # if h._root_data_group is not None:
-            #     root_groups.append(h._root_data_group)
             dump(str(h), schema.cpp_header_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_path)

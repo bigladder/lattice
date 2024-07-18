@@ -23,6 +23,7 @@ class HeaderEntry:
         self.type = "namespace"
         self.name = name
         self.superclass = None
+        self.external_reference_sources = list()
         self._opener = "{"
         self._closure = "}"
         self._parent_entry = parent
@@ -261,6 +262,7 @@ class DataElement(HeaderEntry):
         # schema name; its value will be a list of matchable data object names
         for key in self._refs:
             if internal_type in self._refs[key]:
+                self.external_reference_sources.append(f"{snake_style(key)}")
                 return f"{snake_style(key)}_ns::{internal_type}"
 
         try:
@@ -633,7 +635,7 @@ class HeaderTranslator:
     def _load_meta_info(self, schema_section):
         """Store the global/common types and the types defined by any named references."""
         self._root_data_group = schema_section.get("Root Data Group")
-        refs = {
+        refs: dict = {
             f"{self._schema_name}": os.path.join(self._source_dir, f"{self._schema_name}.schema.yaml"),
             "core": os.path.join(os.path.dirname(__file__), "core.schema.yaml"),
         }
@@ -704,6 +706,12 @@ class HeaderTranslator:
             if include not in self._preamble:
                 self._preamble.append(include)
                 self._required_base_classes.append(data_element.superclass)
+        for external_source in data_element.external_reference_sources:
+            # This piece captures any "forward-declared" types that need to be
+            # processed by the DataElement type-finding mechanism before their header is known.
+            include = f"#include <{external_source}.h>"
+            if include not in self._preamble:
+                self._preamble.append(include)
 
     def _add_function_overrides(self, parent_node, base_class_name):
         """Get base class virtual functions to be overridden."""
