@@ -555,7 +555,7 @@ class HeaderTranslator:
                 self._namespace,
                 superclass=self._contents[base_level_tag].get("Data Group Template", ""),
             )
-            self._add_member_includes(s)
+            self._add_header_dependencies(s)
             # When there is a base class, add overrides:
             # self._add_function_overrides(s, self._fundamental_base_class)
 
@@ -587,7 +587,7 @@ class HeaderTranslator:
                     self._references,
                     self._search_nodes_for_datatype,
                 )
-                self._add_member_includes(d)
+                self._add_header_dependencies(d)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataIsSetElement(data_element, s)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
@@ -689,30 +689,33 @@ class HeaderTranslator:
             ]
         )
 
-    def _add_member_includes(self, data_element):
+    def _add_header_dependencies(self, data_element):
+        """Extract the dependency name from the data_element's type for included headers."""
         if "core_ns" in data_element.type:
-            include = f"#include <core.h>"
-            if include not in self._preamble:
-                self._preamble.append(include)
+            self._add_member_includes("core")
         if "unique_ptr" in data_element.type:
-            m = re.search(r"\<(.*)\>", data_element.type)
+            m = re.search(r"\<(?P<base_class_type>.*)\>", data_element.type)
             if m:
-                include = f"#include <{hyphen_separated_lowercase_style(m.group(1))}.h>"
-                if include not in self._preamble:
-                    self._preamble.append(include)
-                    self._required_base_classes.append(m.group(1))
+                self._add_member_includes(m.group("base_class_type"), True)
         if data_element.superclass:
-            include = f"#include <{hyphen_separated_lowercase_style(data_element.superclass)}.h>"
-            if include not in self._preamble:
-                self._preamble.append(include)
-                self._required_base_classes.append(data_element.superclass)
+            self._add_member_includes(data_element.superclass, True)
         for external_source in data_element.external_reference_sources:
             # This piece captures any "forward-declared" types that need to be
             # processed by the DataElement type-finding mechanism before their header is known.
-            include = f"#include <{external_source}.h>"
-            if include not in self._preamble:
-                self._preamble.append(include)
+            self._add_member_includes(external_source)
 
+    def _add_member_includes(self, dependency: str, base_class: bool = False):
+        """
+        Add the dependency to the list of included headers,
+        and to the list of base classes if necessary.
+        """
+        header_include = f"#include <{hyphen_separated_lowercase_style(dependency)}.h>"
+        if header_include not in self._preamble:
+            self._preamble.append(header_include)
+            if base_class:
+                self._required_base_classes.append(dependency)
+
+    # fmt: off
     def _add_function_overrides(self, parent_node, base_class_name):
         """Get base class virtual functions to be overridden."""
         base_class = os.path.join(
@@ -722,14 +725,16 @@ class HeaderTranslator:
             with open(base_class) as b:
                 for line in b:
                     if base_class_name not in line:
-                        m = re.match(r"\s*virtual\s(.*)\s(.*)\((.*)\)", line)
+                        m = re.match(r"\s*virtual\s(?P<return_type>.*)\s(?P<name>.*)\((?P<arguments>.*)\)", line)
                         if m:
-                            f_ret_type = m.group(1)
-                            f_name = m.group(2)
-                            f_args = f"({m.group(3)})"
-                            MemberFunctionOverride(f_ret_type, f_name, f_args, "", parent_node)
+                            MemberFunctionOverride(m.group("return_type"),
+                                                   m.group("name"),
+                                                   f'({m.group("argument")})',
+                                                   "",
+                                                   parent_node)
         except:
             pass
+    # fmt: on
 
     def _add_performance_overloads(self, parent_node=None):
         """ """
