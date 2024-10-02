@@ -458,6 +458,7 @@ class HeaderTranslator:
     def __init__(self):
         self._references = dict()
         self._fundamental_data_types = dict()
+        self._derived_types = dict()
         self._preamble = list()
         self._doxynotes = "/// @note  This class has been auto-generated. Local changes will not be saved!\n"
         self._epilogue = list()
@@ -504,6 +505,7 @@ class HeaderTranslator:
         self._forward_declaration_dir = forward_declarations_path
         self._schema_name = os.path.splitext(os.path.splitext(os.path.basename(input_file_path))[0])[0]
         self._references.clear()
+        self._derived_types.clear()
         self._fundamental_data_types.clear()
         self._preamble.clear()
         self._epilogue.clear()
@@ -524,16 +526,14 @@ class HeaderTranslator:
             Typedef(base_level_tag, self._namespace, "std::string")
 
         # Second, enumerations
-        for base_level_tag in [
-            tag for tag in self._contents if self._contents[tag].get("Object Type") == "Enumeration"
-        ]:
+        for base_level_tag in self._list_objects_of_type("Enumeration"):
             Enumeration(base_level_tag, self._namespace, self._contents[base_level_tag]["Enumerators"])
 
         # Namespace-level dependencies
         InlineDependency("logger", self._namespace, "std::shared_ptr<Courier::Courier>")
 
         # Collect member objects and their children
-        for base_level_tag in [tag for tag in self._contents if self._contents[tag].get("Object Type") == "Meta"]:
+        for base_level_tag in self._list_objects_of_type("Meta"):
             s = Struct(base_level_tag, self._namespace)
             d = DataElementStaticMetainfo(base_level_tag.lower(),
                                           s,
@@ -547,9 +547,7 @@ class HeaderTranslator:
                                           s,
                                           self._contents[base_level_tag],
                                           "Description")
-        for base_level_tag in [
-            tag for tag in self._contents if self._contents[tag].get("Object Type") in self._data_group_types
-        ]:
+        for base_level_tag in self._list_objects_of_type(self._data_group_types):
             s = Struct(
                 base_level_tag,
                 self._namespace,
@@ -578,7 +576,6 @@ class HeaderTranslator:
             #     s = Struct(base_level_tag, self._namespace)
 
             for data_element in self._contents[base_level_tag]["Data Elements"]:
-                print(data_element)
                 d = DataElement(
                     data_element,
                     s,
@@ -616,17 +613,11 @@ class HeaderTranslator:
         # self._add_performance_overloads()
 
         # Final passes through dictionary in order to add elements related to serialization
-        for base_level_tag in [
-            tag for tag in self._contents
-                if self._contents[tag].get("Object Type") == "Enumeration"
-        ]:
+        for base_level_tag in self._list_objects_of_type("Enumeration"):
             EnumSerializationDeclaration(base_level_tag,
                                          self._namespace,
                                          self._contents[base_level_tag]["Enumerators"])
-        for base_level_tag in [
-            tag for tag in self._contents
-                if self._contents[tag].get("Object Type") in self._data_group_types
-        ]:
+        for base_level_tag in self._list_objects_of_type(self._data_group_types):
             # from_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
@@ -657,6 +648,8 @@ class HeaderTranslator:
             self._references[ref_file] = [
                 name for name in ext_dict if ext_dict[name]["Object Type"] in self._data_group_types + ["Enumeration"]
             ]
+            # For every reference listed, store all the derived-class/base-class pairs as dictionaries
+            self._derived_types[ref_file] = {name : ext_dict[name].get("Data Group Template") for name in ext_dict if ext_dict[name].get("Data Group Template")}
 
             cpp_types = {"integer": "int", "string": "std::string", "number": "double", "boolean": "bool"}
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "Data Type"]:
@@ -765,17 +758,39 @@ class HeaderTranslator:
             else:
                 self._add_performance_overloads(entry)
 
+    def _search_references_for_base_types(self, data_element):
+        """
+        Search the pre-populated derived-class list for base class type. Used
+        when a Data Type requested in a selector constraint is defined in a schema's references rather than in-file.
+        """
+        data_element_unscoped = data_element.split(":")[-1]
+        for reference in self._derived_types:
+            if self._derived_types[reference].get(data_element_unscoped) in self._data_group_types:
+                return self._derived_types[reference][data_element_unscoped]
+        return None
+
     def _search_nodes_for_datatype(self, data_element) -> str:
         """
         If data_element exists, return its data type; else return the data group's 'data type,' which
         is the Data Group Template (base class type). Hacky overload.
         """
-        for listing in self._contents:
-            if "Data Elements" in self._contents[listing]:
-                if "Data Group Template" in self._contents[listing] and listing in data_element:
-                    return self._contents[listing]["Data Group Template"]
+        base_class_type = self._search_references_for_base_types(data_element)
+        if base_class_type:
+            return base_class_type
+        else:
+            for listing in self._contents:
+                if "Data Elements" in self._contents[listing]:
+                    # if "Data Group Template" in self._contents[listing] and listing in data_element:
+                    #     return self._contents[listing]["Data Group Template"]
 
-                for element in self._contents[listing]["Data Elements"]:
-                    if element == data_element and "Data Type" in self._contents[listing]["Data Elements"][element]:
-                        return self._contents[listing]["Data Elements"][element]["Data Type"]
+                    for element in self._contents[listing]["Data Elements"]:
+                        if element == data_element and "Data Type" in self._contents[listing]["Data Elements"][element]:
+                            return self._contents[listing]["Data Elements"][element]["Data Type"]
         return "MissingType"  # Placeholder base class
+
+    def _list_objects_of_type(self, object_type_or_list: list | str) -> list:
+        if isinstance(object_type_or_list, str):
+            return [tag for tag in self._contents if self._contents[tag].get("Object Type") == object_type_or_list]
+        elif isinstance(object_type_or_list, list):
+            return [tag for tag in self._contents if self._contents[tag].get("Object Type") in object_type_or_list]
+
