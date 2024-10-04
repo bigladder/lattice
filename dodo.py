@@ -107,8 +107,8 @@ def task_generate_cpp_code():
             "file_dep": [schema.path for schema in example.cpp_schemas]
             + [schema.meta_schema_path for schema in example.schemas]
             + [CORE_SCHEMA_PATH, BASE_META_SCHEMA_PATH, Path(SOURCE_PATH, "header_entries.py"), Path(SOURCE_PATH, "cpp_entries.py")],
-            "targets": [schema.cpp_header_path for schema in example.cpp_schemas]
-            + [schema.cpp_source_path for schema in example.cpp_schemas]
+            "targets": [schema.cpp_header_file_path for schema in example.cpp_schemas]
+            + [schema.cpp_source_file_path for schema in example.cpp_schemas]
             + example.cpp_support_headers + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
             "actions": [(example.generate_cpp_project, [["https://github.com/nlohmann/json.git", "https://github.com/bigladder/courier.git", "https://github.com/fmtlib/fmt.git"]])],
             "clean": True,

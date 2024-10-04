@@ -1,5 +1,6 @@
 import os
 import re
+import lattice.cpp.support_files as support
 from .file_io import load, get_base_stem
 from .util import snake_style, hyphen_separated_lowercase_style
 from typing import Optional
@@ -392,7 +393,7 @@ class FunctionalHeaderEntry(HeaderEntry):
     @property
     def value(self):
         tab = "\t"
-        return f"{self._level * tab}{' '.join([self.ret_type, self.fname, self.args])}{self._closure}"
+        return f"{self._level * tab}{' '.join([self.ret_type, self.fname])}{self.args}{self._closure}"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -412,7 +413,7 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
 class InitializeFunction(FunctionalHeaderEntry):
 
     def __init__(self, name, parent):
-        super().__init__("void", "initialize", "(const nlohmann::json& j)", name, parent)
+        super().__init__("virtual void", "initialize", "(const nlohmann::json& j)", name, parent)
 
 
 # # -------------------------------------------------------------------------------------------------
@@ -499,11 +500,15 @@ class HeaderTranslator:
         return swapped
 
     # fmt: off
-    def translate(self, input_file_path, top_namespace: str, forward_declarations_path: pathlib.Path):
+    def translate(self,
+                  input_file_path: pathlib.Path,
+                  forward_declarations_path: pathlib.Path,
+                  output_path: pathlib.Path,
+                  top_namespace: str):
         """X"""
-        self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
+        self._source_dir = input_file_path.parent.resolve()
         self._forward_declaration_dir = forward_declarations_path
-        self._schema_name = os.path.splitext(os.path.splitext(os.path.basename(input_file_path))[0])[0]
+        self._schema_name = get_base_stem(input_file_path)
         self._references.clear()
         self._derived_types.clear()
         self._fundamental_data_types.clear()
@@ -553,9 +558,9 @@ class HeaderTranslator:
                 self._namespace,
                 superclass=self._contents[base_level_tag].get("Data Group Template", ""),
             )
-            self._add_header_dependencies(s)
+            self._add_header_dependencies(s, output_path)
             # When there is a base class, add overrides:
-            # self._add_function_overrides(s, self._fundamental_base_class)
+            self._add_function_overrides(s, output_path, self._contents[base_level_tag].get("Data Group Template", ""))
 
             # elif self._contents[base_level_tag].get('Object Type') == 'Grid Variables':
             #     s = Struct(base_level_tag, self._namespace, superclass='GridVariablesBase')
@@ -584,7 +589,7 @@ class HeaderTranslator:
                     self._references,
                     self._search_nodes_for_datatype,
                 )
-                self._add_header_dependencies(d)
+                self._add_header_dependencies(d, output_path)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataIsSetElement(data_element, s)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
@@ -627,12 +632,12 @@ class HeaderTranslator:
         """Store the global/common types and the types defined by any named references."""
         self._root_data_group = schema_section.get("Root Data Group")
         refs: dict = {
-            f"{self._schema_name}": os.path.join(self._source_dir, f"{self._schema_name}.schema.yaml"),
-            "core": os.path.join(os.path.dirname(__file__), "core.schema.yaml"),
+            f"{self._schema_name}": self._source_dir / f"{self._schema_name}.schema.yaml",
+            "core": pathlib.Path(__file__).with_name("core.schema.yaml"),
         }
         if "References" in schema_section:
             for ref in schema_section["References"]:
-                refs.update({f"{ref}": os.path.join(self._source_dir, ref + ".schema.yaml")})
+                refs.update({f"{ref}": self._source_dir / f"{ref}.schema.yaml"})
         if (self._schema_name == "core" and
             self._forward_declaration_dir and
             self._forward_declaration_dir.is_dir()):
@@ -682,22 +687,22 @@ class HeaderTranslator:
             ]
         )
 
-    def _add_header_dependencies(self, data_element):
+    def _add_header_dependencies(self, data_element, generated_header_path: pathlib.Path):
         """Extract the dependency name from the data_element's type for included headers."""
         if "core_ns" in data_element.type:
             self._add_member_includes("core")
         if "unique_ptr" in data_element.type:
             m = re.search(r"\<(?P<base_class_type>.*)\>", data_element.type)
             if m:
-                self._add_member_includes(m.group("base_class_type"), True)
+                self._add_member_includes(m.group("base_class_type"), generated_header_path)
         if data_element.superclass:
-            self._add_member_includes(data_element.superclass, True)
+            self._add_member_includes(data_element.superclass, generated_header_path)
         for external_source in data_element.external_reference_sources:
             # This piece captures any "forward-declared" types that need to be
             # processed by the DataElement type-finding mechanism before their header is known.
             self._add_member_includes(external_source)
 
-    def _add_member_includes(self, dependency: str, base_class: bool = False):
+    def _add_member_includes(self, dependency: str, generated_base_class_path: Optional[pathlib.Path] = None):
         """
         Add the dependency to the list of included headers,
         and to the list of base classes if necessary.
@@ -705,24 +710,23 @@ class HeaderTranslator:
         header_include = f"#include <{hyphen_separated_lowercase_style(dependency)}.h>"
         if header_include not in self._preamble:
             self._preamble.append(header_include)
-            if base_class:
-                self._required_base_classes.append(dependency)
+            if generated_base_class_path:
+                #self._required_base_classes.append(dependency)
+                support.generate_superclass_header(dependency, generated_base_class_path)
 
     # fmt: off
-    def _add_function_overrides(self, parent_node, base_class_name):
+    def _add_function_overrides(self, parent_node, output_path, base_class_name):
         """Get base class virtual functions to be overridden."""
-        base_class = os.path.join(
-            os.path.dirname(__file__), "src", f"{hyphen_separated_lowercase_style(base_class_name)}.h"
-        )
+        base_class = pathlib.Path(output_path) / f"{hyphen_separated_lowercase_style(base_class_name)}.h"
         try:
             with open(base_class) as b:
                 for line in b:
                     if base_class_name not in line:
-                        m = re.match(r"\s*virtual\s(?P<return_type>.*)\s(?P<name>.*)\((?P<arguments>.*)\)", line)
+                        m = re.search(r"\s*virtual\s(?P<return_type>.*)\s(?P<name>.*)\((?P<arguments>.*)\)", line)
                         if m:
                             MemberFunctionOverride(m.group("return_type"),
                                                    m.group("name"),
-                                                   f'({m.group("argument")})',
+                                                   f'({m.group("arguments")})',
                                                    "",
                                                    parent_node)
         except:

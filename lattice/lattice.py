@@ -105,19 +105,19 @@ class SchemaFile:  # pylint:disable=R0902
         self._json_schema_path = Path(json_schema_path).absolute()
 
     @property
-    def cpp_header_path(self):  # pylint:disable=C0116
+    def cpp_header_file_path(self):  # pylint:disable=C0116
         return self._cpp_header_path
 
-    @cpp_header_path.setter
-    def cpp_header_path(self, value):
+    @cpp_header_file_path.setter
+    def cpp_header_file_path(self, value):
         self._cpp_header_path = Path(value).absolute()
 
     @property
-    def cpp_source_path(self):  # pylint:disable=C0116
+    def cpp_source_file_path(self):  # pylint:disable=C0116
         return self._cpp_source_path
 
-    @cpp_source_path.setter
-    def cpp_source_path(self, value):
+    @cpp_source_file_path.setter
+    def cpp_source_file_path(self, value):
         self._cpp_source_path = Path(value).absolute()
 
 
@@ -334,8 +334,8 @@ class Lattice:  # pylint:disable=R0902
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
         self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_path = self._cpp_output_include_dir / f"{schema.file_base_name.lower()}.h"
-            schema.cpp_source_path = self._cpp_output_src_dir / f"{schema.file_base_name.lower()}.cpp"
+            schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.file_base_name.lower()}.h"
+            schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.file_base_name.lower()}.cpp"
 
     def setup_cpp_repository(self, submodules: list[str]):
         """Initialize the CPP output directory as a Git repo."""
@@ -362,12 +362,12 @@ class Lattice:  # pylint:disable=R0902
         h = HeaderTranslator()
         c = CPPTranslator()
         for schema in self.cpp_schemas:
-            h.translate(schema.path, self.root_directory.name, self.schema_directory_path)
-            dump(str(h), schema.cpp_header_path)
+            h.translate(schema.path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name)
+            dump(str(h), schema.cpp_header_file_path)
             c.translate(self.root_directory.name, h)
-            dump(str(c), schema.cpp_source_path)
+            dump(str(c), schema.cpp_source_file_path)
         self.setup_cpp_repository(submodules)
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
         support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
-        for superclass in h.required_base_classes:
-            support.generate_superclass_header(superclass, self._cpp_output_include_dir)
+        # for superclass in h.required_base_classes:
+        #     support.generate_superclass_header(superclass, self._cpp_output_include_dir)
