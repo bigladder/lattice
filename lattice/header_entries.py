@@ -711,7 +711,7 @@ class HeaderTranslator:
         if header_include not in self._preamble:
             self._preamble.append(header_include)
             if generated_base_class_path:
-                #self._required_base_classes.append(dependency)
+                # self._required_base_classes.append(dependency)
                 support.generate_superclass_header(dependency, generated_base_class_path)
 
     # fmt: off
@@ -797,4 +797,3 @@ class HeaderTranslator:
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") == object_type_or_list]
         elif isinstance(object_type_or_list, list):
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") in object_type_or_list]
-

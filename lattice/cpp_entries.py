@@ -327,9 +327,11 @@ class CPPTranslator:
             # Shortcut to avoid creating "from_json" entries for the main class, but create them
             # for all other classes. The main class relies on an "Initialize" function instead,
             # dealt-with in the next block with function overrides.
-            if (isinstance(entry, Struct) and
-               entry.name not in self._namespace._name and
-               len([c for c in entry.child_entries if isinstance(c, DataElement)])):
+            if (
+                isinstance(entry, Struct)
+                and entry.name not in self._namespace._name
+                and len([c for c in entry.child_entries if isinstance(c, DataElement)])
+            ):
                 # Create the "from_json" function definition (header), only if it won't be empty
                 s = StructSerialization(entry.name, self._namespace)
                 for data_element_entry in [c for c in entry.child_entries if isinstance(c, DataElement)]:
