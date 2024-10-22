@@ -173,7 +173,8 @@ class OwnedElementCreation(ElementSerialization):
                 f"if (x.{data_element} == {enum}) {{",
                 f"\tx.{self._name} = std::make_unique<{header_entry.selector[data_element][enum]}>();",
                 f"\tif (x.{self._name}) {{",
-                f'\t\tx.{self._name}->initialize(j.at("{self._name}"));',
+                f'\t\tfrom_json(j.at("{self._name}"), *dynamic_cast<{header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));',
+                #f'\t\tx.{self._name}->initialize(j.at("{self._name}"));',
                 "\t}",
                 "}",
             ]

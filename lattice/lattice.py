@@ -369,5 +369,3 @@ class Lattice:  # pylint:disable=R0902
         self.setup_cpp_repository(submodules)
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
         support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
-        # for superclass in h.required_base_classes:
-        #     support.generate_superclass_header(superclass, self._cpp_output_include_dir)
