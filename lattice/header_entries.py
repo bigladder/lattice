@@ -419,7 +419,7 @@ class InitializeFunction(FunctionalHeaderEntry):
 class VirtualDestructor(FunctionalHeaderEntry):
 
     def __init__(self, f_name, name, parent):
-        super().__init__("virtual", f'~{f_name}', "()", name, parent)
+        super().__init__("virtual", f'~{f_name}', "() = default", name, parent)
 
 
 # # -------------------------------------------------------------------------------------------------
