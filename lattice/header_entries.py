@@ -415,11 +415,12 @@ class InitializeFunction(FunctionalHeaderEntry):
     def __init__(self, name, parent):
         super().__init__("virtual void", "initialize", "(const nlohmann::json& j)", name, parent)
 
+
 # -------------------------------------------------------------------------------------------------
 class VirtualDestructor(FunctionalHeaderEntry):
 
     def __init__(self, f_name, name, parent):
-        super().__init__("virtual", f'~{f_name}', "() = default", name, parent)
+        super().__init__("virtual", f"~{f_name}", "() = default", name, parent)
 
 
 # # -------------------------------------------------------------------------------------------------

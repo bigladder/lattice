@@ -63,7 +63,7 @@ def generate_superclass_header(superclass: str, output_directory: Path):
     s3 = f"#endif"
 
     class_entry = Struct(superclass, None)
-    #initialize_fn = InitializeFunction(None, class_entry)
+    # initialize_fn = InitializeFunction(None, class_entry)
     dtor = VirtualDestructor(superclass, None, class_entry)
 
     superclass_contents = f"{s1}\n{s2}\n{class_entry.value}\n{s3}"
