@@ -87,15 +87,7 @@ Schema can be converted into C++ classes with the following mappings:
 
 The code generator will assume that *Data Group* schema elements with a *Data Group Template* parameter use that template as the element's superclass. An `#include` statement for the expected superclass file is listed at the top of the schema's implemenation (cpp) file (note: see Big Ladder file naming conventions). If the superclass file is not found, the C++ generator will create a stub file for the class. If it is found, any virtual functions in the superclass will appear as overridden function stubs in the subclassed *Data Group*'s struct. Any additional code (members, methods) for the superclass itself must be provided by the **lattice** user.
 
-In the event that the source schema contains a *Data Element* with a "selector constraint" (i.e. a list of possible *Data Type*s combined with an associated list of possible enumerator values for the selector *Data Element*), the C++ generated code will assume that the *Data Type*s in the list all derive from a common base class, named by the *Data Group Template* of the first *Data Type* in the list. An `#include` statement for the base class will be generated, as above. The code that populates the *Data Group* (the struct's `from_json` function) will use a conditional statement to create a new object of the correct subclass and assign it to a member `unique_ptr`. The base class declaration requires an initialize() function, which must be provided by the superclass implementation with the following signature:
-
-> virtual void initialize(const nlohmann::json& j);
-
-or
-
-> virtual void initialize(const nlohmann::json& j) = 0; // must be subclassed
-
-and contents exactly mirroring `from_json` functions.
+In the event that the source schema contains a *Data Element* with a "selector constraint" (i.e. a list of possible *Data Type*s combined with an associated list of possible enumerator values for the selector *Data Element*), the C++ generated code will assume that the *Data Type*s in the list all derive from a common base class, named by the *Data Group Template* of the first *Data Type* in the list. (The *Data Group Template* may be defined in a different schema than the *Data Type*.) An `#include` statement for the base class will be generated, as above. The code that populates the *Data Group* (the struct's `from_json` function) will use a conditional statement to create a new object of the correct subclass and assign it to a member `unique_ptr`, calling directly the derived class' auto-generated `from_json` functions.
 
 Note: If the first *Data Type* in a selector constraint list does not have a *Data Group Template* tag in its schema, the `unique_ptr`'s base class will default to "MissingType."
 
