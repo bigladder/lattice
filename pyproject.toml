@@ -9,13 +9,13 @@ keywords = ["data-modeling", "schema", "lattice"]
 repository = "https://github.com/bigladder/lattice"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 jsonschema = "*"
 pyyaml = "*"
 cbor2 = "*"
 Jinja2 = "^3.1.4"
 stringcase = "1.2.0"
-pygit2 = "^1.13.0"
+pygit2 = "^1.15.1"
 mkdocs-material = "*"
 markdown-grid-tables = "*"
 
@@ -25,6 +25,9 @@ doit = "*"
 pylint = "*"
 black = "*"
 tomli = "2.0.1"
+
+[tool.poetry.group.extras.dependencies]
+pyinstrument = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

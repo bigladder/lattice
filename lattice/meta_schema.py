@@ -20,8 +20,7 @@ class MetaSchema:
             self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
 
     def validate(self, instance_path):
-        with open(os.path.join(instance_path), "r") as input_file:
-            instance = yaml.load(input_file, Loader=yaml.FullLoader)
+        instance = load(instance_path)
         errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
         file_name = os.path.basename(instance_path)
         if len(errors) == 0:
