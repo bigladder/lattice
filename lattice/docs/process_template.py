@@ -9,6 +9,7 @@ import traceback
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNotFound
 from lattice.file_io import load
+import yaml
 
 from .schema_table import (
     load_structure_from_object,
@@ -197,7 +198,7 @@ def make_add_yaml_table():
     """
 
     def add_yaml_table(content, caption=None):
-        table_data = load(content)
+        table_data = yaml.load(content, Loader=yaml.CLoader)
         columns = table_data["Headers"]
         data = {}
         for i, column in enumerate(columns):
