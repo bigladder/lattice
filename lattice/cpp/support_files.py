@@ -4,8 +4,7 @@ import sys
 from lattice.file_io import dump
 from lattice.util import snake_style, hyphen_separated_lowercase_style
 from pathlib import Path
-from lattice.header_entries import InitializeFunction, VirtualDestructor, Struct
-
+import lattice.cpp.header_entries
 
 def support_header_pathnames(output_directory: Path):
     """Return a list of the template-generated header file names."""
@@ -62,9 +61,9 @@ def generate_superclass_header(superclass: str, output_directory: Path):
     s2 = f"#define {superclass.upper()}_H_"
     s3 = f"#endif"
 
-    class_entry = Struct(superclass, None)
+    class_entry = header_entries.Struct(superclass, None)
     # initialize_fn = InitializeFunction(None, class_entry)
-    dtor = VirtualDestructor(superclass, None, class_entry)
+    dtor = header_entries.VirtualDestructor(superclass, None, class_entry)
 
     superclass_contents = f"{s1}\n{s2}\n{class_entry.value}\n{s3}"
 

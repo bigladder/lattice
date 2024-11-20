@@ -8,7 +8,7 @@ from .header_entries import (
     ObjectSerializationDeclaration,
     InlineDependency,
 )
-from .util import snake_style
+from lattice.util import snake_style
 from collections import defaultdict
 
 

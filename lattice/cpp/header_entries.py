@@ -1,8 +1,8 @@
 import os
 import re
 import lattice.cpp.support_files as support
-from .file_io import load, get_base_stem
-from .util import snake_style, hyphen_separated_lowercase_style
+from lattice.file_io import load, get_base_stem
+from lattice.util import snake_style, hyphen_separated_lowercase_style
 from typing import Optional
 import pathlib
 
@@ -587,6 +587,12 @@ class HeaderTranslator:
             #     # Catch-all for when a class of name _schema_name isn't present in the schema
             #     s = Struct(base_level_tag, self._namespace)
 
+            # for plugin in plugins:
+            #     s = Plugin_subobject(tag, namespace, etc.)
+            #     self._add_member_headers(s)
+            #     self._add_function_overrides(s, 'PerformanceMapBase')
+            #     e = Plugin_subobject_items(etc.)
+
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElement(
                     data_element,
@@ -640,7 +646,7 @@ class HeaderTranslator:
         self._root_data_group = schema_section.get("Root Data Group")
         refs: dict = {
             f"{self._schema_name}": self._source_dir / f"{self._schema_name}.schema.yaml",
-            "core": pathlib.Path(__file__).with_name("core.schema.yaml"),
+            "core": pathlib.Path(__file__).parent.with_name("core.schema.yaml"),
         }
         if "References" in schema_section:
             for ref in schema_section["References"]:
