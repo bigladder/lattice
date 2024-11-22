@@ -14,7 +14,7 @@ from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import MkDocsWeb, DocumentFile
 from lattice.docs.process_template import process_template
-from lattice.cpp.header_entries import HeaderTranslator
+from lattice.cpp.header_translator import HeaderTranslator
 from lattice.cpp.cpp_entries import CPPTranslator
 import lattice.cpp.support_files as support
 
