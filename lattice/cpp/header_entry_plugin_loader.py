@@ -13,8 +13,7 @@ class ModuleInterface:
 
 def import_module(path: Path) -> ModuleInterface:
     """Imports a module given a name."""
-    name = path.stem
-    spec = util.spec_from_file_location(name, path)
+    spec = util.spec_from_file_location(path.name, path)
     try:
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
