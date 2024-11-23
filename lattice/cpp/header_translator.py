@@ -108,7 +108,9 @@ class HeaderTranslator:
             if data_group_template in template_entry_plugins:
                 s = template_entry_plugins[data_group_template](
                     base_level_tag,
-                    self._namespace)
+                    self._namespace,
+                    superclass=data_group_template
+                    )
             else:
                 s = Struct(
                     base_level_tag,
