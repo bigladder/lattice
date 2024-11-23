@@ -14,8 +14,6 @@ class ModuleInterface:
 def import_module(path: Path) -> ModuleInterface:
     """Imports a module given a path."""
     spec = util.spec_from_file_location(path.stem, path)
-    print(path)
-    print(spec)
     try:
         module = util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -25,6 +23,6 @@ def import_module(path: Path) -> ModuleInterface:
 
 def load_plugins(plugins: Path) -> None:
     """Loads the plugins defined in the plugins list."""
-    for plugin_file in plugins.iterdir():
+    for plugin_file in [x for x in plugins.iterdir() if x.suffix == ".py"]:
         plugin = import_module(plugin_file) #TODO: not robust?
         plugin.register()
