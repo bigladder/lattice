@@ -24,5 +24,5 @@ def import_module(path: Path) -> ModuleInterface:
 def load_plugins(plugins: Path) -> None:
     """Loads the plugins defined in the plugins list."""
     for plugin_file in [x for x in plugins.iterdir() if x.suffix == ".py"]:
-        plugin = import_module(plugin_file) #TODO: not robust?
+        plugin = import_module(plugin_file)
         plugin.register()

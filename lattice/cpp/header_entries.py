@@ -5,11 +5,15 @@ from typing import Callable
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
-template_entry_plugins: dict[str, Callable] = {}
+data_group_plugins: dict[str, Callable] = {}
 
-def register(data_group_template_name: str, header_entry: Callable):
-    template_entry_plugins[data_group_template_name] = header_entry
+def register_data_group_operation(data_group_template_name: str, header_entry: Callable):
+    data_group_plugins[data_group_template_name] = header_entry
 
+data_element_plugins: dict[str, Callable] = {}
+
+def register_data_element_operation(data_group_template_name: str, header_entry: Callable):
+    data_element_plugins[data_group_template_name] = header_entry
 
 # -------------------------------------------------------------------------------------------------
 class HeaderEntryFormat:
@@ -297,43 +301,6 @@ class DataElement(HeaderEntry):
                         target_dict[mx] = maximum
                 except ValueError:
                     pass
-
-
-# # -------------------------------------------------------------------------------------------------
-# class Lookup_struct(Header_entry):
-#     '''
-#     Special case struct for Lookup Variables. Its value property adds a LookupStruct declaration.
-
-#     This class could initialize correctly by simply deriving from Struct; however, the rich-
-#     comparison between Header_entry(s) only works when items being compared are not a subclass and
-#     sub-subclass.
-#     '''
-
-#     def __init__(self, name, parent, superclass=''):
-#         super().__init__(name, parent)
-#         self.type = 'struct'
-#         self._closure = '};'
-#         if superclass:
-#             self.superclass = superclass
-
-#     @property
-#     def value(self):
-#         entry = self._level*'\t' + self.type + ' ' + self.name
-#         if self.superclass:
-#             entry += ' ' + self.superclass
-#         entry += ' ' + self._opener + '\n'
-#         for c in self._child_entries:
-#             entry += (c.value + '\n')
-#         entry += (self._level*'\t' + self._closure)
-
-#         # Add a LookupStruct that offers a SOA access rather than AOS
-#         entry += '\n'
-#         entry += self._level*'\t' + self.type + ' ' + f'{self.name}Struct' + ' ' + self._opener + '\n'
-#         for c in [ch for ch in self._child_entries if isinstance(ch, Data_element)]:
-#             m = re.match(r'std::vector\<(.*)\>', c.type)
-#             entry += (self._level+1)*'\t' + m.group(1) + ' ' + c.name + ';\n'
-#         entry += (self._level*'\t' + self._closure)
-#         return entry
 
 
 # -------------------------------------------------------------------------------------------------

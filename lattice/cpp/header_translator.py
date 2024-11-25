@@ -105,8 +105,8 @@ class HeaderTranslator:
                                           "Description")
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
             data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
-            if data_group_template in template_entry_plugins:
-                s = template_entry_plugins[data_group_template](
+            if data_group_template in data_group_plugins:
+                s = data_group_plugins[data_group_template](
                     base_level_tag,
                     self._namespace,
                     superclass=data_group_template
@@ -121,30 +121,14 @@ class HeaderTranslator:
             # When there is a base class, add overrides:
             self._add_function_overrides(s, output_path, data_group_template)
 
-            # elif self._contents[base_level_tag].get('Object Type') == 'Grid Variables':
-            #     s = Struct(base_level_tag, self._namespace, superclass='GridVariablesBase')
-            #     self._add_member_headers(s)
-            #     self._add_function_overrides(s, 'GridVariablesBase')
-            #     e = Grid_var_counter_enum('', s, self._contents[base_level_tag]['Data Elements'])
-            # elif self._contents[base_level_tag].get('Object Type') == 'Lookup Variables':
-            #     s = Lookup_struct(base_level_tag, self._namespace, superclass='LookupVariablesBase')
-            #     self._add_member_headers(s)
-            #     self._add_function_overrides(s, 'LookupVariablesBase')
-            #     e = Grid_var_counter_enum('', s, self._contents[base_level_tag]['Data Elements'])
-            # elif self._contents[base_level_tag].get('Object Type') == 'Performance Map':
-            #     s = Struct(base_level_tag, self._namespace, superclass='PerformanceMapBase')
-            #     self._add_member_headers(s)
-            #     self._add_function_overrides(s, 'PerformanceMapBase')
-            # else:
-            #     # Catch-all for when a class of name _schema_name isn't present in the schema
-            #     s = Struct(base_level_tag, self._namespace)
+            # Process plugin code for the entire element group, if there is any
+            if data_group_template in data_element_plugins:
+                e = data_element_plugins[data_group_template](
+                    s,
+                    self._contents[base_level_tag]["Data Elements"]
+                    )
 
-            # for plugin in plugins:
-            #     s = Plugin_subobject(tag, namespace, etc.)
-            #     self._add_member_headers(s)
-            #     self._add_function_overrides(s, 'PerformanceMapBase')
-            #     e = Plugin_subobject_items(etc.)
-
+            # Per-element processing
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElement(
                     data_element,
