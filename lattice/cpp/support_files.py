@@ -6,6 +6,7 @@ from lattice.util import snake_style, hyphen_separated_lowercase_style
 from pathlib import Path
 import lattice.cpp.header_entries as header_entries
 
+
 def support_header_pathnames(output_directory: Path):
     """Return a list of the template-generated header file names."""
     return [

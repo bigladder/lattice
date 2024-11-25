@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional
+from typing import Optional, Union
 
 from .header_entries import *
 from lattice.file_io import load, get_base_stem
@@ -214,6 +214,7 @@ class HeaderTranslator:
     # fmt: on
 
     def _add_include_guard(self, header_name):
+        """Populate the file's include guards."""
         s1 = f"#ifndef {header_name.upper()}_H_"
         s2 = f"#define {header_name.upper()}_H_"
         s3 = f"#endif"
@@ -221,6 +222,7 @@ class HeaderTranslator:
         self._epilogue.append(s3)
 
     def _add_standard_dependency_headers(self, ref_list):
+        """Populate a list of #includes that every lattice-based project will need."""
         if ref_list:
             includes = ""
             for r in ref_list:
@@ -341,7 +343,7 @@ class HeaderTranslator:
                             return self._contents[listing]["Data Elements"][element]["Data Type"]
         return "MissingType"  # Placeholder base class
 
-    def _list_objects_of_type(self, object_type_or_list: list | str) -> list:
+    def _list_objects_of_type(self, object_type_or_list: Union[str, list[str]]) -> list:
         if isinstance(object_type_or_list, str):
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") == object_type_or_list]
         elif isinstance(object_type_or_list, list):
