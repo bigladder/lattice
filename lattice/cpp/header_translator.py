@@ -6,21 +6,40 @@ from lattice.file_io import load, get_base_stem
 from lattice.util import snake_style, hyphen_separated_lowercase_style
 import lattice.cpp.support_files as support
 
+
+def modified_insertion_sort(obj_list):
+    """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
+    swapped = False
+    # Start on the second element as we assume the first element is sorted
+    for i in range(1, len(obj_list)):
+        item_to_insert = obj_list[i]
+        # And keep a reference of the index of the previous element
+        j = i - 1
+        # Move all items of the sorted segment forward if they are larger than the item to insert
+        while j >= 0 and any(obj > item_to_insert for obj in obj_list[0 : j + 1]):
+            obj_list[j + 1] = obj_list[j]
+            swapped = True
+            j -= 1
+        # Insert the item
+        obj_list[j + 1] = item_to_insert
+    return swapped
+
+
 class HeaderTranslator:
     def __init__(self):
-        self._references = dict()
-        self._fundamental_data_types = dict()
-        self._derived_types = dict()
-        self._preamble = list()
+        self._references: dict[str, list[str]] = {}
+        self._fundamental_data_types: dict[str, str] = {}
+        self._derived_types = {}
+        self._preamble = []
         self._doxynotes = "/// @note  This class has been auto-generated. Local changes will not be saved!\n"
-        self._epilogue = list()
+        self._epilogue = []
         self._data_group_types = ["Data Group"]
         self._forward_declaration_dir: Optional[pathlib.Path] = None
-        self._required_base_classes = list()
+        self._required_base_classes = []
 
     def __str__(self):
         s = "\n".join([p for p in self._preamble])
-        s += f"\n\n{self._doxynotes}\n{self.root.value}\n"
+        s += f"\n\n{self._doxynotes}\n{self.root}\n"
         s += "\n".join([e for e in self._epilogue])
         return s
 
@@ -28,35 +47,13 @@ class HeaderTranslator:
     def root(self):
         return self._top_namespace
 
-    @property
-    def required_base_classes(self):
-        return self._required_base_classes
-
-    @staticmethod
-    def modified_insertion_sort(obj_list):
-        """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
-        swapped = False
-        # Start on the second element as we assume the first element is sorted
-        for i in range(1, len(obj_list)):
-            item_to_insert = obj_list[i]
-            # And keep a reference of the index of the previous element
-            j = i - 1
-            # Move all items of the sorted segment forward if they are larger than the item to insert
-            while j >= 0 and any(obj > item_to_insert for obj in obj_list[0 : j + 1]):
-                obj_list[j + 1] = obj_list[j]
-                swapped = True
-                j -= 1
-            # Insert the item
-            obj_list[j + 1] = item_to_insert
-        return swapped
-
     # fmt: off
     def translate(self,
                   input_file_path: pathlib.Path,
                   forward_declarations_path: pathlib.Path,
                   output_path: pathlib.Path,
                   top_namespace: str):
-        """X"""
+        """Translate schema into C++ header file, but store locally as a data structure."""
         self._source_dir = input_file_path.parent.resolve()
         self._forward_declaration_dir = forward_declarations_path
         self._schema_name = get_base_stem(input_file_path)
@@ -74,8 +71,8 @@ class HeaderTranslator:
         self._add_standard_dependency_headers(self._contents["Schema"].get("References"))
 
         # Create "root" node(s)
-        self._top_namespace = HeaderEntry(top_namespace)
-        self._namespace = HeaderEntry(f"{snake_style(self._schema_name)}_ns", parent=self._top_namespace)
+        self._top_namespace = HeaderEntry(top_namespace, None)
+        self._namespace = HeaderEntry(f"{snake_style(self._schema_name)}_ns", self._top_namespace)
 
         # First, assemble typedefs
         for base_level_tag in [tag for tag in self._contents if self._contents[tag]["Object Type"] == "String Type"]:
@@ -140,7 +137,7 @@ class HeaderTranslator:
                 )
                 self._add_header_dependencies(d, output_path)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
-                d = DataIsSetElement(data_element, s)
+                d = DataElementIsSetFlag(data_element, s)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
                     data_element,
@@ -162,7 +159,8 @@ class HeaderTranslator:
                     self._contents[base_level_tag]["Data Elements"][data_element],
                     "Name"
                 )
-        HeaderTranslator.modified_insertion_sort(self._namespace.child_entries)
+
+        modified_insertion_sort(self._namespace.child_entries)
         # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
         # self._add_performance_overloads()
 
@@ -180,7 +178,7 @@ class HeaderTranslator:
     def _load_meta_info(self, schema_section):
         """Store the global/common types and the types defined by any named references."""
         self._root_data_group = schema_section.get("Root Data Group")
-        refs: dict = {
+        refs: dict[str, pathlib.Path] = {
             f"{self._schema_name}": self._source_dir / f"{self._schema_name}.schema.yaml",
             "core": pathlib.Path(__file__).parent.with_name("core.schema.yaml"),
         }
@@ -196,6 +194,7 @@ class HeaderTranslator:
 
         for ref_file in refs:
             ext_dict = load(refs[ref_file])
+            # Load every explicitly listed reference and collect the base classes therein
             self._data_group_types.extend(
                 [name for name in ext_dict if ext_dict[name]["Object Type"] == "Data Group Template"]
             )
@@ -205,11 +204,18 @@ class HeaderTranslator:
             # For every reference listed, store all the derived-class/base-class pairs as dictionaries
             self._derived_types[ref_file] = {name : ext_dict[name].get("Data Group Template") for name in ext_dict if ext_dict[name].get("Data Group Template")}
 
-            cpp_types = {"integer": "int", "string": "std::string", "number": "double", "boolean": "bool"}
+            cpp_types = {"integer": "int",
+                         "string": "std::string",
+                         "number": "double",
+                         "boolean": "bool"}
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "Data Type"]:
-                self._fundamental_data_types[base_item] = cpp_types.get(ext_dict[base_item]["JSON Schema Type"])
+                self._fundamental_data_types[base_item] = cpp_types[ext_dict[base_item]["JSON Schema Type"]]
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
+
+        # print(self._schema_name)
+        # print("_references", self._references)
+        # print("_derived_types", self._derived_types)
 
     # fmt: on
 
@@ -238,25 +244,26 @@ class HeaderTranslator:
             ]
         )
 
-    def _add_header_dependencies(self, data_element, generated_header_path: pathlib.Path):
+    def _add_header_dependencies(self, header_element, generated_header_path: pathlib.Path):
         """Extract the dependency name from the data_element's type for included headers."""
-        if "core_ns" in data_element.type:
-            self._add_member_includes("core")
-        if "unique_ptr" in data_element.type:
-            m = re.search(r"\<(?P<base_class_type>.*)\>", data_element.type)
-            if m:
-                self._add_member_includes(m.group("base_class_type"), generated_header_path)
-        if data_element.superclass:
-            self._add_member_includes(data_element.superclass, generated_header_path)
-        for external_source in data_element.external_reference_sources:
-            # This piece captures any "forward-declared" types that need to be
-            # processed by the DataElement type-finding mechanism before their header is known.
-            self._add_member_includes(external_source)
+        if isinstance(header_element, DataElement):
+            if "core_ns" in header_element.type:
+                self._add_member_includes("core")
+            if "unique_ptr" in header_element.type:
+                m = re.search(r"\<(?P<base_class_type>.*)\>", header_element.type)
+                if m:
+                    self._add_member_includes(m.group("base_class_type"), generated_header_path)
+            if header_element.scoped_innertype[0]:
+                # This piece captures any "forward-declared" types that need to be
+                # processed by the DataElement type-finding mechanism before their header is known.
+                self._add_member_includes(header_element.scoped_innertype[0])
+        elif isinstance(header_element, Struct):
+            if header_element.superclass:
+                self._add_member_includes(header_element.superclass, generated_header_path)
 
     def _add_member_includes(self, dependency: str, generated_base_class_path: Optional[pathlib.Path] = None):
         """
-        Add the dependency to the list of included headers,
-        and to the list of base classes if necessary.
+        Add the dependency to the list of included headers, and generate the header file if it's a base class.
         """
         header_include = f"#include <{hyphen_separated_lowercase_style(dependency)}.h>"
         if header_include not in self._preamble:
@@ -275,11 +282,11 @@ class HeaderTranslator:
                     if base_class_name not in line:
                         m = re.search(r"\s*virtual\s(?P<return_type>.*)\s(?P<name>.*)\((?P<arguments>.*)\)", line)
                         if m:
-                            MemberFunctionOverride(m.group("return_type"),
-                                                   m.group("name"),
-                                                   f'({m.group("arguments")})',
-                                                   "",
-                                                   parent_node)
+                            MemberFunctionOverrideDeclaration("",
+                                                              parent_node,
+                                                              m.group("return_type"),
+                                                              m.group("name"),
+                                                              m.group("arguments").split(","))
         except:
             pass
     # fmt: on

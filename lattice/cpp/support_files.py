@@ -64,9 +64,9 @@ def generate_superclass_header(superclass: str, output_directory: Path):
 
     class_entry = header_entries.Struct(superclass, None)
     # initialize_fn = InitializeFunction(None, class_entry)
-    dtor = header_entries.VirtualDestructor(superclass, None, class_entry)
+    dtor = header_entries.VirtualDestructor("", class_entry, "", superclass, [])
 
-    superclass_contents = f"{s1}\n{s2}\n{class_entry.value}\n{s3}"
+    superclass_contents = f"{s1}\n{s2}\n{class_entry}\n{s3}"
 
     header = Path(output_directory / f"{hyphen_separated_lowercase_style(superclass)}.h")
     if not header.exists():

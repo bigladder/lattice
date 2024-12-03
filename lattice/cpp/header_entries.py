@@ -1,7 +1,9 @@
+from __future__ import annotations
 import re
 from lattice.util import snake_style
-from typing import Callable
-
+from typing import Callable, Optional
+from pathlib import Path
+from dataclasses import dataclass, field
 
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
@@ -22,33 +24,39 @@ def register_data_element_operation(data_group_template_name: str, header_entry:
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass()
 class HeaderEntryFormat:
-    def __init__(self, name, parent=None):
-        self._opener = "{"
-        self._closure = "}"
-
+    _opener: str = field(init=False, default="{")
+    _closure: str = field(init=False, default="}")
+    _level: int = field(init=False, default=0)
 
 # -------------------------------------------------------------------------------------------------
-class HeaderEntry:
+@dataclass
+class HeaderEntry(HeaderEntryFormat):
+    name: str
+    parent: Optional[HeaderEntry]
+    #superclass: str = field(kw_only=True)
+    type: str = field(init=False, default="namespace") # TODO: kw_only=True?
+    child_entries: list[HeaderEntry] = field(init=False, default_factory=list)
 
-    def __init__(self, name, parent=None):
-        self.type = "namespace"
-        self.name = name
-        self.superclass = None
-        self.external_reference_sources = list()
-        self._opener = "{"
-        self._closure = "}"
-        self._parent_entry = parent
-        self._child_entries = list()  # of Header_entry(s)
+    def __post_init__(self):
+        if self.parent:
+            self.parent._add_child_entry(self)
+        self._level = self._get_level()
 
-        if parent:
-            self._parent_entry._add_child_entry(self)
+    def _add_child_entry(self, child: HeaderEntry) -> None:
+        self.child_entries.append(child)
+
+    def _get_level(self, level: int=0) -> int:
+        if self.parent:
+            return self.parent._get_level(level + 1)
+        else:
+            return level
 
     def __lt__(self, other):
-        """Rich-comparison method to allow sorting.
-
+        """
         A Header_entry must be "less than" any another Header_entry that references it, i.e.
-        you must define a value before you reference it.
+        you must define a C++ value before you reference it.
         """
         return self._less_than(other)
 
@@ -72,62 +80,39 @@ class HeaderEntry:
     def __gt__(self, other):
         return other < self
 
-    def _add_child_entry(self, child):
-        self._child_entries.append(child)
-
-    @property
-    def value(self):
-        entry = self._level * "\t" + self.type + " " + self.name
-        if self.superclass:
-            entry += " : " + self.superclass
-        entry += " " + self._opener + "\n"
-        for c in self._child_entries:
-            entry += c.value + "\n"
-        entry += self._level * "\t" + self._closure
+    def __str__(self):
+        tab = "\t"
+        entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
+        entry += "\n".join([str(c) for c in self.child_entries])
+        entry += f"\n{self._level * tab}{self._closure}"
         return entry
-
-    @property
-    def parent(self):
-        return self._parent_entry
-
-    @property
-    def child_entries(self):
-        return self._child_entries
-
-    def _get_level(self, level=0):
-        if self._parent_entry:
-            return self._parent_entry._get_level(level + 1)
-        else:
-            return level
-
-    @property
-    def _level(self):
-        return self._get_level()
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class Typedef(HeaderEntry):
-    def __init__(self, name, parent, typedef):
-        super().__init__(name, parent)
-        self.type = "typedef"
-        self._typedef = typedef
+    _typedef: str
 
-    @property
-    def value(self):
+    def __post_init__(self):
+        super().__post_init__()
+        self.type = "typedef"
+
+    def __str__(self):
         tab = "\t"
         return f"{self._level * tab}{self.type} {self._typedef} {self.name};"
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class Enumeration(HeaderEntry):
-    def __init__(self, name, parent, item_dict):
-        super().__init__(name, parent)
+    _enumerants: dict
+
+    def __post_init__(self):
+        super().__post_init__()
         self.type = "enum class"
         self._closure = "};"
-        self._enumerants: dict = item_dict
 
-    @property
-    def value(self):
+    def __str__(self):
         tab = "\t"
         entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
         for e in self._enumerants:
@@ -150,143 +135,146 @@ class Enumeration(HeaderEntry):
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class EnumSerializationDeclaration(HeaderEntry):
-    def __init__(self, name, parent, item_dict):
-        super().__init__(name, parent)
-        self.type = "NLOHMANN_JSON_SERIALIZE_ENUM"
-        self._opener = "(" + name + ", {"
-        self._closure = "})"
-        self._enumerants: list = ["UNKNOWN"] + (list(item_dict.keys()))
+    """Provides shortcut marcros that populate an enumeration from json."""
+    _enumerants: dict
 
-    @property
-    def value(self):
-        entry = self._level * "\t" + self.type + " " + self._opener + "\n"
-        for e in self._enumerants:
-            entry += (self._level + 1) * "\t"
-            mapping = "{" + self.name + "::" + e + ', "' + e + '"}'
-            entry += mapping + ",\n"
-        entry += self._level * "\t" + self._closure
+    def __post_init__(self):
+        super().__post_init__()
+        self.type = "NLOHMANN_JSON_SERIALIZE_ENUM"
+        self._opener = "(" + self.name + ", {"
+        self._closure = "})"
+
+    def __str__(self):
+        enums_with_placeholder = ["UNKNOWN"] + (list(self._enumerants.keys()))
+        tab = "\t"
+        entry = f"{self._level * tab}{self.type} {self._opener}\n"
+        entry += ",\n".join([f"{(self._level + 1) * tab}{{{self.name}::{e}, \"{e}\"}}" for e in enums_with_placeholder])
+        # for e in enums_with_placeholder:
+        #     entry += (self._level + 1) * "\t"
+        #     mapping = "{" + self.name + "::" + e + ', "' + e + '"}'
+        #     entry += mapping + ",\n"
+        entry += f"\n{self._level * tab}{self._closure}"
         return entry
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class Struct(HeaderEntry):
-    def __init__(self, name, parent, superclass=""):
-        super().__init__(name, parent)
+    superclass:str = ""
+
+    def __post_init__(self):
+        super().__post_init__()
         self.type = "struct"
         self._closure = "};"
-        if superclass:
-            self.superclass = superclass
-            self._inheritance_decl = f" : public {superclass}"
+
+    def __str__(self):
+        tab = "\t"
+        entry = f"{self._level * tab}{self.type} {self.name}"
+        if self.superclass:
+            entry += f" : {self.superclass}"
+        entry += f" {self._opener}\n"
+        entry += "\n".join([str(c) for c in self.child_entries])
+        entry += f"\n{self._level * tab}{self._closure}"
+        return entry
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class DataElement(HeaderEntry):
-    def __init__(self, name, parent, element, data_types, references, find_func=None):
-        super().__init__(name, parent)
+    _element_attributes: dict
+    _pod_datatypes_map: dict[str, str]
+    _custom_datatypes_by_location: dict[str, list[str]]
+    _type_finder: Callable | None = None
+    selector: dict[str, dict[str, str]] = field(init=False, default_factory=dict)
+
+    def __post_init__(self):
+        super().__post_init__()
         self._closure = ";"
-        self._datatypes = data_types
-        self._refs = references
-        self._selector = dict()
-        self.is_required = element.get("Required", False)
+        self.is_required: bool = self._element_attributes.get("Required", False) # used externally
+        self.scoped_innertype: tuple[str,str] = ("", "")
+        #self.external_reference_sources: list = []
 
-        self._create_type_entry(element, find_func)
+        self._create_type_entry(self._element_attributes, self._type_finder)
 
-    @property
-    def value(self):
+    def __str__(self):
         tab = "\t"
         return f"{self._level * tab}{self.type} {self.name}{self._closure}"
 
-    # .............................................................................................
-    @property
-    def selector(self):
-        return self._selector
-
-    def _create_type_entry(self, parent_dict, type_finder=None):
+    def _create_type_entry(self, element_attributes: dict, type_finder: Callable | None = None) -> None:
         """Create type node."""
         try:
             # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
-            m = re.findall(r"\[(.*?)\]", parent_dict["Data Type"])
+            m = re.findall(r"\[(.*?)\]", element_attributes["Data Type"])
             if m:
-                self.type = f"std::vector<{self._get_simple_type(m[0])}>"
+                self.type = f"std::vector<{self._get_scoped_inner_type(m[0])}>"
             else:
                 # If the type is oneOf a set
-                m = re.match(r"\((.*)\)", parent_dict["Data Type"])
+                m = re.match(r"\((?P<comma_separated_selection_types>.*)\)", element_attributes["Data Type"])
                 if m:
                     # Choices can only be mapped to enums, so store the mapping for future use
                     # Constraints (of selection type) are of the form
                     # selection_key(ENUM_VAL_1, ENUM_VAL_2, ENUM_VAL_3)
                     # They connect pairwise with Data Type of the form ({Type_1}, {Type_2}, {Type_3})
-                    oneof_selection_key = parent_dict["Constraints"].split("(")[0]
+                    oneof_selection_key = element_attributes["Constraints"].split("(")[0]
                     if type_finder:
                         selection_key_type = (
-                            self._get_simple_type(
+                            self._get_scoped_inner_type(
                                 "".join(ch for ch in type_finder(oneof_selection_key) if ch.isalnum())
                             )
                             + "::"
                         )
                     else:
                         selection_key_type = ""
-                    types = [self._get_simple_type(t.strip()) for t in m.group(1).split(",")]
-                    m_opt = re.match(r".*\((.*)\)", parent_dict["Constraints"])
+                    selection_types = [self._get_scoped_inner_type(t.strip()) for t in m.group("comma_separated_selection_types").split(",")]
+                    m_opt = re.match(r".*\((?P<comma_separated_constraints>.*)\)", element_attributes["Constraints"])
                     if not m_opt:
                         raise TypeError
-                    selectors = [(selection_key_type + s.strip()) for s in m_opt.group(1).split(",")]
+                    constraints = [(selection_key_type + s.strip()) for s in m_opt.group("comma_separated_constraints").split(",")]
 
                     # the _selector dictionary would have a form like:
                     # { operation_speed_control_type : { CONTINUOUS : PerformanceMapContinuous, DISCRETE : PerformanceMapDiscrete} }
-                    self._selector[oneof_selection_key] = dict(zip(selectors, types))
+                    self.selector[oneof_selection_key] = dict(zip(constraints, selection_types))
 
                     # The elements of 'types' are Data Groups that derive from a Data Group Template.
                     # The template is a verbatim "base class," which is what makes the selector
                     # polymorphism possible
-                    self.type = f"std::unique_ptr<{type_finder(types[0]) if type_finder else None}>"
+                    self.type = f"std::unique_ptr<{type_finder(selection_types[0]) if type_finder else None}>"
                 else:
                     # 1. 'type' entry
-                    self.type = self._get_simple_type(parent_dict["Data Type"])
+                    self.type = self._get_scoped_inner_type(element_attributes["Data Type"])
         except KeyError as ke:
             pass
 
-    def _get_simple_type(self, type_str):
-        """Return the internal type described by type_str.
+    def _get_scoped_inner_type(self, type_str: str) -> str:
+        """Return the scoped cpp type described by type_str.
 
         First, attempt to capture enum, definition, or special string type as references;
         then default to fundamental types with simple key "type".
         """
-        enum_or_def = r"(\{|\<)(.*)(\}|\>)"
-        internal_type = None
-        # nested_type = None
+        enum_or_def = r"(\{|\<)(?P<inner_type>.*)(\}|\>)"
+        inner_type:str  = ""
         m = re.match(enum_or_def, type_str)
         if m:
-            # # Find the internal type. It might be inside nested-type syntax, but more likely
-            # # is a simple definition or enumeration.
-            # m_nested = re.match(r".*?\((.*)\)", m.group(2))
-            # if m_nested:
-            #     # Rare case of a nested specification e.g. 'ASHRAE205(RS_ID=RS0005)'
-            #     internal_type = m.group(2).split("(")[0]
-            #     nested_type = m_nested.group(1)
-            # else:
-            #     internal_type = m.group(2)
-            internal_type = m.group(2)
+            inner_type = m.group("inner_type")
         else:
-            internal_type = type_str
-        # Look through the references to assign a source to the type. 'key' is generally a
+            inner_type = type_str
+        # Look through the references to assign a scope to the type. 'location' is generally a
         # schema name; its value will be a list of matchable data object names
-        for key in self._refs:
-            if internal_type in self._refs[key]:
-                self.external_reference_sources.append(f"{snake_style(key)}")
-                return f"{snake_style(key)}_ns::{internal_type}"
-
+        for location in self._custom_datatypes_by_location:
+            if inner_type in self._custom_datatypes_by_location[location]:
+                self.scoped_innertype = (f"{snake_style(location)}", inner_type)
+                return "_ns::".join(self.scoped_innertype)
         try:
-            if "/" in type_str:
-                # e.g. "Numeric/Null"
-                return self._datatypes[type_str.split("/")[0]]
-            else:
-                return self._datatypes[type_str]
+            # e.g. "Numeric/Null" or "Numeric" both ok
+            self.scoped_innertype = ("", self._pod_datatypes_map[type_str.split("/")[0]])
+            return self.scoped_innertype[1]
         except KeyError:
             print("Type not processed:", type_str)
+        return(f"Type not processed: {type_str}")
 
-    def _get_simple_minmax(self, range_str, target_dict):
+    def _get_simple_minmax(self, range_str, target_dict) -> None:
         """Process Range into min and max fields."""
         if range_str is not None:
             ranges = range_str.split(",")
@@ -310,92 +298,99 @@ class DataElement(HeaderEntry):
 
 
 # -------------------------------------------------------------------------------------------------
-class DataIsSetElement(HeaderEntry):
-    def __init__(self, name, parent):
-        super().__init__(name, parent)
+@dataclass
+class DataElementIsSetFlag(HeaderEntry):
 
-    @property
-    def value(self):
+    def __str__(self):
         tab = "\t"
         return f"{self._level * tab}bool {self.name}_is_set;"
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class DataElementStaticMetainfo(HeaderEntry):
-    def __init__(self, name, parent, element, meta_key):
-        super().__init__(name, parent)
+    element: dict
+    metainfo_key: str
+
+    def __post_init__(self):
+        super().__post_init__()
         self._type_specifier = "const static"
         self.type = "std::string_view"
-        self.init_val = element.get(meta_key, "") if meta_key != "Name" else name
-        self.name = self.name + "_" + meta_key.lower()
+        self.init_val = self.element.get(self.metainfo_key, "") if self.metainfo_key != "Name" else self.name
+        self.name = self.name + "_" + self.metainfo_key.lower()
         self._closure = ";"
 
-    @property
-    def value(self):
+    def __str__(self):
         tab = "\t"
         return f"{self._level * tab}{self._type_specifier} {self.type} {self.name}{self._closure}"
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class InlineDependency(HeaderEntry):
+    type: str # HeaderEntry does not initialize this in __init__, but InlineDependency will
 
-    def __init__(self, name, parent, dependency_type):
-        super().__init__(name, parent)
+    def __post_init__(self):
+        super().__post_init__()
         self._type_specifier = "inline"
-        self.type = dependency_type
         self._closure = ";"
 
-    @property
-    def value(self):
+    def __str__(self):
         tab = "\t"
         return (
-            f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
+            f"{self._level * tab}{self._type_specifier} {self.type} {self.name}{self._closure}"
             "\n"
             f"{self._level * tab}void set_{self.name}({self.type} value);"
         )
 
 
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class FunctionalHeaderEntry(HeaderEntry):
-    def __init__(self, f_ret, f_name, f_args, name, parent):
-        super().__init__(name, parent)
-        self.fname = f_name
-        self.ret_type = f_ret
-        self.args = f_args
+    _f_ret: str
+    _f_name: str
+    _f_args: list[str]
+
+    def __post_init__(self):
+        super().__post_init__()
+        self.args = f"({', '.join(self._f_args)})"
         self._closure = ";"
 
-    @property
-    def value(self):
+    def __str__(self):
         tab = "\t"
-        return f"{self._level * tab}{' '.join([self.ret_type, self.fname])}{self.args}{self._closure}"
-
+        return f"{self._level * tab}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
 # -------------------------------------------------------------------------------------------------
-class MemberFunctionOverride(FunctionalHeaderEntry):
-    def __init__(self, f_ret, f_name, f_args, name, parent):
-        super().__init__(f_ret, f_name, f_args, name, parent)
+@dataclass
+class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
+    def __post_init__(self):
+        super().__post_init__()
         self._closure = " override;"
 
-
 # -------------------------------------------------------------------------------------------------
+@dataclass
 class ObjectSerializationDeclaration(FunctionalHeaderEntry):
-    def __init__(self, name, parent):
-        super().__init__("void", "from_json", f"(const nlohmann::json& j, {name}& x)", name, parent)
+    _f_ret: str = field(init=False)
+    _f_name: str = field(init=False)
+    _f_args: list[str] = field(init=False)
 
+    def __post_init__(self):
+        self._f_ret = "void"
+        self._f_name = "from_json"
+        self._f_args = ["const nlohmann::json& j", f"{self.name}& x"]
+        super().__post_init__()
 
 # -------------------------------------------------------------------------------------------------
-class InitializeFunction(FunctionalHeaderEntry):
-
-    def __init__(self, name, parent):
-        super().__init__("virtual void", "initialize", "(const nlohmann::json& j)", name, parent)
-
-
-# -------------------------------------------------------------------------------------------------
+@dataclass
 class VirtualDestructor(FunctionalHeaderEntry):
+    _explicit_definition: Optional[str] = None
 
-    def __init__(self, f_name, name, parent):
-        super().__init__("virtual", f"~{f_name}", "() = default", name, parent)
-
+    def __post_init__(self):
+        self._closure = f" = {self._explicit_definition};" if self._explicit_definition else ";"
+        self._f_ret = "virtual"
+        self._f_name = f"~{self._f_name}"
+        self._f_args = []
+        super().__post_init__()
 
 # # -------------------------------------------------------------------------------------------------
 # class CalculatePerformanceOverload(FunctionalHeaderEntry):

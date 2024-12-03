@@ -2,9 +2,9 @@ from .header_entries import (
     HeaderEntry,
     Struct,
     DataElement,
-    DataIsSetElement,
+    DataElementIsSetFlag,
     DataElementStaticMetainfo,
-    MemberFunctionOverride,
+    MemberFunctionOverrideDeclaration,
     ObjectSerializationDeclaration,
     InlineDependency,
 )
@@ -105,12 +105,12 @@ class FreeFunctionDefinition(ImplementationEntry):
 
 # -------------------------------------------------------------------------------------------------
 class MemberFunctionDefinition(ImplementationEntry):
-    def __init__(self, header_entry: MemberFunctionOverride, parent: ImplementationEntry = None):
+    def __init__(self, header_entry: MemberFunctionOverrideDeclaration, parent: ImplementationEntry = None):
         super().__init__(None, parent)
         args = header_entry.args
-        if hasattr(header_entry, "args_as_list"):
-            args = "(" + ", ".join([a.split("=")[0] for a in header_entry.args_as_list]) + ")"
-        self._func = f"{header_entry.ret_type} {header_entry.parent.name}::{header_entry.fname}{args}"
+        if hasattr(header_entry, "_f_args"):
+            args = "(" + ", ".join([a.split("=")[0] for a in header_entry._f_args]) + ")"
+        self._func = f"{header_entry._f_ret} {header_entry.parent.name}::{header_entry._f_name}{args}"
 
     @property
     def value(self):
@@ -350,11 +350,11 @@ class CPPTranslator:
             if isinstance(entry, InlineDependency):
                 DependencyInitialization(entry, self._namespace)
             # Initialize and Populate overrides (Currently the only Member_function_override is the Initialize override)
-            if isinstance(entry, MemberFunctionOverride):
+            if isinstance(entry, MemberFunctionOverrideDeclaration):
                 # Create the override function definition (header) using the declaration's signature
                 m = MemberFunctionDefinition(entry, self._namespace)
                 # Dirty hack workaround for Name() function
-                if "Name" in entry.fname:
+                if "Name" in entry._f_name:
                     SimpleReturnProperty(entry.parent.name, m)
                 else:
                     # In function body, choose element-wise ops based on the superclass
