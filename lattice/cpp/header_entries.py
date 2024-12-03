@@ -5,6 +5,7 @@ from typing import Callable, Optional
 from pathlib import Path
 from dataclasses import dataclass, field
 
+
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
@@ -30,13 +31,14 @@ class HeaderEntryFormat:
     _closure: str = field(init=False, default="}")
     _level: int = field(init=False, default=0)
 
+
 # -------------------------------------------------------------------------------------------------
 @dataclass
 class HeaderEntry(HeaderEntryFormat):
     name: str
     parent: Optional[HeaderEntry]
-    #superclass: str = field(kw_only=True)
-    type: str = field(init=False, default="namespace") # TODO: kw_only=True?
+    # superclass: str = field(kw_only=True)
+    type: str = field(init=False, default="namespace")  # TODO: kw_only=True?
     child_entries: list[HeaderEntry] = field(init=False, default_factory=list)
 
     def __post_init__(self):
@@ -47,7 +49,7 @@ class HeaderEntry(HeaderEntryFormat):
     def _add_child_entry(self, child: HeaderEntry) -> None:
         self.child_entries.append(child)
 
-    def _get_level(self, level: int=0) -> int:
+    def _get_level(self, level: int = 0) -> int:
         if self.parent:
             return self.parent._get_level(level + 1)
         else:
@@ -138,6 +140,7 @@ class Enumeration(HeaderEntry):
 @dataclass
 class EnumSerializationDeclaration(HeaderEntry):
     """Provides shortcut marcros that populate an enumeration from json."""
+
     _enumerants: dict
 
     def __post_init__(self):
@@ -150,7 +153,7 @@ class EnumSerializationDeclaration(HeaderEntry):
         enums_with_placeholder = ["UNKNOWN"] + (list(self._enumerants.keys()))
         tab = "\t"
         entry = f"{self._level * tab}{self.type} {self._opener}\n"
-        entry += ",\n".join([f"{(self._level + 1) * tab}{{{self.name}::{e}, \"{e}\"}}" for e in enums_with_placeholder])
+        entry += ",\n".join([f'{(self._level + 1) * tab}{{{self.name}::{e}, "{e}"}}' for e in enums_with_placeholder])
         # for e in enums_with_placeholder:
         #     entry += (self._level + 1) * "\t"
         #     mapping = "{" + self.name + "::" + e + ', "' + e + '"}'
@@ -162,7 +165,7 @@ class EnumSerializationDeclaration(HeaderEntry):
 # -------------------------------------------------------------------------------------------------
 @dataclass
 class Struct(HeaderEntry):
-    superclass:str = ""
+    superclass: str = ""
 
     def __post_init__(self):
         super().__post_init__()
@@ -192,9 +195,9 @@ class DataElement(HeaderEntry):
     def __post_init__(self):
         super().__post_init__()
         self._closure = ";"
-        self.is_required: bool = self._element_attributes.get("Required", False) # used externally
-        self.scoped_innertype: tuple[str,str] = ("", "")
-        #self.external_reference_sources: list = []
+        self.is_required: bool = self._element_attributes.get("Required", False)  # used externally
+        self.scoped_innertype: tuple[str, str] = ("", "")
+        # self.external_reference_sources: list = []
 
         self._create_type_entry(self._element_attributes, self._type_finder)
 
@@ -227,11 +230,16 @@ class DataElement(HeaderEntry):
                         )
                     else:
                         selection_key_type = ""
-                    selection_types = [self._get_scoped_inner_type(t.strip()) for t in m.group("comma_separated_selection_types").split(",")]
+                    selection_types = [
+                        self._get_scoped_inner_type(t.strip())
+                        for t in m.group("comma_separated_selection_types").split(",")
+                    ]
                     m_opt = re.match(r".*\((?P<comma_separated_constraints>.*)\)", element_attributes["Constraints"])
                     if not m_opt:
                         raise TypeError
-                    constraints = [(selection_key_type + s.strip()) for s in m_opt.group("comma_separated_constraints").split(",")]
+                    constraints = [
+                        (selection_key_type + s.strip()) for s in m_opt.group("comma_separated_constraints").split(",")
+                    ]
 
                     # the _selector dictionary would have a form like:
                     # { operation_speed_control_type : { CONTINUOUS : PerformanceMapContinuous, DISCRETE : PerformanceMapDiscrete} }
@@ -254,7 +262,7 @@ class DataElement(HeaderEntry):
         then default to fundamental types with simple key "type".
         """
         enum_or_def = r"(\{|\<)(?P<inner_type>.*)(\}|\>)"
-        inner_type:str  = ""
+        inner_type: str = ""
         m = re.match(enum_or_def, type_str)
         if m:
             inner_type = m.group("inner_type")
@@ -272,7 +280,7 @@ class DataElement(HeaderEntry):
             return self.scoped_innertype[1]
         except KeyError:
             print("Type not processed:", type_str)
-        return(f"Type not processed: {type_str}")
+        return f"Type not processed: {type_str}"
 
     def _get_simple_minmax(self, range_str, target_dict) -> None:
         """Process Range into min and max fields."""
@@ -328,7 +336,7 @@ class DataElementStaticMetainfo(HeaderEntry):
 # -------------------------------------------------------------------------------------------------
 @dataclass
 class InlineDependency(HeaderEntry):
-    type: str # HeaderEntry does not initialize this in __init__, but InlineDependency will
+    type: str  # HeaderEntry does not initialize this in __init__, but InlineDependency will
 
     def __post_init__(self):
         super().__post_init__()
@@ -360,12 +368,14 @@ class FunctionalHeaderEntry(HeaderEntry):
         tab = "\t"
         return f"{self._level * tab}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
+
 # -------------------------------------------------------------------------------------------------
 @dataclass
 class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
     def __post_init__(self):
         super().__post_init__()
         self._closure = " override;"
+
 
 # -------------------------------------------------------------------------------------------------
 @dataclass
@@ -380,6 +390,7 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
         self._f_args = ["const nlohmann::json& j", f"{self.name}& x"]
         super().__post_init__()
 
+
 # -------------------------------------------------------------------------------------------------
 @dataclass
 class VirtualDestructor(FunctionalHeaderEntry):
@@ -391,6 +402,7 @@ class VirtualDestructor(FunctionalHeaderEntry):
         self._f_name = f"~{self._f_name}"
         self._f_args = []
         super().__post_init__()
+
 
 # # -------------------------------------------------------------------------------------------------
 # class CalculatePerformanceOverload(FunctionalHeaderEntry):
