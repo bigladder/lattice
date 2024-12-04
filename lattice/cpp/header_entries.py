@@ -85,6 +85,7 @@ class HeaderEntry(HeaderEntryFormat):
         entry += f"\n{self._level * tab}{self._closure}"
         return entry
 
+
 # -------------------------------------------------------------------------------------------------
 @dataclass
 class Typedef(HeaderEntry):
