@@ -2,19 +2,21 @@
 
 import re
 import warnings
+import os
+import subprocess
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Union
 from jsonschema.exceptions import RefResolutionError
 
-from lattice.docs.process_template import process_template
 from .file_io import check_dir, make_dir, load, dump, get_file_basename, get_base_stem
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import MkDocsWeb, DocumentFile
-from .header_entries import HeaderTranslator
-from .cpp_entries import CPPTranslator
-from lattice.cpp.generate_support_headers import generate_support_headers, support_header_pathnames
+from lattice.docs.process_template import process_template
+from lattice.cpp.header_translator import HeaderTranslator
+from lattice.cpp.cpp_entries import CPPTranslator
+import lattice.cpp.support_files as support
 
 
 class SchemaFile:  # pylint:disable=R0902
@@ -103,19 +105,19 @@ class SchemaFile:  # pylint:disable=R0902
         self._json_schema_path = Path(json_schema_path).absolute()
 
     @property
-    def cpp_header_path(self):  # pylint:disable=C0116
+    def cpp_header_file_path(self):  # pylint:disable=C0116
         return self._cpp_header_path
 
-    @cpp_header_path.setter
-    def cpp_header_path(self, value):
+    @cpp_header_file_path.setter
+    def cpp_header_file_path(self, value):
         self._cpp_header_path = Path(value).absolute()
 
     @property
-    def cpp_source_path(self):  # pylint:disable=C0116
+    def cpp_source_file_path(self):  # pylint:disable=C0116
         return self._cpp_source_path
 
-    @cpp_source_path.setter
-    def cpp_source_path(self, value):
+    @cpp_source_file_path.setter
+    def cpp_source_file_path(self, value):
         self._cpp_source_path = Path(value).absolute()
 
 
@@ -328,23 +330,42 @@ class Lattice:  # pylint:disable=R0902
         """Create directories for generated CPP source"""
         self.cpp_output_dir = Path(self.build_directory) / "cpp"
         make_dir(self.cpp_output_dir)
+        include_dir = make_dir(self.cpp_output_dir / "include")
+        self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
+        self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.h"
-            schema.cpp_source_path = self.cpp_output_dir / f"{schema.file_base_name.lower()}.cpp"
+            schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.file_base_name.lower()}.h"
+            schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.file_base_name.lower()}.cpp"
 
+    def setup_cpp_repository(self, submodules: list[str]):
+        """Initialize the CPP output directory as a Git repo."""
+        cwd = os.getcwd()
+        os.chdir(self.cpp_output_dir)
+        subprocess.run(["git", "init"], check=True)
+        vendor_dir = make_dir("vendor")
+        os.chdir(vendor_dir)
+        # subprocess.run(["git", "remote", "add", "-f -t", "main", "--no-tags", "origin_atheneum", "https://github.com/bigladder/atheneum.git"])
+        try:
+            for submodule in submodules:
+                subprocess.run(["git", "submodule", "add", submodule], check=False)
+        finally:
+            os.chdir(cwd)
+        os.chdir(cwd)
+
+    @property
     def cpp_support_headers(self) -> list[Path]:
-        return support_header_pathnames(self.cpp_output_dir)
+        """Wrap list of template-generated headers."""
+        return support.support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_headers(self):
-        """Generate CPP header and source files"""
+    def generate_cpp_project(self, submodules: list[str]):
+        """Generate CPP header files, source files, and build support files."""
         h = HeaderTranslator()
         c = CPPTranslator()
-        root_groups = []
         for schema in self.cpp_schemas:
-            h.translate(schema.path, self.root_directory.name, self.schema_directory_path)
-            if h._root_data_group is not None:
-                root_groups.append(h._root_data_group)
-            dump(str(h), schema.cpp_header_path)
+            h.translate(schema.path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name)
+            dump(str(h), schema.cpp_header_file_path)
             c.translate(self.root_directory.name, h)
-            dump(str(c), schema.cpp_source_path)
-        generate_support_headers(self.root_directory.name, root_groups, self.cpp_output_dir)
+            dump(str(c), schema.cpp_source_file_path)
+        self.setup_cpp_repository(submodules)
+        support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
+        support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
