@@ -10,18 +10,18 @@ def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
 
-data_group_plugins: dict[str, Callable] = {}
+data_group_extensions: dict[str, Callable] = {}
 
 
 def register_data_group_operation(data_group_template_name: str, header_entry: Callable):
-    data_group_plugins[data_group_template_name] = header_entry
+    data_group_extensions[data_group_template_name] = header_entry
 
 
-data_element_plugins: dict[str, Callable] = {}
+data_element_extensions: dict[str, Callable] = {}
 
 
 def register_data_element_operation(data_group_template_name: str, header_entry: Callable):
-    data_element_plugins[data_group_template_name] = header_entry
+    data_element_extensions[data_group_template_name] = header_entry
 
 
 # -------------------------------------------------------------------------------------------------
@@ -37,7 +37,6 @@ class HeaderEntryFormat:
 class HeaderEntry(HeaderEntryFormat):
     name: str
     parent: Optional[HeaderEntry]
-    # superclass: str = field(kw_only=True)
     type: str = field(init=False, default="namespace")  # TODO: kw_only=True?
     child_entries: list[HeaderEntry] = field(init=False, default_factory=list)
 
@@ -79,16 +78,12 @@ class HeaderEntry(HeaderEntryFormat):
                 lt = self._less_than(c)
         return lt
 
-    def __gt__(self, other):
-        return other < self
-
     def __str__(self):
         tab = "\t"
         entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
         entry += "\n".join([str(c) for c in self.child_entries])
         entry += f"\n{self._level * tab}{self._closure}"
         return entry
-
 
 # -------------------------------------------------------------------------------------------------
 @dataclass

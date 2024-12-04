@@ -102,8 +102,8 @@ class HeaderTranslator:
                                           "Description")
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
             data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
-            if data_group_template in data_group_plugins:
-                s = data_group_plugins[data_group_template](
+            if data_group_template in data_group_extensions:
+                s = data_group_extensions[data_group_template](
                     base_level_tag,
                     self._namespace,
                     superclass=data_group_template
@@ -119,8 +119,9 @@ class HeaderTranslator:
             self._add_function_overrides(s, output_path, data_group_template)
 
             # Process plugin code for the entire element group, if there is any
-            if data_group_template in data_element_plugins:
-                e = data_element_plugins[data_group_template](
+            if data_group_template in data_element_extensions:
+                e = data_element_extensions[data_group_template](
+                    data_group_template,
                     s,
                     self._contents[base_level_tag]["Data Elements"]
                     )

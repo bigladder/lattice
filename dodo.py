@@ -1,5 +1,6 @@
-from lattice import Lattice
 from pathlib import Path
+from lattice import Lattice
+from lattice.cpp.header_entry_extension_loader import load_extensions
 
 from doit.tools import create_folder
 
@@ -110,7 +111,7 @@ def task_generate_cpp_code():
             "targets": [schema.cpp_header_file_path for schema in example.cpp_schemas]
             + [schema.cpp_source_file_path for schema in example.cpp_schemas]
             + example.cpp_support_headers + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
-            "actions": [(example.generate_cpp_project, [["https://github.com/nlohmann/json.git", "https://github.com/bigladder/courier.git", "https://github.com/fmtlib/fmt.git"]])],
+            "actions": [(load_extensions, [Path(example.root_directory, "cpp", "extensions")]), (example.generate_cpp_project, [["https://github.com/nlohmann/json.git", "https://github.com/bigladder/courier.git", "https://github.com/fmtlib/fmt.git"]])],
             "clean": True,
         }
 

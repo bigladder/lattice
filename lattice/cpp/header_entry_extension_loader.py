@@ -23,8 +23,9 @@ def import_module(path: Path) -> ModuleInterface:
         raise ModuleNotFoundError
 
 
-def load_plugins(plugins: Path) -> None:
+def load_extensions(from_path: Path) -> None:
     """Loads the plugins defined in the plugins list."""
-    for plugin_file in [x for x in plugins.iterdir() if x.suffix == ".py"]:
-        plugin = import_module(plugin_file)
-        plugin.register()
+    if from_path.is_dir():
+        for plugin_file in [x for x in from_path.iterdir() if x.suffix == ".py"]:
+            plugin = import_module(plugin_file)
+            plugin.register()
