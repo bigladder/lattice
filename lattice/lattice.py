@@ -14,111 +14,10 @@ from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import MkDocsWeb, DocumentFile
 from lattice.docs.process_template import process_template
-from lattice.cpp.header_translator import HeaderTranslator
-from lattice.cpp.cpp_entries import CPPTranslator
+from .cpp.header_translator import HeaderTranslator
+from .cpp.cpp_entries import CPPTranslator
 import lattice.cpp.support_files as support
-
-
-class SchemaFile:  # pylint:disable=R0902
-    """Parse the components of a schema file."""
-
-    def __init__(self, path: Path) -> None:
-        """Open and parse source schema"""
-
-        self.path = Path(path).absolute()
-        self.file_base_name = get_base_stem(self.path)
-        self.schema_type = self.file_base_name  # Overwritten if it is actually specified
-
-        self._content: dict = load(self.path)
-        self._meta_schema_path: Path = None
-        self._json_schema_path: Path = None
-        self._root_data_group: str = None
-
-        # Check for required content
-        if "Schema" not in self._content:
-            raise Exception(f'Required "Schema" object not found in schema file, "{self.path}".')
-
-        self.schema_author = None
-        if "Root Data Group" in self._content["Schema"]:
-            self._root_data_group = self._content["Schema"]["Root Data Group"]
-            self.schema_type = self._root_data_group
-            if self._root_data_group in self._content:
-                # Get metadata
-                if "Data Elements" not in self._content[self._root_data_group]:
-                    raise Exception(f'Root Data Group, "{self._root_data_group}" ' 'does not contain "Data Elements".')
-                if "metadata" in self._content[self._root_data_group]["Data Elements"]:
-                    self._get_schema_constraints()
-                else:
-                    pass  # Warning?
-            else:
-                raise Exception(
-                    f'Root Data Group, "{self._root_data_group}", ' f'not found in schema file, "{self.path}"'
-                )
-
-            # TODO: Version? # pylint: disable=fixme
-
-    def _get_schema_constraints(self):
-        """Populate instance variables from schema constraints"""
-
-        constraints = self._content[self._root_data_group]["Data Elements"]["metadata"].get("Constraints")
-        data_element_pattern = "([a-z]+)(_([a-z]|[0-9])+)*"
-        enumerator_pattern = "([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*"
-        constraint_pattern = re.compile(
-            f"^(?P<data_element>{data_element_pattern})=(?P<enumerator>{enumerator_pattern})$"
-        )
-        if not isinstance(constraints, list):
-            constraints = [constraints]
-        for constraint in [c for c in constraints if c]:
-            match = constraint_pattern.match(constraint)
-            if match:
-                if match.group(1) == "schema_author":
-                    self.schema_author = match.group(5)
-                else:
-                    pass  # Warning?
-
-                if match.group(1) == "schema":
-                    self.schema_type = match.group(5)
-                else:
-                    pass  # Warning?
-
-                if match.group("data_element") == "schema":
-                    self.schema_type = match.group("enumerator")
-                else:
-                    pass  # Warning?
-
-    @property
-    def meta_schema_path(self) -> Path:
-        """Path to this SchemaFile's validating metaschema"""
-        return self._meta_schema_path
-
-    @meta_schema_path.setter
-    def meta_schema_path(self, meta_schema_path):
-        self._meta_schema_path = Path(meta_schema_path).absolute()
-
-    @property
-    def json_schema_path(self) -> Path:
-        """Path to this SchemaFile as translated JSON"""
-        return self._json_schema_path
-
-    @json_schema_path.setter
-    def json_schema_path(self, json_schema_path):
-        self._json_schema_path = Path(json_schema_path).absolute()
-
-    @property
-    def cpp_header_file_path(self):  # pylint:disable=C0116
-        return self._cpp_header_path
-
-    @cpp_header_file_path.setter
-    def cpp_header_file_path(self, value):
-        self._cpp_header_path = Path(value).absolute()
-
-    @property
-    def cpp_source_file_path(self):  # pylint:disable=C0116
-        return self._cpp_source_path
-
-    @cpp_source_file_path.setter
-    def cpp_source_file_path(self, value):
-        self._cpp_source_path = Path(value).absolute()
+from lattice.schema import Schema
 
 
 class Lattice:  # pylint:disable=R0902
@@ -130,7 +29,7 @@ class Lattice:  # pylint:disable=R0902
         self,
         root_directory: Path = Path.cwd(),
         build_directory: Union[Path, None] = None,
-        build_output_directory_name: Path = Path(".lattice"),
+        build_output_directory_name: Union[Path, None] = Path(".lattice"),
         build_validation: bool = True,
     ) -> None:
         """Set up file structure"""
@@ -184,10 +83,10 @@ class Lattice:  # pylint:disable=R0902
             self.schema_directory_path = self.root_directory
 
         # Collect list of schema files
-        self.schemas: List[SchemaFile] = []
+        self.schemas: List[Schema] = []
         for file_name in sorted(list(self.schema_directory_path.iterdir())):
             if fnmatch(file_name, "*.schema.yaml") or fnmatch(file_name, "*.schema.yml"):
-                self.schemas.append(SchemaFile(file_name))
+                self.schemas.append(Schema(file_name))
 
         if len(self.schemas) == 0:
             raise Exception(f'No schemas found in "{self.schema_directory_path}".')
@@ -198,34 +97,34 @@ class Lattice:  # pylint:disable=R0902
         self.meta_schema_directory = Path(self.build_directory) / "meta_schema"
         make_dir(self.meta_schema_directory)
         for schema in self.schemas:
-            meta_schema_path = self.meta_schema_directory / f"{schema.file_base_name}.meta.schema.json"
+            meta_schema_path = self.meta_schema_directory / f"{schema.name}.meta.schema.json"
             schema.meta_schema_path = meta_schema_path
 
     def generate_meta_schemas(self):
         """Generate metaschemas"""
 
         for schema in self.schemas:
-            generate_meta_schema(Path(schema.meta_schema_path), Path(schema.path))
+            generate_meta_schema(Path(schema.meta_schema_path), Path(schema.file_path))
 
     def validate_schemas(self):
         """Validate source schema using metaschema file"""
 
         for schema in self.schemas:
-            meta_validate_file(Path(schema.path), Path(schema.meta_schema_path))
+            meta_validate_file(Path(schema.file_path), Path(schema.meta_schema_path))
 
     def setup_json_schemas(self):
         """Set up json_schema subdirectory"""
         self.json_schema_directory = Path(self.build_directory) / "json_schema"
         make_dir(self.json_schema_directory)
         for schema in self.schemas:
-            json_schema_path = self.json_schema_directory / f"{schema.file_base_name}.schema.json"
+            json_schema_path = self.json_schema_directory / f"{schema.name}.schema.json"
             schema.json_schema_path = json_schema_path
 
     def generate_json_schemas(self):
         """Generate JSON schemas"""
 
         for schema in self.schemas:
-            generate_json_schema(schema.path, schema.json_schema_path)
+            generate_json_schema(schema.file_path, schema.json_schema_path)
 
     def validate_file(self, input_path, schema_type=None):
         """
@@ -237,8 +136,8 @@ class Lattice:  # pylint:disable=R0902
         instance = load(input_path)
         if schema_type is None:
             if "metadata" in instance:
-                if "schema" in instance["metadata"]:
-                    schema_type = instance["metadata"]["schema"]
+                if "schema_name" in instance["metadata"]:
+                    schema_type = instance["metadata"]["schema_name"]
 
         if schema_type is None:
             if len(self.schemas) > 1:
@@ -251,7 +150,7 @@ class Lattice:  # pylint:disable=R0902
         else:
             # Find corresponding schema
             for schema in self.schemas:
-                if schema.schema_type == schema_type:
+                if schema.schema_name == schema_type:
                     try:
                         validate_file(input_path, schema.json_schema_path)
                         postvalidate_file(input_path, schema.json_schema_path)
@@ -324,7 +223,7 @@ class Lattice:  # pylint:disable=R0902
 
     def collect_cpp_schemas(self):
         """Collect source schemas into list of SchemaFiles"""
-        self.cpp_schemas = self.schemas + [SchemaFile(Path(__file__).with_name("core.schema.yaml"))]
+        self.cpp_schemas = self.schemas + [Schema(Path(__file__).with_name("core.schema.yaml"))]
 
     def setup_cpp_source_files(self):
         """Create directories for generated CPP source"""
@@ -334,8 +233,8 @@ class Lattice:  # pylint:disable=R0902
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
         self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.file_base_name.lower()}.h"
-            schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.file_base_name.lower()}.cpp"
+            schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.name.lower()}.h"
+            schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.name.lower()}.cpp"
 
     def setup_cpp_repository(self, submodules: list[str]):
         """Initialize the CPP output directory as a Git repo."""
@@ -362,7 +261,7 @@ class Lattice:  # pylint:disable=R0902
         h = HeaderTranslator()
         c = CPPTranslator()
         for schema in self.cpp_schemas:
-            h.translate(schema.path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name)
+            h.translate(schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name)
             dump(str(h), schema.cpp_header_file_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_file_path)

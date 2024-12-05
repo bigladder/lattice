@@ -103,14 +103,18 @@ GridVariables:
   Data Elements:
     shaft_power:
       Description: "Delivered rotational shaft power"
-      Data Type: "[Numeric][1..]"
-      Constraints: ">=0.0"
+      Data Type: "[Numeric]"
+      Constraints:
+        - ">=0.0"
+        - "[1..]"
       Units: "W"
       Required: True
     shaft_rotational_speed:
       Description: "Rotational speed of shaft"
-      Data Type: "[Numeric][1..]"
-      Constraints: ">=0.0"
+      Data Type: "[Numeric]"
+      Constraints:
+        - ">=0.0"
+        - "[1..]"
       Units: "rev/s"
       Required: True
 
@@ -120,14 +124,20 @@ LookupVariables:
   Data Elements:
     efficiency:
       Description: "Efficiency of motor"
-      Data Type: "[Numeric][1..]"
-      Constraints: [">=0.0", "<=1.0"]
+      Data Type: "[Numeric]"
+      Constraints:
+        - ">=0.0"
+        - "<=1.0"
+        - "[1..]"
       Units: "-"
       Notes: "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
       Required: True
     power_factor:
       Description: "Power factor of the motor"
-      Data Type: "[Numeric][1..]"
-      Constraints: [">=0.0", "<=1.0"]
+      Data Type: "[Numeric]"
+      Constraints:
+        - ">=0.0"
+        - "<=1.0"
+        - "[1..]"
       Units: "-"
       Required: True

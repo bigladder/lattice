@@ -1,7 +1,7 @@
 from __future__ import (
     annotations,
 )  # Needed for type hinting classes that are not yet fully defined
-from typing import List
+from typing import List, Union, Type, Dict, Any
 import pathlib
 import re
 
@@ -18,14 +18,14 @@ class RegularExpressionPattern:
     def __str__(self):
         return self.pattern.pattern
 
-    def match(self, test_string: str, anchored: bool = False):
+    def match(self, test_string: str, anchored: bool = False) -> Union[re.Match[str], None]:
         return self.pattern.match(test_string) if not anchored else self.anchored_pattern.match(test_string)
 
     def anchored(self):
         return self.anchored_pattern.pattern
 
     @staticmethod
-    def anchor(pattern_text: str):
+    def anchor(pattern_text: str) -> str:
         return f"^{pattern_text}$"
 
 
@@ -37,7 +37,10 @@ _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)
 
 
 class DataType:
-    def __init__(self, text, parent_data_element: DataElement):
+    pattern: RegularExpressionPattern
+    value_pattern: RegularExpressionPattern
+
+    def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
         self.parent_data_element = parent_data_element
 
@@ -78,16 +81,14 @@ class PatternType(DataType):
     value_pattern = RegularExpressionPattern('".*"')
 
 
-class ArrayType(DataType):
-    pattern = RegularExpressionPattern(r"\[(\S+)]")
-
-
 class DataGroupType(DataType):
     pattern = RegularExpressionPattern(rf"\{{({_type_base_names})\}}")
 
     def __init__(self, text, parent_data_element):
         super().__init__(text, parent_data_element)
-        self.data_group_name = self.pattern.match(text).group(1)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.data_group_name = match.group(1)
         self.data_group = None  # only valid once resolve() is called
 
     def resolve(self):
@@ -103,6 +104,14 @@ class AlternativeType(DataType):
     pattern = RegularExpressionPattern(r"\(([^\s,]+)((, ?([^\s,]+))+)\)")
 
 
+class ReferenceType(DataType):
+    pattern = RegularExpressionPattern(rf":{_type_base_names}:")
+
+
+class ArrayType(DataType):
+    pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
+
+
 _value_pattern = RegularExpressionPattern(
     f"(({NumericType.value_pattern})|"
     f"({StringType.value_pattern})|"
@@ -113,6 +122,8 @@ _value_pattern = RegularExpressionPattern(
 
 # Constraints
 class Constraint:
+    pattern: RegularExpressionPattern
+
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
         self.parent_data_element = parent_data_element
@@ -154,6 +165,7 @@ class DataElementValueConstraint(Constraint):
         super().__init__(text, parent_data_element)
         self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
         match = self.pattern.match(self.text)
+        assert match is not None
         self.data_element_name = match.group(1)  # TODO: Named groups?
         self.data_element_value = match.group(5)  # TODO: Named groups?
 
@@ -162,7 +174,7 @@ class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]")
 
 
-_constraint_list: List[Constraint] = [
+_constraint_list: List[Type[Constraint]] = [
     RangeConstraint,
     MultipleConstraint,
     SetConstraint,
@@ -173,19 +185,18 @@ _constraint_list: List[Constraint] = [
 ]
 
 
-def _constraint_factory(input: str, parent_data_element: DataElement) -> Constraint:
+def _constraint_factory(text: str, parent_data_element: DataElement) -> Constraint:
     number_of_matches = 0
-    match_type = None
     for constraint in _constraint_list:
-        if constraint.pattern.match(input):
+        if constraint.pattern.match(text):
             match_type = constraint
             number_of_matches += 1
 
     if number_of_matches == 1:
-        return match_type(input, parent_data_element)
+        return match_type(text, parent_data_element)
     if number_of_matches == 0:
-        raise Exception(f"No matching constraint for {input}.")
-    raise Exception(f"Multiple matches found for constraint, {input}")
+        raise Exception(f"No matching constraint for {text}.")
+    raise Exception(f"Multiple matches found for constraint, {text}")
 
 
 # Required
@@ -198,7 +209,8 @@ class DataElement:
         self.name = name
         self.dictionary = data_element_dictionary
         self.parent_data_group = parent_data_group
-        self.constraints = []
+        self.constraints: List[Constraint] = []
+        self.is_id = False
         for attribute in self.dictionary:
             if attribute == "Description":
                 self.description = self.dictionary[attribute]
@@ -214,6 +226,16 @@ class DataElement:
                 self.required = self.dictionary[attribute]
             elif attribute == "Notes":
                 self.notes = self.dictionary[attribute]
+            elif attribute == "ID":
+                self.is_id = self.dictionary[attribute]
+                if self.is_id:
+                    if self.parent_data_group.id_data_element is None:
+                        self.parent_data_group.id_data_element = self
+                    else:
+                        raise RuntimeError(
+                            f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}': '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
+                        )
+
             else:
                 raise Exception(
                     f'Unrecognized attribute, "{attribute}".'
@@ -222,7 +244,7 @@ class DataElement:
                     f"Data Element={self.name}"
                 )
 
-    def set_constraints(self, constraints_input):
+    def set_constraints(self, constraints_input: Union[str, List[str]]) -> None:
         if not isinstance(constraints_input, list):
             constraints_input = [constraints_input]
 
@@ -245,7 +267,7 @@ class CommonStringType:
         self.name = name
         self.dictionary = string_type_dictionary
         self.parent_schema = parent_schema
-        self.value_pattern = self.dictionary["JSON Schema Pattern"]
+        self.value_pattern = self.dictionary["Regular Expression Pattern"]
 
         # Make new DataType class
         def init_method(self, text, parent_data_element):
@@ -265,11 +287,12 @@ class CommonStringType:
 
 
 class DataGroup:
-    def __init__(self, name: str, data_group_dictionary, parent_schema: Schema):
+    def __init__(self, name: str, data_group_dictionary: dict, parent_schema: Schema):
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
         self.data_elements = {}
+        self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
         for data_element in self.dictionary["Data Elements"]:
             self.data_elements[data_element] = DataElement(
                 data_element, self.dictionary["Data Elements"][data_element], self
@@ -283,14 +306,14 @@ class DataGroup:
 class Enumerator:
     pattern = EnumerationType.value_pattern
 
-    def __init__(self, name, enumerator_dictionary, parent_enumeration: Enumeration) -> None:
+    def __init__(self, name: str, enumerator_dictionary: dict, parent_enumeration: Enumeration):
         self.name = name
         self.dictionary = enumerator_dictionary
         self.parent_enumeration = parent_enumeration
 
 
 class Enumeration:
-    def __init__(self, name, enumeration_dictionary, parent_schema: Schema):
+    def __init__(self, name: str, enumeration_dictionary: dict, parent_schema: Schema):
         self.name = name
         self.dictionary = enumeration_dictionary
         self.parent_schema = parent_schema
@@ -329,8 +352,8 @@ class SchemaPatterns:
 
         regex_base_types = core_types["Data Type"]
 
-        base_types = "|".join(regex_base_types)
-        base_types = RegularExpressionPattern(f"({base_types})")
+        base_types_string = "|".join(regex_base_types)
+        base_types = RegularExpressionPattern(f"({base_types_string})")
 
         string_types = core_types["String Type"]
         if schema:
@@ -339,39 +362,41 @@ class SchemaPatterns:
             if "String Type" in schema_types:
                 string_types += ["String Type"]
 
-        re_string_types = "|".join(string_types)
-        re_string_types = RegularExpressionPattern(f"({re_string_types})")
+        re_string_types_string = "|".join(string_types)
+        re_string_types = RegularExpressionPattern(f"({re_string_types_string})")
 
         self.data_group_types = DataGroupType.pattern
         self.enumeration_types = EnumerationType.pattern
-        single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types})"
+        references = ReferenceType.pattern
+        single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types}|{references})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
-        arrays = rf"\[({single_type})\](\[\d*\.*\d*\])?"
+        arrays = ArrayType.pattern
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
         self.values = RegularExpressionPattern(
-            f"(({self.numeric})|" f"({self.string})|" f"({self.enumerator})|" f"({self.boolean}))"
+            f"(({self.numeric})|({self.string})|({self.enumerator})|({self.boolean}))"
         )
 
         # Constraints
-        alpha_array = "([A-Z]{[1-9]+})"
-        numeric_array = "([0-9]{[1-9]+})"
         self.range_constraint = RangeConstraint.pattern
         self.multiple_constraint = MultipleConstraint.pattern
         self.data_element_value_constraint = DataElementValueConstraint.pattern
         sets = SetConstraint.pattern
         reference_scope = f":{_type_base_names}:"
         self.selector_constraint = SelectorConstraint.pattern
+        array_limits = ArrayLengthLimitsConstraint.pattern
+        string_patterns = StringPatternConstraint.pattern
 
         self.constraints = RegularExpressionPattern(
-            f"({alpha_array}|{numeric_array}|{self.range_constraint})|"  # pylint:disable=C0301
+            f"({self.range_constraint})|"  # pylint:disable=C0301
             f"({self.multiple_constraint})|"
             f"({sets})|"
             f"({self.data_element_value_constraint})|"
             f"({reference_scope})|"
             f"({self.selector_constraint})|"
-            f"({StringPatternConstraint.pattern})"
+            f"({array_limits})|"
+            f"({string_patterns})"
         )
 
         # Conditional Requirements
@@ -395,7 +420,7 @@ class Schema:
         self.data_groups = {}
         self.data_group_templates = {}
 
-        self._data_type_list = [
+        self._data_type_list: List[Type[DataType]] = [
             IntegerType,
             NumericType,
             BooleanType,
@@ -405,6 +430,7 @@ class Schema:
             DataGroupType,
             EnumerationType,
             AlternativeType,
+            ReferenceType,
         ]
 
         self.schema_patterns = SchemaPatterns(self.source_dictionary)
@@ -445,10 +471,10 @@ class Schema:
         self.root_data_group = None
         self.metadata = None
         self.schema_author = None
-        self.schema_type = self.name
+        self.schema_name = self.name
 
         if self.root_data_group_name is not None:
-            self.schema_type = self.root_data_group_name
+            self.schema_name = self.root_data_group_name
             self.root_data_group = self.get_data_group(self.root_data_group_name)
             self.metadata = (
                 self.root_data_group.data_elements["metadata"]
@@ -461,7 +487,7 @@ class Schema:
                         if constraint.data_element_name == "schema_author":
                             self.schema_author = constraint.data_element_value
                         elif constraint.data_element_name == "schema":
-                            self.schema_type = constraint.data_element_value
+                            self.schema_name = constraint.data_element_value
 
         for data_group in self.data_groups.values():
             data_group.resolve()
@@ -488,7 +514,7 @@ class Schema:
         else:
             self.reference_schemas[schema_name] = Schema(schema_path, self)
 
-    def get_reference_schema(self, schema_name) -> Schema | None:
+    def get_reference_schema(self, schema_name: str) -> Schema | None:
         # TODO: verify schema has the same path too?
         # Search this schema first
         if schema_name in self.reference_schemas:
@@ -500,7 +526,7 @@ class Schema:
 
         return None
 
-    def get_data_group(self, data_group_name: str):
+    def get_data_group(self, data_group_name: str) -> DataGroup:
         matching_schemas = []
         # 1. Search this schema first
         if data_group_name in self.data_groups:
@@ -514,22 +540,21 @@ class Schema:
 
         return matching_schemas[0].data_groups[data_group_name]
 
-    def data_type_factory(self, input: str, parent_data_element: DataElement) -> DataType:
+    def data_type_factory(self, text: str, parent_data_element: DataElement) -> DataType:
         number_of_matches = 0
-        match_type = None
         for data_type in self._data_type_list:
-            if data_type.pattern.match(input):
+            if data_type.pattern.match(text):
                 match_type = data_type
                 number_of_matches += 1
 
         if number_of_matches == 1:
-            return match_type(input, parent_data_element)
+            return match_type(text, parent_data_element)
         if number_of_matches == 0:
-            raise Exception(f"No matching data type for {input}.")
+            raise Exception(f"No matching data type for {text}.")
         else:
-            raise Exception(f"Multiple matches found for data type, {input}")
+            raise Exception(f"Multiple matches found for data type, {text}")
 
-    def add_data_type(self, data_type: DataType):
+    def add_data_type(self, data_type: Type[DataType]) -> None:
         if data_type not in self._data_type_list:
             self._data_type_list.append(data_type)
 
@@ -539,9 +564,9 @@ class Schema:
 
 def get_types(schema):
     """For each Object Type in a schema, map a list of Objects matching that type."""
-    types = {}
-    for object in schema:
-        if schema[object]["Object Type"] not in types:
-            types[schema[object]["Object Type"]] = []
-        types[schema[object]["Object Type"]].append(object)
+    types: Dict[str, Any] = {}
+    for object_name in schema:
+        if schema[object_name]["Object Type"] not in types:
+            types[schema[object_name]["Object Type"]] = []
+        types[schema[object_name]["Object Type"]].append(object_name)
     return types

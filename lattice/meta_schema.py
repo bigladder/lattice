@@ -11,7 +11,7 @@ from .schema import SchemaPatterns
 
 class MetaSchema:
     def __init__(self, schema_path):
-        with open(schema_path) as meta_schema_file:
+        with open(schema_path, encoding="utf-8") as meta_schema_file:
             uri_path = os.path.abspath(os.path.dirname(schema_path))
             if os.sep != posixpath.sep:
                 uri_path = posixpath.sep + uri_path
@@ -20,7 +20,8 @@ class MetaSchema:
             self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
 
     def validate(self, instance_path):
-        instance = load(instance_path)
+        with open(os.path.join(instance_path), "r", encoding="utf-8") as input_file:
+            instance = yaml.load(input_file, Loader=yaml.FullLoader)
         errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
         file_name = os.path.basename(instance_path)
         if len(errors) == 0:
@@ -128,12 +129,11 @@ def generate_meta_schema(output_path, schema=None):
         meta_schema["patternProperties"][schema_patterns.type_base_names.anchored()]["allOf"].append(
             {
                 "if": {"properties": {"Object Type": {"const": "Data Group"}, "Data Group Template": True}},
-                "then": {"$ref": f"meta.schema.json#/definitions/DataGroup"},
+                "then": {"$ref": "meta.schema.json#/definitions/DataGroup"},
             }
         )
 
-        for data_group_template_name in data_group_templates:
-            data_group_template = data_group_templates[data_group_template_name]
+        for data_group_template_name, data_group_template in data_group_templates.items():
             meta_schema["definitions"][f"{data_group_template_name}DataElementAttributes"] = copy.deepcopy(
                 meta_schema["definitions"]["DataElementAttributes"]
             )
@@ -244,9 +244,9 @@ def generate_meta_schema(output_path, schema=None):
 
     dump(meta_schema, output_path)
 
-    with open(output_path, "r") as file:
+    with open(output_path, "r", encoding="utf-8") as file:
         content = file.read()
-    with open(output_path, "w") as file:
+    with open(output_path, "w", encoding="utf-8") as file:
         file.writelines(content.replace("meta.schema.json", meta_schema_file_name))
 
     return schema_patterns
