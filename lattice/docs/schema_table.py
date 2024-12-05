@@ -29,9 +29,12 @@ def process_string_types(string_types):
     for str_typ in string_types:
         new_item = deepcopy(str_typ)
         if "Is Regex" in new_item and new_item["Is Regex"]:
-            new_item["JSON Schema Pattern"] = "(Not applicable)"
-        new_item["JSON Schema Pattern"] = (
-            new_item["JSON Schema Pattern"].replace("*", r"\*").replace(r"(?", "\n" r"(?").replace(r"-[", "\n" r"-[")
+            new_item["Regular Expression Pattern"] = "(Not applicable)"
+        new_item["Regular Expression Pattern"] = (
+            new_item["Regular Expression Pattern"]
+            .replace("*", r"\*")
+            .replace(r"(?", "\n" r"(?")
+            .replace(r"-[", "\n" r"-[")
         )
         new_list.append(new_item)
     return new_list
@@ -215,7 +218,7 @@ def string_types_table(string_types, caption=None, add_training_ws=True):
     RETURN: string, the table in Pandoc markdown grid table format
     """
     return create_table_from_list(
-        columns=["String Type", "Description", "JSON Schema Pattern", "Examples"],
+        columns=["String Type", "Description", "Regular Expression Pattern", "Examples"],
         data_list=string_types,
         caption=caption,
         add_training_ws=add_training_ws,

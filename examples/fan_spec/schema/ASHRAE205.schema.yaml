@@ -25,15 +25,15 @@ PerformanceMapTemplate:
 GridVariablesTemplate:
   Object Type: "Data Group Template"
   Required Data Types:
-    - "[Numeric][1..]"
-    - "[Integer][1..]"
+    - "[Numeric]"
+    - "[Integer]"
   Data Elements Required: True
 
 LookupVariablesTemplate:
   Object Type: "Data Group Template"
   Required Data Types:
-    - "[Numeric][1..]"
-    - "[Integer][1..]"
+    - "[Numeric]"
+    - "[Integer]"
   Data Elements Required: True
 
 RepresentationSpecificationTemplate:
