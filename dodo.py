@@ -1,8 +1,14 @@
+import logging
 from pathlib import Path
 from lattice import Lattice
 from lattice.cpp.header_entry_extension_loader import load_extensions
 
+from doit import task_params
 from doit.tools import create_folder
+
+logging.basicConfig(level=logging.CRITICAL,
+                    format='%(asctime)s: [%(levelname)s]  %(message)s',
+                    handlers=[logging.FileHandler("lattice.log", mode='w')])
 
 SOURCE_PATH = "lattice"
 EXAMPLES_PATH = "examples"
@@ -98,8 +104,19 @@ def task_generate_markdown():
         }
 
 
-def task_generate_cpp_code():
+@task_params([{'name':'level',
+                'short':'l',
+                'long': 'level',
+                'type': str,
+                'default': "CRITICAL",
+                'choices': (("DEBUG",""),("INFO",""),("WARNING",""),("ERROR",""),("CRITICAL","")),
+                'help': 'Set the logger level.'}]
+)
+def task_generate_cpp_code(level):
     """Generate CPP headers and source for example schema."""
+    def set_log_level(level):
+        logging.getLogger().setLevel(level)
+
     for example in examples:
         name = Path(example.root_directory).name
         yield {
@@ -111,7 +128,9 @@ def task_generate_cpp_code():
             "targets": [schema.cpp_header_file_path for schema in example.cpp_schemas]
             + [schema.cpp_source_file_path for schema in example.cpp_schemas]
             + example.cpp_support_headers + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
-            "actions": [(load_extensions, [Path(example.root_directory, "cpp", "extensions")]), (example.generate_cpp_project, [["https://github.com/nlohmann/json.git", "https://github.com/bigladder/courier.git", "https://github.com/fmtlib/fmt.git"]])],
+            "actions": [(set_log_level, [level]),
+                        (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
+                        (example.generate_cpp_project, [["https://github.com/nlohmann/json.git", "https://github.com/bigladder/courier.git", "https://github.com/fmtlib/fmt.git"]])],
             "clean": True,
         }
 

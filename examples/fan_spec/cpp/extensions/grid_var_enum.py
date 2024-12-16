@@ -18,10 +18,9 @@ class GridVarCounterEnum(HeaderEntry):
 
     def __str__(self):
         enums = self._enumerants
-        tab = "\t"
-        entry = f"{self._level * tab}{self.type} {self._opener}\n"
-        entry += ",\n".join([f"{(self._level + 1) * tab}{e}" for e in enums])
-        entry += f"\n{self._level * tab}{self._closure}"
+        entry = f"{self._indent}{self.type} {self._opener}\n"
+        entry += ",\n".join([f"{self._indent}\t{e}" for e in enums])
+        entry += f"\n{self._indent}{self._closure}"
         return entry
 
 def register():

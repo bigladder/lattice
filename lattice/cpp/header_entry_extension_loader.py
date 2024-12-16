@@ -1,11 +1,17 @@
 from importlib import util
 from pathlib import Path
+from .header_entries import HeaderEntry
 
 """From https://github.com/ArjanCodes/2021-plugin-architecture/blob/main/after/game/loader.py"""
 
 
 class ModuleInterface:
-    """Represents a plugin interface. A plugin has a single register function."""
+
+    # @staticmethod
+    # def insert_entry(root: HeaderEntry) -> None:
+    #     """
+    #     For a given Data Group Template, insert code into the necessary parts of the HeaderEntry tree.
+    #     """
 
     @staticmethod
     def register() -> None:

@@ -1,9 +1,12 @@
 from __future__ import annotations
 import re
+import logging
 from lattice.util import snake_style
 from typing import Callable, Optional
 from pathlib import Path
 from dataclasses import dataclass, field
+
+logger = logging.getLogger()
 
 
 def remove_prefix(text, prefix):
@@ -26,15 +29,20 @@ def register_data_element_operation(data_group_template_name: str, header_entry:
 
 # -------------------------------------------------------------------------------------------------
 @dataclass()
-class HeaderEntryFormat:
+class EntryFormat:
     _opener: str = field(init=False, default="{")
     _closure: str = field(init=False, default="}")
     _level: int = field(init=False, default=0)
+    _indent: str = field(init=False, default="")
+
+    def trace(self):
+        logger.debug(type(self).__name__)
+        logger.debug(self.__str__())
 
 
 # -------------------------------------------------------------------------------------------------
 @dataclass
-class HeaderEntry(HeaderEntryFormat):
+class HeaderEntry(EntryFormat):
     name: str
     parent: Optional[HeaderEntry]
     type: str = field(init=False, default="namespace")  # TODO: kw_only=True?
@@ -44,6 +52,7 @@ class HeaderEntry(HeaderEntryFormat):
         if self.parent:
             self.parent._add_child_entry(self)
         self._level = self._get_level()
+        self._indent = self._level * "\t"
 
     def _add_child_entry(self, child: HeaderEntry) -> None:
         self.child_entries.append(child)
@@ -80,9 +89,9 @@ class HeaderEntry(HeaderEntryFormat):
 
     def __str__(self):
         tab = "\t"
-        entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
+        entry = f"{self._indent}{self.type} {self.name} {self._opener}\n"
         entry += "\n".join([str(c) for c in self.child_entries])
-        entry += f"\n{self._level * tab}{self._closure}"
+        entry += f"\n{self._indent}{self._closure}"
         return entry
 
 
@@ -94,10 +103,11 @@ class Typedef(HeaderEntry):
     def __post_init__(self):
         super().__post_init__()
         self.type = "typedef"
+        self.trace()
 
     def __str__(self):
         tab = "\t"
-        return f"{self._level * tab}{self.type} {self._typedef} {self.name};"
+        return f"{self._indent}{self.type} {self._typedef} {self.name};"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -109,25 +119,24 @@ class Enumeration(HeaderEntry):
         super().__post_init__()
         self.type = "enum class"
         self._closure = "};"
+        self.trace()
 
     def __str__(self):
         tab = "\t"
-        entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
+        entry = f"{self._indent}{self.type} {self.name} {self._opener}\n"
         for e in self._enumerants:
-            entry += f"{(self._level + 1) * tab}{e},\n"
-        entry += f"{(self._level + 1) * tab}UNKNOWN\n{self._level * tab}{self._closure}"
+            entry += f"{self._indent}\t{e},\n"
+        entry += f"{self._indent}\tUNKNOWN\n{self._indent}{self._closure}"
 
         # Incorporate an enum_info map into this object
         map_type = f"const static std::unordered_map<{self.name}, enum_info>"
-        entry += f"\n" f"{self._level * tab}{map_type} {self.name}_info {self._opener}\n"
+        entry += f"\n" f"{self._indent}{map_type} {self.name}_info {self._opener}\n"
         for e in self._enumerants:
             display_text = self._enumerants[e].get("Display Text", e)
             description = self._enumerants[e].get("Description")
-            entry += (
-                f"{(self._level + 1) * tab}" f'{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
-            )
-        entry += f"{(self._level + 1) * tab}" f'{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
-        entry += f"{self._level * tab}{self._closure}"
+            entry += f"{self._indent}\t" f'{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
+        entry += f"{self._indent}\t" f'{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
+        entry += f"{self._indent}{self._closure}"
 
         return entry
 
@@ -144,17 +153,18 @@ class EnumSerializationDeclaration(HeaderEntry):
         self.type = "NLOHMANN_JSON_SERIALIZE_ENUM"
         self._opener = "(" + self.name + ", {"
         self._closure = "})"
+        self.trace()
 
     def __str__(self):
         enums_with_placeholder = ["UNKNOWN"] + (list(self._enumerants.keys()))
         tab = "\t"
-        entry = f"{self._level * tab}{self.type} {self._opener}\n"
-        entry += ",\n".join([f'{(self._level + 1) * tab}{{{self.name}::{e}, "{e}"}}' for e in enums_with_placeholder])
+        entry = f"{self._indent}{self.type} {self._opener}\n"
+        entry += ",\n".join([f'{self._indent}\t{{{self.name}::{e}, "{e}"}}' for e in enums_with_placeholder])
         # for e in enums_with_placeholder:
         #     entry += (self._level + 1) * "\t"
         #     mapping = "{" + self.name + "::" + e + ', "' + e + '"}'
         #     entry += mapping + ",\n"
-        entry += f"\n{self._level * tab}{self._closure}"
+        entry += f"\n{self._indent}{self._closure}"
         return entry
 
 
@@ -167,15 +177,16 @@ class Struct(HeaderEntry):
         super().__post_init__()
         self.type = "struct"
         self._closure = "};"
+        self.trace()
 
     def __str__(self):
         tab = "\t"
-        entry = f"{self._level * tab}{self.type} {self.name}"
+        entry = f"{self._indent}{self.type} {self.name}"
         if self.superclass:
             entry += f" : {self.superclass}"
         entry += f" {self._opener}\n"
         entry += "\n".join([str(c) for c in self.child_entries])
-        entry += f"\n{self._level * tab}{self._closure}"
+        entry += f"\n{self._indent}{self._closure}"
         return entry
 
 
@@ -196,10 +207,11 @@ class DataElement(HeaderEntry):
         # self.external_reference_sources: list = []
 
         self._create_type_entry(self._element_attributes, self._type_finder)
+        self.trace()
 
     def __str__(self):
         tab = "\t"
-        return f"{self._level * tab}{self.type} {self.name}{self._closure}"
+        return f"{self._indent}{self.type} {self.name}{self._closure}"
 
     def _create_type_entry(self, element_attributes: dict, type_finder: Callable | None = None) -> None:
         """Create type node."""
@@ -307,7 +319,7 @@ class DataElementIsSetFlag(HeaderEntry):
 
     def __str__(self):
         tab = "\t"
-        return f"{self._level * tab}bool {self.name}_is_set;"
+        return f"{self._indent}bool {self.name}_is_set;"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -324,9 +336,11 @@ class DataElementStaticMetainfo(HeaderEntry):
         self.name = self.name + "_" + self.metainfo_key.lower()
         self._closure = ";"
 
+        self.trace()
+
     def __str__(self):
         tab = "\t"
-        return f"{self._level * tab}{self._type_specifier} {self.type} {self.name}{self._closure}"
+        return f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -338,13 +352,14 @@ class InlineDependency(HeaderEntry):
         super().__post_init__()
         self._type_specifier = "inline"
         self._closure = ";"
+        self.trace()
 
     def __str__(self):
         tab = "\t"
         return (
-            f"{self._level * tab}{self._type_specifier} {self.type} {self.name}{self._closure}"
+            f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
             "\n"
-            f"{self._level * tab}void set_{self.name}({self.type} value);"
+            f"{self._indent}void set_{self.name}({self.type} value);"
         )
 
 
@@ -359,10 +374,11 @@ class FunctionalHeaderEntry(HeaderEntry):
         super().__post_init__()
         self.args = f"({', '.join(self._f_args)})"
         self._closure = ";"
+        self.trace()
 
     def __str__(self):
         tab = "\t"
-        return f"{self._level * tab}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
+        return f"{self._indent}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -371,6 +387,7 @@ class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
     def __post_init__(self):
         super().__post_init__()
         self._closure = " override;"
+        self.trace()
 
 
 # -------------------------------------------------------------------------------------------------
@@ -385,6 +402,7 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
         self._f_name = "from_json"
         self._f_args = ["const nlohmann::json& j", f"{self.name}& x"]
         super().__post_init__()
+        self.trace()
 
 
 # -------------------------------------------------------------------------------------------------
@@ -398,6 +416,7 @@ class VirtualDestructor(FunctionalHeaderEntry):
         self._f_name = f"~{self._f_name}"
         self._f_args = []
         super().__post_init__()
+        self.trace()
 
 
 # # -------------------------------------------------------------------------------------------------
