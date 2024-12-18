@@ -13,20 +13,6 @@ def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
 
-data_group_extensions: dict[str, Callable] = {}
-
-
-def register_data_group_operation(data_group_template_name: str, header_entry: Callable):
-    data_group_extensions[data_group_template_name] = header_entry
-
-
-data_element_extensions: dict[str, Callable] = {}
-
-
-def register_data_element_operation(data_group_template_name: str, header_entry: Callable):
-    data_element_extensions[data_group_template_name] = header_entry
-
-
 # -------------------------------------------------------------------------------------------------
 @dataclass()
 class EntryFormat:

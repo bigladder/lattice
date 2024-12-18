@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pathlib
 import logging
 from typing import Optional, Union
@@ -6,8 +7,23 @@ from .header_entries import *
 from lattice.file_io import load, get_base_stem
 from lattice.util import snake_style, hyphen_separated_lowercase_style
 import lattice.cpp.support_files as support
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger()
+
+
+class PluginInterface(ABC):
+    extensions: dict[str, Callable] = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__()
+        if "base_class" in kwargs and isinstance(kwargs["base_class"], str):
+            cls.extensions[kwargs["base_class"]] = cls
+
+    @abstractmethod
+    def process_data_group(self, parent_node: HeaderEntry):
+        ...
+
 
 def modified_insertion_sort(obj_list):
     """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
@@ -38,6 +54,7 @@ class HeaderTranslator:
         self._data_group_types = ["Data Group"]
         self._forward_declaration_dir: Optional[pathlib.Path] = None
         self._required_base_classes = []
+        self._extensions:dict[str, PluginInterface] = {base_class : PluginInterface.extensions[base_class]() for base_class in PluginInterface.extensions}
 
     def __str__(self):
         s = "\n".join([p for p in self._preamble])
@@ -100,14 +117,6 @@ class HeaderTranslator:
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
             logger.debug(f"Processing data group type {self._schema_name}::{base_level_tag}.")
             data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
-            if data_group_template in data_group_extensions:
-                s_0 = data_group_extensions[data_group_template](
-                    base_level_tag,
-                    self._namespace
-                    )
-                self._process_data_elements(s_0, base_level_tag, data_group_template)
-                self._add_function_overrides(s_0, output_path, data_group_template)
-
             s = Struct(
                 base_level_tag,
                 self._namespace,
@@ -131,6 +140,11 @@ class HeaderTranslator:
             self._add_function_overrides(s, output_path, data_group_template)
 
         self._add_header_dependencies(output_path)
+
+        for base_level_tag in self._list_objects_of_type(self._data_group_types):
+            data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
+            if data_group_template in self._extensions:
+                self._extensions[data_group_template].process_data_group(self.root)
 
         modified_insertion_sort(self._namespace.child_entries)
         # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
@@ -260,11 +274,6 @@ class HeaderTranslator:
 
     def _process_data_elements(self, data_group_entry: HeaderEntry, base_level_tag: str, data_group_template: str):
         """Iterate over child Data Elements and assign them to a parent struct."""
-        # Process plugin code for the entire element group, if there is any
-        if data_group_template in data_element_extensions:
-            e = data_element_extensions[data_group_template](
-                data_group_template, data_group_entry, self._contents[base_level_tag]["Data Elements"]
-            )
 
         # Per-element processing
         for data_element in self._contents[base_level_tag]["Data Elements"]:

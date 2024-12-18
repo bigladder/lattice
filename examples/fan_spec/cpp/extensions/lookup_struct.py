@@ -1,7 +1,8 @@
 import re
 from dataclasses import dataclass
-from lattice.cpp.header_entries import DataElement, HeaderEntry
-from lattice.cpp.header_entries import register_data_group_operation
+from lattice.cpp.header_entries import DataElement, HeaderEntry, Struct
+# from lattice.cpp.header_entries import register_data_group_operation
+from lattice.cpp.header_translator import PluginInterface
 
 @dataclass
 class LookupStruct(HeaderEntry):
@@ -27,5 +28,16 @@ class LookupStruct(HeaderEntry):
 
         return struct
 
-def register():
-    register_data_group_operation("LookupVariablesTemplate", LookupStruct)
+
+# def register():
+#     register_data_group_operation("LookupVariablesTemplate", LookupStruct)
+
+class LookupStructPlugin(PluginInterface, base_class="LookupVariablesTemplate"):
+    """"""
+    def process_data_group(self, parent_node: HeaderEntry):
+        for entry in parent_node.child_entries:
+            if isinstance(entry, Struct) and entry.superclass == "LookupVariablesTemplate":
+                ls = LookupStruct(entry.name, entry.parent)
+                ls.child_entries = entry.child_entries
+            else:
+                self.process_data_group(entry)

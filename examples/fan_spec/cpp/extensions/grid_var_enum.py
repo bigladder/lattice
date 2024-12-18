@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from lattice.cpp.header_entries import HeaderEntry
-from lattice.cpp.header_entries import register_data_element_operation
+from lattice.cpp.header_entries import HeaderEntry, Struct, DataElement
+# from lattice.cpp.header_entries import register_data_element_operation
+from lattice.cpp.header_translator import PluginInterface
 
 @dataclass
 class GridVarCounterEnum(HeaderEntry):
-    elements_dict: dict
+    elements: list
 
     def __post_init__(self):
         super().__post_init__()
@@ -12,7 +13,7 @@ class GridVarCounterEnum(HeaderEntry):
         self._closure = "};"
         self._enumerants = list()
 
-        for element in self.elements_dict:
+        for element in self.elements:
             self._enumerants.append(f"{element}_index")
         self._enumerants.append("index_count");
 
@@ -23,5 +24,12 @@ class GridVarCounterEnum(HeaderEntry):
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
-def register():
-    register_data_element_operation("GridVariablesTemplate", GridVarCounterEnum)
+class GridVarCounterEnumPlugin(PluginInterface, base_class="GridVariablesTemplate"):
+    """"""
+    def process_data_group(self, parent_node: HeaderEntry):
+        for entry in parent_node.child_entries:
+            if isinstance(entry, Struct) and entry.superclass == "GridVariablesTemplate":
+                data_elements = [child.name for child in entry.child_entries if isinstance(child, DataElement)]
+                e = GridVarCounterEnum(entry.name, entry, data_elements)
+            else:
+                self.process_data_group(entry)

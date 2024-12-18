@@ -1,6 +1,7 @@
 from importlib import util
 from pathlib import Path
 from .header_entries import HeaderEntry
+from typing import Callable
 
 """From https://github.com/ArjanCodes/2021-plugin-architecture/blob/main/after/game/loader.py"""
 
@@ -18,7 +19,7 @@ class ModuleInterface:
         """Register the necessary items in the game character factory."""
 
 
-def import_module(path: Path) -> ModuleInterface:
+def import_module(path: Path):
     """Imports a module given a path."""
     spec = util.spec_from_file_location(path.stem, path)
     try:
@@ -34,4 +35,5 @@ def load_extensions(from_path: Path) -> None:
     if from_path.is_dir():
         for plugin_file in [x for x in from_path.iterdir() if x.suffix == ".py"]:
             plugin = import_module(plugin_file)
-            plugin.register()
+            #plugin.register()
+
