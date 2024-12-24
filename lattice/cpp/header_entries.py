@@ -239,7 +239,7 @@ class DataElement(HeaderEntry):
                     # { operation_speed_control_type : { CONTINUOUS : PerformanceMapContinuous, DISCRETE : PerformanceMapDiscrete} }
                     self.selector[oneof_selection_key] = dict(zip(constraints, selection_types))
 
-                    # The elements of 'types' are Data Groups that derive from a Data Group Template.
+                    # The elements of 'selection_types' are Data Groups that derive from a Data Group Template.
                     # The template is a verbatim "base class," which is what makes the selector
                     # polymorphism possible
                     self.type = f"std::unique_ptr<{type_finder(selection_types[0]) if type_finder else None}>"

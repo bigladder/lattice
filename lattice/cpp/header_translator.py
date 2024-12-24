@@ -1,4 +1,5 @@
 from __future__ import annotations
+import pprint
 import pathlib
 import logging
 from typing import Optional, Union
@@ -21,8 +22,7 @@ class PluginInterface(ABC):
             cls.extensions[kwargs["base_class"]] = cls
 
     @abstractmethod
-    def process_data_group(self, parent_node: HeaderEntry):
-        ...
+    def process_data_group(self, parent_node: HeaderEntry): ...
 
 
 def modified_insertion_sort(obj_list):
@@ -51,10 +51,12 @@ class HeaderTranslator:
         self._preamble = []
         self._doxynotes = "/// @note  This class has been auto-generated. Local changes will not be saved!\n"
         self._epilogue = []
-        self._data_group_types = ["Data Group"]
+        self._data_group_types = {"Data Group"}
         self._forward_declaration_dir: Optional[pathlib.Path] = None
         self._required_base_classes = []
-        self._extensions:dict[str, PluginInterface] = {base_class : PluginInterface.extensions[base_class]() for base_class in PluginInterface.extensions}
+        self._extensions: dict[str, PluginInterface] = {
+            base_class: PluginInterface.extensions[base_class]() for base_class in PluginInterface.extensions
+        }
 
     def __str__(self):
         s = "\n".join([p for p in self._preamble])
@@ -84,22 +86,18 @@ class HeaderTranslator:
         self._add_include_guard(snake_style(self._schema_name))
         self._add_standard_dependency_headers(self._contents["Schema"].get("References"))
 
-        # Create "root" node(s)
         self._top_namespace = HeaderEntry(top_namespace, None)
         self._namespace = HeaderEntry(f"{snake_style(self._schema_name)}_ns", self._top_namespace)
 
-        # First, assemble typedefs
         for base_level_tag in [tag for tag in self._contents if self._contents[tag]["Object Type"] == "String Type"]:
             Typedef(base_level_tag, self._namespace, "std::string")
 
-        # Second, enumerations
         for base_level_tag in self._list_objects_of_type("Enumeration"):
             Enumeration(base_level_tag, self._namespace, self._contents[base_level_tag]["Enumerators"])
 
-        # Namespace-level dependencies
         InlineDependency("logger", self._namespace, "std::shared_ptr<Courier::Courier>")
 
-        # Collect member objects and their children
+        # Collect member objects and their children, building the header element tree
         for base_level_tag in self._list_objects_of_type("Meta"):
             s = Struct(base_level_tag, self._namespace)
             d = DataElementStaticMetainfo(base_level_tag.lower(),
@@ -114,8 +112,14 @@ class HeaderTranslator:
                                           s,
                                           self._contents[base_level_tag],
                                           "Description")
+
+        for base_level_tag in self._list_objects_of_type("Data Group Template"):
+            # TODO: If header does not already exist as a separate file, then
+            class_entry = Struct(base_level_tag, self._namespace)
+            dtor = VirtualDestructor("", class_entry, "", base_level_tag, [])
+            # TODO: else, copy contents into tree?
+
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
-            logger.debug(f"Processing data group type {self._schema_name}::{base_level_tag}.")
             data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
             s = Struct(
                 base_level_tag,
@@ -123,32 +127,17 @@ class HeaderTranslator:
                 superclass=data_group_template,
             )
             self._process_data_elements(s, base_level_tag, data_group_template)
-            for data_element in self._contents[base_level_tag]["Data Elements"]:
-                d_is_set = DataElementIsSetFlag(data_element, s)
-                d_units = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Units"
-                )
-                d_desc = DataElementStaticMetainfo(
-                    data_element,
-                    s,
-                    self._contents[base_level_tag]["Data Elements"][data_element],
-                    "Description",
-                )
-                d_name = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Name"
-                )
             self._add_function_overrides(s, output_path, data_group_template)
 
-        self._add_header_dependencies(output_path)
-
+        # Process customizations
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
             data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
             if data_group_template in self._extensions:
                 self._extensions[data_group_template].process_data_group(self.root)
+                self._extensions.pop(data_group_template)
 
+        self._add_header_dependencies(output_path)
         modified_insertion_sort(self._namespace.child_entries)
-        # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
-        # self._add_performance_overloads()
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in self._list_objects_of_type("Enumeration"):
@@ -188,11 +177,11 @@ class HeaderTranslator:
         for ref_file in refs:
             ext_dict = load(refs[ref_file])
             # Load every explicitly listed reference and collect the base classes therein
-            self._data_group_types.extend(
+            self._data_group_types.update(
                 [name for name in ext_dict if ext_dict[name]["Object Type"] == "Data Group Template"]
             )
             self._references[ref_file] = [
-                name for name in ext_dict if ext_dict[name]["Object Type"] in self._data_group_types + ["Enumeration"]
+                name for name in ext_dict if ext_dict[name]["Object Type"] in list(self._data_group_types) + ["Enumeration"]
             ]
             # For every reference listed, store all the derived-class/base-class pairs as dictionaries
             self._derived_types[ref_file] = {name : ext_dict[name].get("Data Group Template") for name in ext_dict if ext_dict[name].get("Data Group Template")}
@@ -206,9 +195,10 @@ class HeaderTranslator:
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
 
-        # print(self._schema_name)
-        # print("_references", self._references)
-        # print("_derived_types", self._derived_types)
+        print(self._schema_name, "References")
+        pprint.pp(self._references)
+        print(self._schema_name, "Derived types")
+        pprint.pp(self._derived_types)
 
     # fmt: on
 
@@ -249,12 +239,14 @@ class HeaderTranslator:
                     m = re.search(r"\<(?P<base_class_type>.*)\>", entry.type)
                     if m:
                         self._add_member_includes(m.group("base_class_type"), generated_header_path)
-                if entry.scoped_innertype[0]:
+                if entry.scoped_innertype[0] and entry.scoped_innertype[0].lower() != self._schema_name.lower():
                     # This piece captures any "forward-declared" types that need to be
                     # processed by the DataElement type-finding mechanism before their header is known.
+                    # Don't include one's self
                     self._add_member_includes(entry.scoped_innertype[0])
             elif isinstance(entry, Struct):
                 if entry.superclass:
+                    #TODO: Now we have to look for the class in the header tree instead of assuming it's in its own file
                     self._add_member_includes(entry.superclass, generated_header_path)
                 self._add_header_dependencies(generated_header_path, entry)
 
@@ -268,9 +260,8 @@ class HeaderTranslator:
         header_include = f"#include <{hyphen_separated_lowercase_style(dependency)}.h>"
         if header_include not in self._preamble:
             self._preamble.append(header_include)
-            if generated_base_class_path:
-                # self._required_base_classes.append(dependency)
-                support.generate_superclass_header(dependency, generated_base_class_path)
+            # if generated_base_class_path:
+            #     support.generate_superclass_header(dependency, generated_base_class_path)
 
     def _process_data_elements(self, data_group_entry: HeaderEntry, base_level_tag: str, data_group_template: str):
         """Iterate over child Data Elements and assign them to a parent struct."""
@@ -285,10 +276,24 @@ class HeaderTranslator:
                 self._references,
                 self._search_nodes_for_datatype,
             )
+            d_is_set = DataElementIsSetFlag(data_element, data_group_entry)
+            d_units = DataElementStaticMetainfo(
+                data_element, data_group_entry, self._contents[base_level_tag]["Data Elements"][data_element], "Units"
+            )
+            d_desc = DataElementStaticMetainfo(
+                data_element,
+                data_group_entry,
+                self._contents[base_level_tag]["Data Elements"][data_element],
+                "Description",
+            )
+            d_name = DataElementStaticMetainfo(
+                data_element, data_group_entry, self._contents[base_level_tag]["Data Elements"][data_element], "Name"
+            )
 
     # fmt: off
     def _add_function_overrides(self, parent_node, output_path, base_class_name):
         """Get base class virtual functions to be overridden."""
+        # TODO: Not looking in a base class file anymore
         base_class = pathlib.Path(output_path) / f"{hyphen_separated_lowercase_style(base_class_name)}.h"
         try:
             with open(base_class) as b:
@@ -305,36 +310,7 @@ class HeaderTranslator:
             pass
     # fmt: on
 
-    def _add_performance_overloads(self, parent_node=None):
-        """ """
-        if not parent_node:
-            parent_node = self.root
-        for entry in parent_node.child_entries:
-            if entry.parent and entry.superclass == "PerformanceMapBase":
-                for lvstruct in [
-                    lv
-                    for lv in entry.parent.child_entries
-                    if lv.superclass == "LookupVariablesBase"
-                    and remove_prefix(lv.name, "LookupVariables") == remove_prefix(entry.name, "PerformanceMap")
-                ]:
-                    f_ret = f"{lvstruct.name}Struct"
-                    n_ret = len([c for c in lvstruct.child_entries if isinstance(c, DataElement)])
-                    # for each performance map, find GridVariables sibling of PerformanceMap, that has a matching name
-                    for gridstruct in [
-                        gridv
-                        for gridv in entry.parent.child_entries
-                        if gridv.superclass == "GridVariablesBase"
-                        and remove_prefix(gridv.name, "GridVariables") == remove_prefix(entry.name, "PerformanceMap")
-                    ]:
-                        f_args = list()
-                        for ce in [c for c in gridstruct.child_entries if isinstance(c, DataElement)]:
-                            f_args.append(" ".join(["double", ce.name]))
-                        f_args.append("Btwxt::Method performance_interpolation_method = Btwxt::Method::LINEAR")
-                        CalculatePerformanceOverload(f_ret, f_args, "", entry, n_ret)
-            else:
-                self._add_performance_overloads(entry)
-
-    def _search_references_for_base_types(self, data_element):
+    def _search_references_for_base_types(self, data_element) -> str | None:
         """
         Search the pre-populated derived-class list for base class type. Used
         when a Data Type requested in a selector constraint is defined in a schema's references rather than in-file.
@@ -364,8 +340,10 @@ class HeaderTranslator:
                             return self._contents[listing]["Data Elements"][element]["Data Type"]
         return "MissingType"  # Placeholder base class
 
-    def _list_objects_of_type(self, object_type_or_list: Union[str, list[str]]) -> list:
+    def _list_objects_of_type(self, object_type_or_list: Union[str, list[str], set[str]]) -> list:
         if isinstance(object_type_or_list, str):
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") == object_type_or_list]
-        elif isinstance(object_type_or_list, list):
+        elif isinstance(object_type_or_list, list) or isinstance(object_type_or_list, set):
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") in object_type_or_list]
+        else:
+            return []
