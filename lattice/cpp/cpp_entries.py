@@ -16,7 +16,6 @@ from .header_entries import (
     ObjectSerializationDeclaration,
     InlineDependency,
 )
-from lattice.util import snake_style
 
 logger = logging.getLogger()
 
@@ -357,6 +356,7 @@ class CPPTranslator:
                     #     PerformanceMapImplementation(data_element_entry.name, s)
 
             elif isinstance(entry, DataElementStaticMetainfo):
+                logger.debug(f"{entry.name}, {entry.parent.name}")
                 DataElementStaticInitialization(entry, self._namespace)
 
             elif isinstance(entry, InlineDependency):
@@ -414,4 +414,4 @@ class CPPTranslator:
 
     def _add_included_headers(self, main_header):
         self._preamble.clear()
-        self._preamble.append(f"#include <{snake_style(main_header)}.h>\n#include <load-object.h>\n")
+        self._preamble.append(f"#include <{main_header}.h>\n#include <load-object.h>\n")

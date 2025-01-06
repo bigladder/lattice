@@ -13,11 +13,11 @@ from .file_io import check_dir, make_dir, load, dump, get_file_basename, get_bas
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import MkDocsWeb, DocumentFile
-from lattice.docs.process_template import process_template
+from .docs.process_template import process_template
 from .cpp.header_translator import HeaderTranslator
 from .cpp.cpp_entries import CPPTranslator
 import lattice.cpp.support_files as support
-from lattice.schema import Schema
+from .schema import Schema
 
 
 class Lattice:  # pylint:disable=R0902
@@ -233,8 +233,12 @@ class Lattice:  # pylint:disable=R0902
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
         self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.name.lower()}.h"
-            schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.name.lower()}.cpp"
+            schema.cpp_header_file_path = (
+                self._cpp_output_include_dir / f"{schema.name}.h"
+            )
+            schema.cpp_source_file_path = (
+                self._cpp_output_src_dir / f"{schema.name}.cpp"
+            )
 
     def setup_cpp_repository(self, submodules: list[str]):
         """Initialize the CPP output directory as a Git repo."""
@@ -261,10 +265,12 @@ class Lattice:  # pylint:disable=R0902
         h = HeaderTranslator()
         c = CPPTranslator()
         for schema in self.cpp_schemas:
-            h.translate(schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name)
+            h.translate(
+                schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name
+            )
             dump(str(h), schema.cpp_header_file_path)
             c.translate(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_file_path)
-        self.setup_cpp_repository(submodules)
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
         support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
+        self.setup_cpp_repository(submodules)

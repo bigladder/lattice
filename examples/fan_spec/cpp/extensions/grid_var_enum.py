@@ -17,6 +17,8 @@ class GridVarCounterEnum(HeaderEntry):
             self._enumerants.append(f"{element}_index")
         self._enumerants.append("index_count");
 
+        self.trace()
+
     def __str__(self):
         enums = self._enumerants
         entry = f"{self._indent}{self.type} {self._opener}\n"

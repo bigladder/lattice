@@ -1,8 +1,9 @@
 from __future__ import annotations
 import re
 import logging
+import pprint
 from lattice.util import snake_style
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 from pathlib import Path
 from dataclasses import dataclass, field
 
@@ -13,7 +14,13 @@ def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
 
 
-# -------------------------------------------------------------------------------------------------
+@dataclass
+class ReferencedDataType:
+    name: str
+    namespace: str
+    superclass_name: Union[str, None] = None
+
+
 @dataclass()
 class EntryFormat:
     _opener: str = field(init=False, default="{")
@@ -26,7 +33,6 @@ class EntryFormat:
         logger.debug(self.__str__())
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class HeaderEntry(EntryFormat):
     name: str
@@ -81,7 +87,6 @@ class HeaderEntry(EntryFormat):
         return entry
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class Typedef(HeaderEntry):
     _typedef: str
@@ -96,7 +101,6 @@ class Typedef(HeaderEntry):
         return f"{self._indent}{self.type} {self._typedef} {self.name};"
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class Enumeration(HeaderEntry):
     _enumerants: dict
@@ -127,7 +131,6 @@ class Enumeration(HeaderEntry):
         return entry
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class EnumSerializationDeclaration(HeaderEntry):
     """Provides shortcut marcros that populate an enumeration from json."""
@@ -154,7 +157,6 @@ class EnumSerializationDeclaration(HeaderEntry):
         return entry
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class Struct(HeaderEntry):
     superclass: str = ""
@@ -176,76 +178,38 @@ class Struct(HeaderEntry):
         return entry
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class DataElement(HeaderEntry):
-    _element_attributes: dict
+    _data_group_attributes: dict
     _pod_datatypes_map: dict[str, str]
-    _custom_datatypes_by_location: dict[str, list[str]]
-    _type_finder: Callable | None = None
+    _referenced_datatypes: list[ReferencedDataType]
     selector: dict[str, dict[str, str]] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
         super().__post_init__()
         self._closure = ";"
+        self._element_attributes = self._data_group_attributes[self.name]
         self.is_required: bool = self._element_attributes.get("Required", False)  # used externally
         self.scoped_innertype: tuple[str, str] = ("", "")
-        # self.external_reference_sources: list = []
 
-        self._create_type_entry(self._element_attributes, self._type_finder)
+        self._create_type_entry(self._element_attributes)
         self.trace()
 
     def __str__(self):
         tab = "\t"
         return f"{self._indent}{self.type} {self.name}{self._closure}"
 
-    def _create_type_entry(self, element_attributes: dict, type_finder: Callable | None = None) -> None:
+    def _create_type_entry(self, element_attributes: dict) -> None:
         """Create type node."""
         try:
             # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
             m = re.findall(r"\[(.*?)\]", element_attributes["Data Type"])
             if m:
                 self.type = f"std::vector<{self._get_scoped_inner_type(m[0])}>"
+            elif m := re.match(r"\((?P<comma_separated_selection_types>.*)\)", element_attributes["Data Type"]):
+                self._get_constrained_base_type(element_attributes, m.group("comma_separated_selection_types"))
             else:
-                # If the type is oneOf a set
-                m = re.match(r"\((?P<comma_separated_selection_types>.*)\)", element_attributes["Data Type"])
-                if m:
-                    # Choices can only be mapped to enums, so store the mapping for future use
-                    # Constraints (of selection type) are of the form
-                    # selection_key(ENUM_VAL_1, ENUM_VAL_2, ENUM_VAL_3)
-                    # They connect pairwise with Data Type of the form ({Type_1}, {Type_2}, {Type_3})
-                    oneof_selection_key = element_attributes["Constraints"].split("(")[0]
-                    if type_finder:
-                        selection_key_type = (
-                            self._get_scoped_inner_type(
-                                "".join(ch for ch in type_finder(oneof_selection_key) if ch.isalnum())
-                            )
-                            + "::"
-                        )
-                    else:
-                        selection_key_type = ""
-                    selection_types = [
-                        self._get_scoped_inner_type(t.strip())
-                        for t in m.group("comma_separated_selection_types").split(",")
-                    ]
-                    m_opt = re.match(r".*\((?P<comma_separated_constraints>.*)\)", element_attributes["Constraints"])
-                    if not m_opt:
-                        raise TypeError
-                    constraints = [
-                        (selection_key_type + s.strip()) for s in m_opt.group("comma_separated_constraints").split(",")
-                    ]
-
-                    # the _selector dictionary would have a form like:
-                    # { operation_speed_control_type : { CONTINUOUS : PerformanceMapContinuous, DISCRETE : PerformanceMapDiscrete} }
-                    self.selector[oneof_selection_key] = dict(zip(constraints, selection_types))
-
-                    # The elements of 'selection_types' are Data Groups that derive from a Data Group Template.
-                    # The template is a verbatim "base class," which is what makes the selector
-                    # polymorphism possible
-                    self.type = f"std::unique_ptr<{type_finder(selection_types[0]) if type_finder else None}>"
-                else:
-                    # 1. 'type' entry
-                    self.type = self._get_scoped_inner_type(element_attributes["Data Type"])
+                self.type = self._get_scoped_inner_type(element_attributes["Data Type"])
         except KeyError as ke:
             pass
 
@@ -262,12 +226,13 @@ class DataElement(HeaderEntry):
             inner_type = m.group("inner_type")
         else:
             inner_type = type_str
-        # Look through the references to assign a scope to the type. 'location' is generally a
-        # schema name; its value will be a list of matchable data object names
-        for location in self._custom_datatypes_by_location:
-            if inner_type in self._custom_datatypes_by_location[location]:
-                self.scoped_innertype = (f"{snake_style(location)}", inner_type)
-                return "_ns::".join(self.scoped_innertype)
+
+        # Look through the references to assign a scope to the type
+        for custom_type in self._referenced_datatypes:
+            if inner_type in custom_type.name:
+                self.scoped_innertype = (f"{custom_type.namespace}", inner_type)
+                # namespace naming convention is snake_style, regardless of the schema file name
+                return "::".join(self.scoped_innertype)
         try:
             # e.g. "Numeric/Null" or "Numeric" both ok
             self.scoped_innertype = ("", self._pod_datatypes_map[type_str.split("/")[0]])
@@ -298,8 +263,43 @@ class DataElement(HeaderEntry):
                 except ValueError:
                     pass
 
+    def _get_constrained_base_type(self, element_attributes: dict, match_result: str) -> None:
+        """
+        Choices can only be mapped to enums; the enum selection key will be stored
+        in this object for later code generation, since it constitutes a constraint on this
+        Data Element.
 
-# -------------------------------------------------------------------------------------------------
+        Constraints (of selection type) are of the form
+        'selection_key(ENUM_VAL_1, ENUM_VAL_2, ENUM_VAL_3)' They connect pairwise with a Data Type list of the
+        form          ({Type_1},   {Type_2},   {Type_3}), all deriving from a base TypeBase
+        """
+        selection_key = element_attributes["Constraints"].split("(")[0]
+        selection_key_enum_class = self._get_scoped_inner_type(self._data_group_attributes[selection_key]["Data Type"])
+        selection_types = [self._get_scoped_inner_type(t.strip()) for t in match_result.split(",")]
+        m_opt = re.match(r".*\((?P<comma_separated_constraints>.*)\)", element_attributes["Constraints"])
+        if not m_opt:
+            raise TypeError
+        constraints = [
+            "::".join([selection_key_enum_class, s.strip()])
+            for s in m_opt.group("comma_separated_constraints").split(",")
+        ]
+
+        # the self.selector dictionary will have a form like:
+        # { operation_speed_control_type : { OperationSpeedControlType::CONTINUOUS : PerformanceMapContinuous, OperationSpeedControlType::DISCRETE : PerformanceMapDiscrete} }
+        # save this mapping to generate the source file contents
+        self.selector[selection_key] = dict(zip(constraints, selection_types))
+
+        # The elements of 'selection_types' are Data Groups that derive from a Data Group Template.
+        # The template is a verbatim "base class," which is what makes the selector
+        # polymorphism possible
+        for custom_type in self._referenced_datatypes:
+            if custom_type.name == self.scoped_innertype[1]:  # uses last of the selection types list to be processed
+                for base_type in self._referenced_datatypes:
+                    if base_type.name == custom_type.superclass_name:
+                        self.type = f"std::unique_ptr<{base_type.namespace}::{custom_type.superclass_name}>"
+                        break
+
+
 @dataclass
 class DataElementIsSetFlag(HeaderEntry):
 
@@ -308,7 +308,6 @@ class DataElementIsSetFlag(HeaderEntry):
         return f"{self._indent}bool {self.name}_is_set;"
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class DataElementStaticMetainfo(HeaderEntry):
     element: dict
@@ -329,7 +328,6 @@ class DataElementStaticMetainfo(HeaderEntry):
         return f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class InlineDependency(HeaderEntry):
     type: str  # HeaderEntry does not initialize this in __init__, but InlineDependency will
@@ -349,7 +347,6 @@ class InlineDependency(HeaderEntry):
         )
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class FunctionalHeaderEntry(HeaderEntry):
     _f_ret: str
@@ -367,7 +364,6 @@ class FunctionalHeaderEntry(HeaderEntry):
         return f"{self._indent}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
     def __post_init__(self):
@@ -376,7 +372,6 @@ class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
         self.trace()
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class ObjectSerializationDeclaration(FunctionalHeaderEntry):
     _f_ret: str = field(init=False)
@@ -391,7 +386,6 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
         self.trace()
 
 
-# -------------------------------------------------------------------------------------------------
 @dataclass
 class VirtualDestructor(FunctionalHeaderEntry):
     _explicit_definition: Optional[str] = None
@@ -403,17 +397,3 @@ class VirtualDestructor(FunctionalHeaderEntry):
         self._f_args = []
         super().__post_init__()
         self.trace()
-
-
-# # -------------------------------------------------------------------------------------------------
-# class CalculatePerformanceOverload(FunctionalHeaderEntry):
-#     def __init__(self, f_ret, f_args, name, parent, n_return_values):
-#         super().__init__(f_ret, "calculate_performance", "(" + ", ".join(f_args) + ")", name, parent)
-#         self.args_as_list = f_args
-#         self.n_return_values = n_return_values
-
-#     @property
-#     def value(self):
-#         complete_decl = self._level * "\t" + "using PerformanceMapBase::calculate_performance;\n"
-#         complete_decl += self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
-#         return complete_decl

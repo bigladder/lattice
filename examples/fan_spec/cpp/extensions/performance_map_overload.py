@@ -1,4 +1,5 @@
 import re
+import logging
 from dataclasses import dataclass, field
 from lattice.cpp.header_entries import DataElement, Struct, HeaderEntry, FunctionalHeaderEntry
 from lattice.cpp.header_translator import PluginInterface

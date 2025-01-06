@@ -29,9 +29,6 @@ class LookupStruct(HeaderEntry):
         return struct
 
 
-# def register():
-#     register_data_group_operation("LookupVariablesTemplate", LookupStruct)
-
 class LookupStructPlugin(PluginInterface, base_class="LookupVariablesTemplate"):
     """"""
     def process_data_group(self, parent_node: HeaderEntry):
