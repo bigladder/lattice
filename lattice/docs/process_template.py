@@ -8,6 +8,7 @@ import os
 import traceback
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNotFound
+from lattice.file_io import load
 import yaml
 
 from .schema_table import load_structure_from_object, write_data_model, create_table_from_list
@@ -135,8 +136,7 @@ def load_yaml_source(schema_dir, source, args_str):
     src_path = os.path.join(schema_dir, source + ".schema.yaml")
     if not os.path.exists(src_path):
         return (make_error_string(f'Schema source "{source}" ("{src_path}") doesn\'t exist!', args_str), None)
-    with open(src_path, encoding="utf-8", mode="r") as input_file:
-        data = yaml.load(input_file, Loader=yaml.FullLoader)
+    data = load(src_path)
     return (None, data)
 
 
@@ -221,7 +221,7 @@ def make_add_yaml_table():
     """
 
     def add_yaml_table(content, caption=None):
-        table_data = yaml.load(content, Loader=yaml.FullLoader)
+        table_data = yaml.load(content, Loader=yaml.CLoader)
         columns = table_data["Headers"]
         data = {}
         for i, column in enumerate(columns):

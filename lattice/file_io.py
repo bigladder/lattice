@@ -39,7 +39,7 @@ def load(input_file_path) -> dict:
             return cbor2.load(input_file)
     elif ext in [".yaml", ".yml"]:
         with open(input_file_path, "r", encoding="utf-8") as input_file:
-            return yaml.load(input_file, Loader=yaml.FullLoader)
+            return yaml.load(input_file, Loader=yaml.CLoader)
     else:
         raise ValueError(f'Unsupported input "{ext}".')
 
