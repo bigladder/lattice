@@ -31,7 +31,6 @@ class HeaderEntry:
         if parent:
             self._parent_entry._add_child_entry(self)
 
-    # .............................................................................................
     def __lt__(self, other):
         """Rich-comparison method to allow sorting.
 
@@ -40,7 +39,6 @@ class HeaderEntry:
         """
         return self._less_than(other)
 
-    # .............................................................................................
     def _less_than(self, other):
         """ """
         lt = False
@@ -58,15 +56,12 @@ class HeaderEntry:
                 lt = self._less_than(c)
         return lt
 
-    # .............................................................................................
     def __gt__(self, other):
         return other < self
 
-    # .............................................................................................
     def _add_child_entry(self, child):
         self._child_entries.append(child)
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self._level * "\t" + self.type + " " + self.name
@@ -78,24 +73,20 @@ class HeaderEntry:
         entry += self._level * "\t" + self._closure
         return entry
 
-    # .............................................................................................
     @property
     def parent(self):
         return self._parent_entry
 
-    # .............................................................................................
     @property
     def child_entries(self):
         return self._child_entries
 
-    # .............................................................................................
     def _get_level(self, level=0):
         if self._parent_entry:
             return self._parent_entry._get_level(level + 1)
         else:
             return level
 
-    # .............................................................................................
     @property
     def _level(self):
         return self._get_level()
@@ -108,10 +99,10 @@ class Typedef(HeaderEntry):
         self.type = "typedef"
         self._typedef = typedef
 
-    # .............................................................................................
     @property
     def value(self):
-        return self._level * "\t" + self.type + " " + self._typedef + " " + self.name + ";"
+        tab = "\t"
+        return f"{self._level * tab}{self.type} {self._typedef} {self.name};"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -122,26 +113,25 @@ class Enumeration(HeaderEntry):
         self._closure = "};"
         self._enumerants: dict = item_dict
 
-    # .............................................................................................
     @property
     def value(self):
-        entry = self._level * "\t" + self.type + " " + self.name + " " + self._opener + "\n"
+        tab = "\t"
+        entry = f"{self._level * tab}{self.type} {self.name} {self._opener}\n"
         for e in self._enumerants:
-            entry += (self._level + 1) * "\t"
-            entry += e + ",\n"
-        entry += (self._level + 1) * "\t" + "UNKNOWN\n"
-        entry += self._level * "\t" + self._closure
+            entry += f"{(self._level + 1) * tab}{e},\n"
+        entry += f"{(self._level + 1) * tab}UNKNOWN\n{self._level * tab}{self._closure}"
 
         # Incorporate an enum_info map into this object
         map_type = f"const static std::unordered_map<{self.name}, enum_info>"
-        entry += "\n"
-        entry += self._level * "\t" + map_type + " " + self.name + "_info " + self._opener + "\n"
+        entry += f"\n" f"{self._level * tab}{map_type} {self.name}_info {self._opener}\n"
         for e in self._enumerants:
             display_text = self._enumerants[e].get("Display Text", e)
             description = self._enumerants[e].get("Description")
-            entry += (self._level + 1) * "\t" + f'{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
-        entry += (self._level + 1) * "\t" + f'{{{self.name}::UNKNOWN, {{"UNKNOWN", "None","None"}}}}\n'
-        entry += self._level * "\t" + self._closure
+            entry += (
+                f"{(self._level + 1) * tab}" f'{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
+            )
+        entry += f"{(self._level + 1) * tab}" f'{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
+        entry += f"{self._level * tab}{self._closure}"
 
         return entry
 
@@ -155,7 +145,6 @@ class EnumSerializationDeclaration(HeaderEntry):
         self._closure = "})"
         self._enumerants: list = ["UNKNOWN"] + (list(item_dict.keys()))
 
-    # .............................................................................................
     @property
     def value(self):
         entry = self._level * "\t" + self.type + " " + self._opener + "\n"
@@ -190,24 +179,23 @@ class DataElement(HeaderEntry):
 
         self._create_type_entry(element, find_func)
 
-    # .............................................................................................
     @property
     def value(self):
-        return self._level * "\t" + self.type + " " + self.name + self._closure
+        tab = "\t"
+        return f"{self._level * tab}{self.type} {self.name}{self._closure}"
 
     # .............................................................................................
     @property
     def selector(self):
         return self._selector
 
-    # .............................................................................................
     def _create_type_entry(self, parent_dict, type_finder=None):
         """Create type node."""
         try:
             # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
             m = re.findall(r"\[(.*?)\]", parent_dict["Data Type"])
             if m:
-                self.type = "std::vector<" + self._get_simple_type(m[0]) + ">"
+                self.type = f"std::vector<{self._get_simple_type(m[0])}>"
             else:
                 # If the type is oneOf a set
                 m = re.match(r"\((.*)\)", parent_dict["Data Type"])
@@ -235,17 +223,17 @@ class DataElement(HeaderEntry):
                     # the _selector dictionary would have a form like:
                     # { operation_speed_control_type : { CONTINUOUS : PerformanceMapContinuous, DISCRETE : PerformanceMapDiscrete} }
                     self._selector[oneof_selection_key] = dict(zip(selectors, types))
-                    # TODO: the following assumes the data element name is an exact match for its base class type; e.g. performance_map -> PerformanceMapBase
-                    # Possibly need a better assumption
-                    classname_from_name = "".join(word.title() for word in self.name.split("_"))  # CamelCase it
-                    self.type = f"std::unique_ptr<{classname_from_name}Base>"
+
+                    # The elements of 'types' are Data Groups that derive from a Data Group Template.
+                    # The template is a verbatim "base class," which is what makes the selector
+                    # polymorphism possible
+                    self.type = f"std::unique_ptr<{type_finder(types[0]) if type_finder else None}>"
                 else:
                     # 1. 'type' entry
                     self.type = self._get_simple_type(parent_dict["Data Type"])
         except KeyError as ke:
             pass
 
-    # .............................................................................................
     def _get_simple_type(self, type_str):
         """Return the internal type described by type_str.
 
@@ -254,46 +242,37 @@ class DataElement(HeaderEntry):
         """
         enum_or_def = r"(\{|\<)(.*)(\}|\>)"
         internal_type = None
-        nested_type = None
+        # nested_type = None
         m = re.match(enum_or_def, type_str)
         if m:
-            # Find the internal type. It might be inside nested-type syntax, but more likely
-            # is a simple definition or enumeration.
-            m_nested = re.match(r".*?\((.*)\)", m.group(2))
-            if m_nested:
-                # Rare case of a nested specification e.g. 'ASHRAE205(RS_ID=RS0005)'
-                internal_type = m.group(2).split("(")[0]
-                nested_type = m_nested.group(1)
-            else:
-                internal_type = m.group(2)
+            # # Find the internal type. It might be inside nested-type syntax, but more likely
+            # # is a simple definition or enumeration.
+            # m_nested = re.match(r".*?\((.*)\)", m.group(2))
+            # if m_nested:
+            #     # Rare case of a nested specification e.g. 'ASHRAE205(RS_ID=RS0005)'
+            #     internal_type = m.group(2).split("(")[0]
+            #     nested_type = m_nested.group(1)
+            # else:
+            #     internal_type = m.group(2)
+            internal_type = m.group(2)
         else:
             internal_type = type_str
         # Look through the references to assign a source to the type. 'key' is generally a
         # schema name; its value will be a list of matchable data object names
+        print(internal_type, self._refs)
         for key in self._refs:
             if internal_type in self._refs[key]:
-                simple_type = f"{snake_style(key)}_ns::{internal_type}"
-                # simple_type = internal_type
-                # #
-                # if key == internal_type:
-                #     simple_type = f'{key}_ns::{internal_type}'
-                if nested_type:
-                    # e.g. 'ASHRAE205' from the composite 'ASHRAE205(RS_ID=RSXXXX)'
-                    # simple_type = f'std::shared_ptr<{internal_type}>'
-                    simple_type = f"{internal_type}"
-                return simple_type
+                return f"{snake_style(key)}_ns::{internal_type}"
 
         try:
             if "/" in type_str:
                 # e.g. "Numeric/Null"
-                simple_type = self._datatypes[type_str.split("/")[0]]
+                return self._datatypes[type_str.split("/")[0]]
             else:
-                simple_type = self._datatypes[type_str]
+                return self._datatypes[type_str]
         except KeyError:
             print("Type not processed:", type_str)
-        return simple_type
 
-    # .............................................................................................
     def _get_simple_minmax(self, range_str, target_dict):
         """Process Range into min and max fields."""
         if range_str is not None:
@@ -334,7 +313,6 @@ class DataElement(HeaderEntry):
 #         if superclass:
 #             self.superclass = superclass
 
-#     # .............................................................................................
 #     @property
 #     def value(self):
 #         entry = self._level*'\t' + self.type + ' ' + self.name
@@ -360,10 +338,10 @@ class DataIsSetElement(HeaderEntry):
     def __init__(self, name, parent):
         super().__init__(name, parent)
 
-    # .............................................................................................
     @property
     def value(self):
-        return self._level * "\t" + "bool " + self.name + "_is_set;"
+        tab = "\t"
+        return f"{self._level * tab}bool {self.name}_is_set;"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -376,10 +354,25 @@ class DataElementStaticMetainfo(HeaderEntry):
         self.name = self.name + "_" + meta_key.lower()
         self._closure = ";"
 
-    # .............................................................................................
     @property
     def value(self):
-        return self._level * "\t" + self._type_specifier + " " + self.type + " " + self.name + self._closure
+        tab = "\t"
+        return f"{self._level * tab}{self._type_specifier} {self.type} {self.name}{self._closure}"
+
+
+# -------------------------------------------------------------------------------------------------
+class InlineDependency(HeaderEntry):
+
+    def __init__(self, name, parent, dependency_type):
+        super().__init__(name, parent)
+        self._type_specifier = "inline"
+        self.type = dependency_type
+        self._closure = ";"
+
+    @property
+    def value(self):
+        tab = "\t"
+        return f"{self._level * tab}{self._type_specifier } {self.type} {self.name}{self._closure}"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -391,10 +384,10 @@ class FunctionalHeaderEntry(HeaderEntry):
         self.args = f_args
         self._closure = ";"
 
-    # .............................................................................................
     @property
     def value(self):
-        return self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
+        tab = "\t"
+        return f"{self._level * tab}{' '.join([self.ret_type, self.fname, self.args])}{self._closure}"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -430,7 +423,6 @@ class InitializeFunction(FunctionalHeaderEntry):
 #         for key in item_dict:
 #             self._enumerants.append(f'{key}_index')
 
-#     # .............................................................................................
 #     @property
 #     def value(self):
 #         enums = self._enumerants
@@ -443,19 +435,18 @@ class InitializeFunction(FunctionalHeaderEntry):
 #         return entry
 
 
-# -------------------------------------------------------------------------------------------------
-class CalculatePerformanceOverload(FunctionalHeaderEntry):
-    def __init__(self, f_ret, f_args, name, parent, n_return_values):
-        super().__init__(f_ret, "calculate_performance", "(" + ", ".join(f_args) + ")", name, parent)
-        self.args_as_list = f_args
-        self.n_return_values = n_return_values
+# # -------------------------------------------------------------------------------------------------
+# class CalculatePerformanceOverload(FunctionalHeaderEntry):
+#     def __init__(self, f_ret, f_args, name, parent, n_return_values):
+#         super().__init__(f_ret, "calculate_performance", "(" + ", ".join(f_args) + ")", name, parent)
+#         self.args_as_list = f_args
+#         self.n_return_values = n_return_values
 
-    # .............................................................................................
-    @property
-    def value(self):
-        complete_decl = self._level * "\t" + "using PerformanceMapBase::calculate_performance;\n"
-        complete_decl += self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
-        return complete_decl
+#     @property
+#     def value(self):
+#         complete_decl = self._level * "\t" + "using PerformanceMapBase::calculate_performance;\n"
+#         complete_decl += self._level * "\t" + " ".join([self.ret_type, self.fname, self.args]) + self._closure
+#         return complete_decl
 
 
 # -------------------------------------------------------------------------------------------------
@@ -469,25 +460,16 @@ class HeaderTranslator:
         self._data_group_types = ["Data Group"]
         self._forward_declaration_dir: Optional[pathlib.Path] = None
 
-    # .............................................................................................
     def __str__(self):
-        s = ""
-        for p in self._preamble:
-            s += p
-        s += "\n"
-        s += self._doxynotes
-        s += "\n"
-        s += self.root.value
-        s += "\n"
-        for e in self._epilogue:
-            s += e
+        s = "\n".join([p for p in self._preamble])
+        s += f"\n\n{self._doxynotes}\n{self.root.value}\n"
+        s += "\n".join([e for e in self._epilogue])
         return s
 
     @property
     def root(self):
         return self._top_namespace
 
-    # .............................................................................................
     @staticmethod
     def modified_insertion_sort(obj_list):
         """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
@@ -506,7 +488,7 @@ class HeaderTranslator:
             obj_list[j + 1] = item_to_insert
         return swapped
 
-    # .............................................................................................
+    # fmt: off
     def translate(self, input_file_path, top_namespace: str, forward_declarations_path: pathlib.Path):
         """X"""
         self._source_dir = os.path.dirname(os.path.abspath(input_file_path))
@@ -522,7 +504,7 @@ class HeaderTranslator:
         # Load meta info first (assuming that base level tag == Schema means object type == Meta)
         self._load_meta_info(self._contents["Schema"])
         self._add_include_guard(snake_style(self._schema_name))
-        self._add_included_headers(self._contents["Schema"].get("References"))
+        self._add_standard_dependency_headers(self._contents["Schema"].get("References"))
 
         # Create "root" node(s)
         self._top_namespace = HeaderEntry(top_namespace)
@@ -531,21 +513,39 @@ class HeaderTranslator:
         # First, assemble typedefs
         for base_level_tag in [tag for tag in self._contents if self._contents[tag]["Object Type"] == "String Type"]:
             Typedef(base_level_tag, self._namespace, "std::string")
+
         # Second, enumerations
         for base_level_tag in [
             tag for tag in self._contents if self._contents[tag].get("Object Type") == "Enumeration"
         ]:
             Enumeration(base_level_tag, self._namespace, self._contents[base_level_tag]["Enumerators"])
+
+        # Namespace-level dependencies
+        InlineDependency("logger", self._namespace, "std::shared_ptr<Courier::Courier>")
+
         # Collect member objects and their children
         for base_level_tag in [tag for tag in self._contents if self._contents[tag].get("Object Type") == "Meta"]:
             s = Struct(base_level_tag, self._namespace)
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Title")
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Version")
-            d = DataElementStaticMetainfo(base_level_tag.lower(), s, self._contents[base_level_tag], "Description")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Title")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Version")
+            d = DataElementStaticMetainfo(base_level_tag.lower(),
+                                          s,
+                                          self._contents[base_level_tag],
+                                          "Description")
         for base_level_tag in [
             tag for tag in self._contents if self._contents[tag].get("Object Type") in self._data_group_types
         ]:
-            s = Struct(base_level_tag, self._namespace)
+            s = Struct(
+                base_level_tag,
+                self._namespace,
+                superclass=self._contents[base_level_tag].get("Data Group Template", ""),
+            )
             self._add_member_headers(s)
             # When there is a base class, add overrides:
             # self._add_function_overrides(s, self._fundamental_base_class)
@@ -569,6 +569,7 @@ class HeaderTranslator:
             #     s = Struct(base_level_tag, self._namespace)
 
             for data_element in self._contents[base_level_tag]["Data Elements"]:
+                print(data_element)
                 d = DataElement(
                     data_element,
                     s,
@@ -582,15 +583,24 @@ class HeaderTranslator:
                 d = DataIsSetElement(data_element, s)
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Units"
+                    data_element,
+                    s,
+                    self._contents[base_level_tag]["Data Elements"][data_element],
+                    "Units"
                 )
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Description"
+                    data_element,
+                    s,
+                    self._contents[base_level_tag]["Data Elements"][data_element],
+                    "Description"
                 )
             for data_element in self._contents[base_level_tag]["Data Elements"]:
                 d = DataElementStaticMetainfo(
-                    data_element, s, self._contents[base_level_tag]["Data Elements"][data_element], "Name"
+                    data_element,
+                    s,
+                    self._contents[base_level_tag]["Data Elements"][data_element],
+                    "Name"
                 )
         HeaderTranslator.modified_insertion_sort(self._namespace.child_entries)
         # PerformanceMapBase object needs sibling grid/lookup vars to be created, so parse last
@@ -598,17 +608,21 @@ class HeaderTranslator:
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in [
-            tag for tag in self._contents if self._contents[tag].get("Object Type") == "Enumeration"
+            tag for tag in self._contents
+                if self._contents[tag].get("Object Type") == "Enumeration"
         ]:
-            EnumSerializationDeclaration(base_level_tag, self._namespace, self._contents[base_level_tag]["Enumerators"])
+            EnumSerializationDeclaration(base_level_tag,
+                                         self._namespace,
+                                         self._contents[base_level_tag]["Enumerators"])
         for base_level_tag in [
-            tag for tag in self._contents if self._contents[tag].get("Object Type") in self._data_group_types
+            tag for tag in self._contents
+                if self._contents[tag].get("Object Type") in self._data_group_types
         ]:
             # from_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
 
-    # .............................................................................................
+
     def _load_meta_info(self, schema_section):
         """Store the global/common types and the types defined by any named references."""
         self._root_data_group = schema_section.get("Root Data Group")
@@ -619,7 +633,9 @@ class HeaderTranslator:
         if "References" in schema_section:
             for ref in schema_section["References"]:
                 refs.update({f"{ref}": os.path.join(self._source_dir, ref + ".schema.yaml")})
-        if self._schema_name == "core" and self._forward_declaration_dir and self._forward_declaration_dir.is_dir():
+        if (self._schema_name == "core" and
+            self._forward_declaration_dir and
+            self._forward_declaration_dir.is_dir()):
             for file in self._forward_declaration_dir.iterdir():
                 ref = get_base_stem(file)
                 refs.update({ref: file})
@@ -639,40 +655,43 @@ class HeaderTranslator:
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
 
-    # .............................................................................................
+    # fmt: on
+
     def _add_include_guard(self, header_name):
         s1 = f"#ifndef {header_name.upper()}_H_"
         s2 = f"#define {header_name.upper()}_H_"
         s3 = f"#endif"
-        self._preamble.append(s1 + "\n" + s2 + "\n")
-        self._epilogue.append(s3 + "\n")
+        self._preamble.extend([s1, s2])
+        self._epilogue.append(s3)
 
-    # .............................................................................................
-    def _add_included_headers(self, ref_list):
+    def _add_standard_dependency_headers(self, ref_list):
         if ref_list:
             includes = ""
             for r in ref_list:
-                includes += f"#include <{hyphen_separated_lowercase_style(r)}.h>"
-                includes += "\n"
-            self._preamble.append(includes)
-        self._preamble.append(
-            "#include <string>\n#include <vector>\n#include <nlohmann/json.hpp>\n#include <enum-info.h>\n"
+                include = f"#include <{hyphen_separated_lowercase_style(r)}.h>"
+                self._preamble.append(include)
+        self._preamble.extend(
+            [
+                "#include <string>",
+                "#include <vector>",
+                "#include <nlohmann/json.hpp>",
+                "#include <enum-info.h>",
+                "#include <courier/courier.h>",
+            ]
         )
 
-    # .............................................................................................
     def _add_member_headers(self, data_element):
         if "unique_ptr" in data_element.type:
             m = re.search(r"\<(.*)\>", data_element.type)
             if m:
-                include = f"#include <{hyphen_separated_lowercase_style(m.group(1))}.h>\n"
+                include = f"#include <{hyphen_separated_lowercase_style(m.group(1))}.h>"
                 if include not in self._preamble:
                     self._preamble.append(include)
         if data_element.superclass:
-            include = f"#include <{hyphen_separated_lowercase_style(data_element.superclass)}.h>\n"
+            include = f"#include <{hyphen_separated_lowercase_style(data_element.superclass)}.h>"
             if include not in self._preamble:
                 self._preamble.append(include)
 
-    # .............................................................................................
     def _add_function_overrides(self, parent_node, base_class_name):
         """Get base class virtual functions to be overridden."""
         base_class = os.path.join(
@@ -691,7 +710,6 @@ class HeaderTranslator:
         except:
             pass
 
-    # .............................................................................................
     def _add_performance_overloads(self, parent_node=None):
         """ """
         if not parent_node:
@@ -721,10 +739,17 @@ class HeaderTranslator:
             else:
                 self._add_performance_overloads(entry)
 
-    # .............................................................................................
-    def _search_nodes_for_datatype(self, data_element):
+    def _search_nodes_for_datatype(self, data_element) -> str:
+        """
+        If data_element exists, return its data type; else return the data group's 'data type,' which
+        is the Data Group Template. Hacky overload.
+        """
         for listing in self._contents:
             if "Data Elements" in self._contents[listing]:
+                if "Data Group Template" in self._contents[listing] and listing in data_element:
+                    return self._contents[listing]["Data Group Template"]
+
                 for element in self._contents[listing]["Data Elements"]:
                     if element == data_element and "Data Type" in self._contents[listing]["Data Elements"][element]:
                         return self._contents[listing]["Data Elements"][element]["Data Type"]
+        return "Template"  # Placeholder base class
