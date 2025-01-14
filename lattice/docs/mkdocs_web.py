@@ -181,8 +181,10 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
 
         # Make stylesheets directory and copy extra_styles.css into this path.
         # Nesting inside stylesheets directory allows it to live with the other Mkdocs-generated css assets.
-        self.style_css_dir = make_dir(Path(self.assets_directory_path, 'stylesheets'))
-        self.style_css_path = str(shutil.copy(Path(Path(__file__).parent.resolve(), 'extra_styles.css'), self.style_css_dir))
+        self.style_css_dir = make_dir(Path(self.assets_directory_path, "stylesheets"))
+        self.style_css_path = str(
+            shutil.copy(Path(Path(__file__).parent.resolve(), "extra_styles.css"), self.style_css_dir)
+        )
 
         # Specifications
         self.make_specification_pages()
