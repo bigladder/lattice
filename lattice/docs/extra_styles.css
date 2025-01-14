@@ -6,10 +6,12 @@ dl {
 
 :is([dir="ltr"], [dir="rtl"]) .md-typeset dt {
   text-align: right;
+  grid-column: 1 / 2;
 }
 
 :is([dir="ltr"], [dir="rtl"]) .md-typeset dd {
   margin: 0;
+  grid-column: 2 / -1;
 }
 
 dl > dd > * {
