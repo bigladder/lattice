@@ -1,0 +1,18 @@
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5em 1ch;
+}
+
+:is([dir="ltr"], [dir="rtl"]) .md-typeset dt {
+  text-align: right;
+}
+
+:is([dir="ltr"], [dir="rtl"]) .md-typeset dd {
+  margin: 0;
+}
+
+dl > dd > * {
+  /* TODO: Increase selector specificity so we don't have to use !important. */
+  margin: 0 !important;
+}
