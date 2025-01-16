@@ -60,23 +60,25 @@ class HeaderEntry(EntryFormat):
         A Header_entry must be "less than" any another Header_entry that references it, i.e.
         you must define a C++ value before you reference it.
         """
-        return self._less_than(other)
+        return self._less_than(self, other)
 
-    def _less_than(self, other):
+    @staticmethod
+    def _less_than(this: HeaderEntry | FunctionalHeaderEntry,
+                   other: HeaderEntry | FunctionalHeaderEntry):
         """ """
         lt = False
-        t = f"{other.type} {other.name}"
+        t =  f"{other._f_ret} {other.args}" if isinstance(other, FunctionalHeaderEntry) else f"{other.type} {other.name}"
         # \b is a "boundary" character, or specifier for a whole word
-        if re.search(r"\b" + self.name + r"\b", t):
+        if re.search(r"\b" + this.name + r"\b", t):
             return True
         for c in other.child_entries:
-            t = f"{c.type} {c.name}"
-            if re.search(r"\b" + self.name + r"\b", t):
+            t = f"{c._f_ret} {c.args}" if isinstance(c, FunctionalHeaderEntry) else f"{c.type} {c.name}"
+            if re.search(r"\b" + this.name + r"\b", t):
                 # Shortcut around checking siblings; if one child matches, then self < other
                 return True
             else:
                 # Check grandchildren
-                lt = self._less_than(c)
+                lt = HeaderEntry._less_than(this, c)
         return lt
 
     def __str__(self):

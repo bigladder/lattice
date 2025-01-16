@@ -16,12 +16,15 @@ logger = logging.getLogger()
 
 
 class PluginInterface(ABC):
-    extensions: dict[str, Callable] = {}
+    extensions: dict[str, list[Callable]] = {} # TODO: list should be a set
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
         if "base_class" in kwargs and isinstance(kwargs["base_class"], str):
-            cls.extensions[kwargs["base_class"]] = cls
+            if kwargs["base_class"] in cls.extensions:
+                cls.extensions[kwargs["base_class"]].append(cls)
+            else:
+                cls.extensions[kwargs["base_class"]] = [cls]
 
     @abstractmethod
     def process_data_group(self, parent_node: HeaderEntry): ...
@@ -46,7 +49,11 @@ def modified_insertion_sort(obj_list):
 
 
 class HeaderTranslator:
-    def __init__(self):
+    def __init__(self,
+                  input_file_path: pathlib.Path,
+                  forward_declarations_path: pathlib.Path,
+                  output_path: pathlib.Path,
+                  top_namespace: str):
         self._referenced_data_types: list[ReferencedDataType] = []
         self._references: dict[str, list[str]] = {}
         self._fundamental_data_types: dict[str, str] = {}
@@ -56,9 +63,12 @@ class HeaderTranslator:
         self._epilogue = []
         self._data_group_types = {"Data Group"}
         self._forward_declaration_dir: Optional[pathlib.Path] = None
-        self._extensions: dict[str, PluginInterface] = {
-            base_class: PluginInterface.extensions[base_class]() for base_class in PluginInterface.extensions
-        }
+        self._extensions: dict[str, list[PluginInterface]] = {}
+
+        for base_class in PluginInterface.extensions:
+            self._extensions[base_class] = [PluginInterface.extensions[base_class][i]() for i in range(len(PluginInterface.extensions[base_class]))]
+
+        self._translate(input_file_path, forward_declarations_path, output_path, top_namespace)
 
     def __str__(self):
         s = "\n".join([p for p in self._preamble])
@@ -71,7 +81,7 @@ class HeaderTranslator:
         return self._top_namespace
 
     # fmt: off
-    def translate(self,
+    def _translate(self,
                   input_file_path: pathlib.Path,
                   forward_declarations_path: pathlib.Path,
                   output_path: pathlib.Path,
@@ -80,7 +90,7 @@ class HeaderTranslator:
         self._source_dir = input_file_path.parent.resolve()
         self._forward_declaration_dir = forward_declarations_path
         self._schema_name = get_base_stem(input_file_path)
-        self._reset_parsing()
+        #self._reset_parsing()
         self._contents = load(input_file_path)
 
         self._add_include_guard(snake_style(self._schema_name))
@@ -146,7 +156,7 @@ class HeaderTranslator:
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
             data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
             if data_group_template in self._extensions:
-                self._extensions[data_group_template].process_data_group(self.root)
+                [self._extensions[data_group_template][i].process_data_group(self.root) for i in range(len(self._extensions[data_group_template]))]
                 self._extensions.pop(data_group_template)
 
         self._add_header_dependencies()

@@ -4,6 +4,8 @@ from __future__ import (
 import logging
 from typing import Optional, Callable
 from dataclasses import dataclass, field
+from abc import ABC, abstractmethod
+import sys
 
 from .header_entries import (
     EntryFormat,
@@ -12,9 +14,9 @@ from .header_entries import (
     DataElement,
     DataElementStaticMetainfo,
     FunctionalHeaderEntry,
-    MemberFunctionOverrideDeclaration,
     ObjectSerializationDeclaration,
     InlineDependency,
+    VirtualDestructor
 )
 
 logger = logging.getLogger()
@@ -22,20 +24,6 @@ logger = logging.getLogger()
 
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
-
-
-data_group_extensions: dict[str, Callable] = {}
-
-
-def register_data_group_implementation(data_group_template_name: str, header_entry: Callable):
-    data_group_extensions[data_group_template_name] = header_entry
-
-
-data_element_extensions: dict[str, Callable] = {}
-
-
-def register_data_element_implementation(data_group_template_name: str, header_entry: Callable):
-    data_element_extensions[data_group_template_name] = header_entry
 
 
 @dataclass
@@ -148,7 +136,7 @@ class StructSerialization(FunctionDefinition):
 
 @dataclass
 class MemberFunctionDefinition(FunctionDefinition):
-    _header_entry: MemberFunctionOverrideDeclaration
+    _header_entry: FunctionalHeaderEntry
 
     def __post_init__(self):
         super(FunctionDefinition, self).__post_init__()
@@ -223,6 +211,8 @@ class ClassFactoryCreation(ElementSerialization):
 
 @dataclass
 class SerializeFromInitFunction(ElementSerialization):
+    _header_entry: ObjectSerializationDeclaration
+
     def __post_init__(self):
         super().__post_init__()
         self._func = "x.initialize(j);\n"
@@ -232,81 +222,6 @@ class SerializeFromInitFunction(ElementSerialization):
         return self._indent + self._func
 
 
-# # -------------------------------------------------------------------------------------------------
-# class PerformanceMapImplementation(ElementSerialization):
-#     def __init__(self, parent, header_entry, populates_self=False):
-#         super().__init__(parent, header_entry)
-#         if populates_self:
-#             self._func = f"{self._name}.populate_performance_map(this);\n"
-#         else:
-#             self._func = f"x.{self._name}.populate_performance_map(&x);\n"
-
-#     @property
-#     def value(self):
-#         return self.level * "\t" + self._func
-
-
-# # -------------------------------------------------------------------------------------------------
-# class GridAxisImplementation(ImplementationEntry):
-#     def __init__(self, name, parent):
-#         super().__init__(name, parent)
-#         self._func = [f"add_grid_axis(performance_map, {name});\n"]
-
-#     @property
-#     def value(self):
-#         entry = ""
-#         for f in self._func:
-#             entry += self.level * "\t" + f
-#         return entry
-
-
-# # -------------------------------------------------------------------------------------------------
-# class GridAxisFinalize(ImplementationEntry):
-#     def __init__(self, name, parent):
-#         super().__init__(name, parent)
-#         self._func = [f"performance_map->finalize_grid();\n"]
-
-#     @property
-#     def value(self):
-#         entry = ""
-#         for f in self._func:
-#             entry += self.level * "\t" + f
-#         return entry
-
-
-# # -------------------------------------------------------------------------------------------------
-# class DataTableImplementation(ImplementationEntry):
-#     def __init__(self, name, parent):
-#         super().__init__(name, parent)
-#         self._func = [f"add_data_table(performance_map, {name});\n"]
-
-#     @property
-#     def value(self):
-#         entry = ""
-#         for f in self._func:
-#             entry += self.level * "\t" + f
-#         return entry
-
-
-# # -------------------------------------------------------------------------------------------------
-# class PerformanceOverloadImplementation(ElementSerialization):
-#     def __init__(self, header_entry, parent):
-#         super().__init__(None, None, parent, None)
-#         self._func = []
-#         args = ", ".join([f"{a[1]}" for a in [arg.split(" ") for arg in header_entry.args_as_list[:-1]]])
-#         self._func.append(f"std::vector<double> target {{{args}}};")
-#         self._func.append(
-#             "auto v = PerformanceMapBase::calculate_performance(target, performance_interpolation_method);"
-#         )
-#         init_str = f"{header_entry.ret_type} s {{"
-#         for i in range(header_entry.n_return_values):
-#             init_str += f"v[{i}], "
-#         init_str += "};"
-#         self._func.append(init_str)
-#         self._func.append("return s;")
-
-
-# -------------------------------------------------------------------------------------------------
 class SimpleReturnProperty(ImplementationEntry):
 
     def __str__(self):
@@ -315,10 +230,24 @@ class SimpleReturnProperty(ImplementationEntry):
         return entry
 
 
-# -------------------------------------------------------------------------------------------------
+class CPPExtensionInterface(ABC):
+    extensions: list[Callable] = []
+
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        cls.extensions.append(cls)
+
+    @abstractmethod
+    def process_data_group(self, reference_header_entry: HeaderEntry): ...
+
+
 class CPPTranslator:
-    def __init__(self):
+    def __init__(self, container_class_name, header_tree):
         self._preamble = list()
+        self._extensions = [
+            extension_object() for extension_object in CPPExtensionInterface.extensions
+        ]
+        self._translate(container_class_name, header_tree)
 
     def __str__(self):
         s = "".join(self._preamble)
@@ -327,7 +256,7 @@ class CPPTranslator:
         s += "\n"
         return s
 
-    def translate(self, container_class_name, header_tree):
+    def _translate(self, container_class_name, header_tree):
         """X"""
         self._add_included_headers(header_tree._schema_name)
 
@@ -339,78 +268,45 @@ class CPPTranslator:
 
         self._get_items_to_serialize(header_tree.root)
 
-    def _get_items_to_serialize(self, header_tree):
-        for entry in header_tree.child_entries:
-            if isinstance(entry, Struct) and len([c for c in entry.child_entries if isinstance(c, DataElement)]):
-                # Create the "from_json" function definition (header), only if it won't be empty
-                s = StructSerialization(entry, self._namespace)
-                for data_element_entry in [c for c in entry.child_entries if isinstance(c, DataElement)]:
+    def _get_items_to_serialize(self, header_tree: HeaderEntry):
+        for h_entry in header_tree.child_entries:
+            cpp_entry: Optional[ImplementationEntry] = None
+            logger.debug(f"Header entry being processed: {h_entry.name} under {h_entry.parent.name}")
+            if isinstance(h_entry, Struct) and len([c for c in h_entry.child_entries if isinstance(c, DataElement)]):
+                cpp_entry = StructSerialization(h_entry, self._namespace) # Create the "from_json" function definition (header), only if it won't be empty
+
+                for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
                     # In function body, create each "get_to" for individual data elements
                     if "unique_ptr" in data_element_entry.type:
-                        OwnedElementCreation(data_element_entry, s)
+                        c = OwnedElementCreation(data_element_entry, cpp_entry)
                     else:
-                        OwnedElementSerialization(data_element_entry, s)
-                    # In the special case of a performance_map subclass, add calls to its
-                    # members' Populate_performance_map functions
-                    # if entry.superclass == "PerformanceMapBase":
-                    #     PerformanceMapImplementation(data_element_entry.name, s)
+                        c = OwnedElementSerialization(data_element_entry, cpp_entry)
 
-            elif isinstance(entry, DataElementStaticMetainfo):
-                logger.debug(f"{entry.name}, {entry.parent.name}")
-                DataElementStaticInitialization(entry, self._namespace)
+            elif isinstance(h_entry, DataElementStaticMetainfo):
+                logger.debug(f"{h_entry.name} under {type(h_entry.parent)} under {self._namespace._name}")
+                cpp_entry = DataElementStaticInitialization(h_entry, self._namespace)
 
-            elif isinstance(entry, InlineDependency):
-                DependencyInitialization(entry, self._namespace)
+            elif isinstance(h_entry, InlineDependency):
+                cpp_entry = DependencyInitialization(h_entry, self._namespace)
 
             # Initialize and Populate overrides (Currently the only Member_function_override is the Initialize override)
-            elif isinstance(entry, MemberFunctionOverrideDeclaration):
-                # Create the override function definition (header) using the declaration's signature
-                m = MemberFunctionDefinition(entry, self._namespace)
+            elif (isinstance(h_entry, FunctionalHeaderEntry)
+                 and not isinstance(h_entry, ObjectSerializationDeclaration)
+                 and not isinstance(h_entry, VirtualDestructor)):
+                cpp_entry = MemberFunctionDefinition(h_entry, self._namespace) # Create the override function definition (header) using the declaration's signature
+
                 # In function body, choose element-wise ops based on the superclass
-                for data_element_entry in [c for c in entry.parent.child_entries if isinstance(c, DataElement)]:
+                for data_element_entry in [c for c in h_entry.parent.child_entries if isinstance(c, DataElement)]:
                     if "unique_ptr" in data_element_entry.type:
-                        ClassFactoryCreation(data_element_entry, m)
+                        ClassFactoryCreation(data_element_entry, cpp_entry)
                         self._preamble.append(f"#include <{data_element_entry.name}_factory.h>\n")
-                    # else:
-                    #     if entry.parent.superclass == "GridVariablesBase":
-                    #         GridAxisImplementation(data_element_entry.name, m)
-                    #     elif entry.parent.superclass == "LookupVariablesBase":
-                    #         DataTableImplementation(data_element_entry.name, m)
-                    #     elif entry.parent.superclass == "PerformanceMapBase":
-                    #         ElementSerialization(
-                    #             data_element_entry.name, data_element_entry.type, m, data_element_entry._is_required
-                    #         )
-                    #     else:
-                    #         ElementSerialization(
-                    #             data_element_entry.name, data_element_entry.type, m, data_element_entry._is_required
-                    #         )
-                    #     if entry.parent.superclass == "PerformanceMapBase":
-                    #         PerformanceMapImplementation(data_element_entry.name, m, populates_self=True)
-                # # Special case of grid_axis_base needs a finalize function after all grid axes
-                # # are added
-                # if entry.parent.superclass == "GridVariablesBase":
-                #     GridAxisFinalize("", m)
-            # '''
-            # if data_group_template in data_group_extensions:
-            #     s = data_group_extensions[data_group_template](
-            #         entry,
-            #         self._namespace
-            #         )
-            # '''
-            # if isinstance(entry, CalculatePerformanceOverload):
-            #     m = MemberFunctionDefinition(entry, self._namespace)
-            #     for data_element_entry in [c for c in entry.parent.child_entries if isinstance(c, DataElement)]:
-            #         # Build internals of Calculate_performance function
-            #         if data_element_entry.name == "grid_variables":
-            #             PerformanceOverloadImplementation(entry, m)
 
-            # Lastly, handle the special case of objects that need both serialization
-            # and initialization (currently a bit of a hack specific to this project)
+            # Process customizations
+            for plugin in self._extensions:
+                if cpp_entry:
+                    plugin.process_data_group(h_entry, cpp_entry)
 
-            # elif isinstance(entry, ObjectSerializationDeclaration) and entry.name in self._namespace._name:
-            #     s = FreeFunctionDefinition(entry, self._namespace)
-            #     SerializeFromInitFunction(entry, s)
-            self._get_items_to_serialize(entry)
+            self._get_items_to_serialize(h_entry)
 
     def _add_included_headers(self, main_header):
         self._preamble.clear()

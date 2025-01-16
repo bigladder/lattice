@@ -1,4 +1,5 @@
 import re
+import copy
 from dataclasses import dataclass
 from lattice.cpp.header_entries import DataElement, HeaderEntry, Struct
 # from lattice.cpp.header_entries import register_data_group_operation
@@ -33,8 +34,9 @@ class LookupStructPlugin(PluginInterface, base_class="LookupVariablesTemplate"):
     """"""
     def process_data_group(self, parent_node: HeaderEntry):
         for entry in parent_node.child_entries:
-            if isinstance(entry, Struct) and entry.superclass == "LookupVariablesTemplate":
+            if isinstance(entry, Struct) and entry.superclass == "ashrae205::LookupVariablesTemplate":
                 ls = LookupStruct(entry.name, entry.parent)
-                ls.child_entries = entry.child_entries
+                for child in [ch for ch in entry.child_entries if isinstance(ch, DataElement)]:
+                    ls._add_child_entry(copy.deepcopy(child))
             else:
                 self.process_data_group(entry)

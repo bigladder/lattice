@@ -1,0 +1,28 @@
+Schema:
+  Object Type: "Meta"
+  References:
+    - "RSTANK"
+    - "HeatSourceConfiguration"
+    # - "RSAIRTOWATERHEATPUMP" # TODO: Add
+  Title: "Central Water Heating System"
+  Description: "Components that make up a central water heating system"
+  Version: "0.1.0"
+  Root Data Group: CentralWaterHeatingSystem
+
+CentralWaterHeatingSystem:
+  Object Type: "Data Group"
+  Data Elements:
+    tank:
+      Description: "The corresponding Standard 205 tank representation"
+      Data Type: "{RSTANK}"
+      Required: True
+    heat_source_configurations:
+      Description: "Describes how the heat sources are configured within the tank"
+      Data Type: "[{HeatSourceConfiguration}]"
+    primary_heat_source_id:
+      Description: "Turns on independently of other heat sources"
+      Data Type: "String" # TODO: Make an actual reference type (need to use 232 compliant Lattice)
+    standby_power:
+      Description: "Power drawn when system is in standby mode"
+      Data Type: "Numeric"
+      Constraints: ">0"

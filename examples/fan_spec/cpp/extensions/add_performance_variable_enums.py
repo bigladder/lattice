@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 from lattice.cpp.header_entries import HeaderEntry, Struct, DataElement
-# from lattice.cpp.header_entries import register_data_element_operation
 from lattice.cpp.header_translator import PluginInterface
 
 @dataclass
-class GridVarCounterEnum(HeaderEntry):
+class CounterEnum(HeaderEntry):
     elements: list
 
     def __post_init__(self):
@@ -26,12 +25,24 @@ class GridVarCounterEnum(HeaderEntry):
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
+
 class GridVarCounterEnumPlugin(PluginInterface, base_class="GridVariablesTemplate"):
     """"""
     def process_data_group(self, parent_node: HeaderEntry):
         for entry in parent_node.child_entries:
-            if isinstance(entry, Struct) and entry.superclass == "GridVariablesTemplate":
+            if isinstance(entry, Struct) and entry.superclass == "ashrae205::GridVariablesTemplate":
                 data_elements = [child.name for child in entry.child_entries if isinstance(child, DataElement)]
-                e = GridVarCounterEnum(entry.name, entry, data_elements)
+                e = CounterEnum(entry.name, entry, data_elements)
+            else:
+                self.process_data_group(entry)
+
+
+class LookupVarCounterEnumPlugin(PluginInterface, base_class="LookupVariablesTemplate"):
+    """"""
+    def process_data_group(self, parent_node: HeaderEntry):
+        for entry in parent_node.child_entries:
+            if isinstance(entry, Struct) and entry.superclass == "ashrae205::LookupVariablesTemplate":
+                data_elements = [child.name for child in entry.child_entries if isinstance(child, DataElement)]
+                e = CounterEnum(entry.name, entry, data_elements)
             else:
                 self.process_data_group(entry)
