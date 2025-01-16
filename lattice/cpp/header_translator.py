@@ -16,7 +16,7 @@ logger = logging.getLogger()
 
 
 class PluginInterface(ABC):
-    extensions: dict[str, list[Callable]] = {} # TODO: list should be a set
+    extensions: dict[str, list[Callable]] = {}  # TODO: list should be a set
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__()
@@ -49,11 +49,13 @@ def modified_insertion_sort(obj_list):
 
 
 class HeaderTranslator:
-    def __init__(self,
-                  input_file_path: pathlib.Path,
-                  forward_declarations_path: pathlib.Path,
-                  output_path: pathlib.Path,
-                  top_namespace: str):
+    def __init__(
+        self,
+        input_file_path: pathlib.Path,
+        forward_declarations_path: pathlib.Path,
+        output_path: pathlib.Path,
+        top_namespace: str,
+    ):
         self._referenced_data_types: list[ReferencedDataType] = []
         self._references: dict[str, list[str]] = {}
         self._fundamental_data_types: dict[str, str] = {}
@@ -66,7 +68,9 @@ class HeaderTranslator:
         self._extensions: dict[str, list[PluginInterface]] = {}
 
         for base_class in PluginInterface.extensions:
-            self._extensions[base_class] = [PluginInterface.extensions[base_class][i]() for i in range(len(PluginInterface.extensions[base_class]))]
+            self._extensions[base_class] = [
+                PluginInterface.extensions[base_class][i]() for i in range(len(PluginInterface.extensions[base_class]))
+            ]
 
         self._translate(input_file_path, forward_declarations_path, output_path, top_namespace)
 

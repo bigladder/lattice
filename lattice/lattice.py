@@ -233,12 +233,8 @@ class Lattice:  # pylint:disable=R0902
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
         self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
         for schema in self.cpp_schemas:
-            schema.cpp_header_file_path = (
-                self._cpp_output_include_dir / f"{schema.name}.h"
-            )
-            schema.cpp_source_file_path = (
-                self._cpp_output_src_dir / f"{schema.name}.cpp"
-            )
+            schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.name}.h"
+            schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.name}.cpp"
 
     def setup_cpp_repository(self, submodules: list[str]):
         """Initialize the CPP output directory as a Git repo."""
@@ -263,7 +259,9 @@ class Lattice:  # pylint:disable=R0902
     def generate_cpp_project(self, submodules: list[str]):
         """Generate CPP header files, source files, and build support files."""
         for schema in self.cpp_schemas:
-            h = HeaderTranslator(schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name)
+            h = HeaderTranslator(
+                schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name
+            )
             dump(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             dump(str(c), schema.cpp_source_file_path)

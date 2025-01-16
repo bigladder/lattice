@@ -16,7 +16,7 @@ from .header_entries import (
     FunctionalHeaderEntry,
     ObjectSerializationDeclaration,
     InlineDependency,
-    VirtualDestructor
+    VirtualDestructor,
 )
 
 logger = logging.getLogger()
@@ -244,9 +244,7 @@ class CPPExtensionInterface(ABC):
 class CPPTranslator:
     def __init__(self, container_class_name, header_tree):
         self._preamble = list()
-        self._extensions = [
-            extension_object() for extension_object in CPPExtensionInterface.extensions
-        ]
+        self._extensions = [extension_object() for extension_object in CPPExtensionInterface.extensions]
         self._translate(container_class_name, header_tree)
 
     def __str__(self):
@@ -273,7 +271,9 @@ class CPPTranslator:
             cpp_entry: Optional[ImplementationEntry] = None
             logger.debug(f"Header entry being processed: {h_entry.name} under {h_entry.parent.name}")
             if isinstance(h_entry, Struct) and len([c for c in h_entry.child_entries if isinstance(c, DataElement)]):
-                cpp_entry = StructSerialization(h_entry, self._namespace) # Create the "from_json" function definition (header), only if it won't be empty
+                cpp_entry = StructSerialization(
+                    h_entry, self._namespace
+                )  # Create the "from_json" function definition (header), only if it won't be empty
 
                 for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
                     # In function body, create each "get_to" for individual data elements
@@ -290,10 +290,14 @@ class CPPTranslator:
                 cpp_entry = DependencyInitialization(h_entry, self._namespace)
 
             # Initialize and Populate overrides (Currently the only Member_function_override is the Initialize override)
-            elif (isinstance(h_entry, FunctionalHeaderEntry)
-                 and not isinstance(h_entry, ObjectSerializationDeclaration)
-                 and not isinstance(h_entry, VirtualDestructor)):
-                cpp_entry = MemberFunctionDefinition(h_entry, self._namespace) # Create the override function definition (header) using the declaration's signature
+            elif (
+                isinstance(h_entry, FunctionalHeaderEntry)
+                and not isinstance(h_entry, ObjectSerializationDeclaration)
+                and not isinstance(h_entry, VirtualDestructor)
+            ):
+                cpp_entry = MemberFunctionDefinition(
+                    h_entry, self._namespace
+                )  # Create the override function definition (header) using the declaration's signature
 
                 # In function body, choose element-wise ops based on the superclass
                 for data_element_entry in [c for c in h_entry.parent.child_entries if isinstance(c, DataElement)]:

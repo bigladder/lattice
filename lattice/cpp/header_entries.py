@@ -63,11 +63,10 @@ class HeaderEntry(EntryFormat):
         return self._less_than(self, other)
 
     @staticmethod
-    def _less_than(this: HeaderEntry | FunctionalHeaderEntry,
-                   other: HeaderEntry | FunctionalHeaderEntry):
+    def _less_than(this: HeaderEntry | FunctionalHeaderEntry, other: HeaderEntry | FunctionalHeaderEntry):
         """ """
         lt = False
-        t =  f"{other._f_ret} {other.args}" if isinstance(other, FunctionalHeaderEntry) else f"{other.type} {other.name}"
+        t = f"{other._f_ret} {other.args}" if isinstance(other, FunctionalHeaderEntry) else f"{other.type} {other.name}"
         # \b is a "boundary" character, or specifier for a whole word
         if re.search(r"\b" + this.name + r"\b", t):
             return True
