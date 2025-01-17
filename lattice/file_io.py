@@ -44,8 +44,8 @@ def load(input_file_path) -> dict:
         raise ValueError(f'Unsupported input "{ext}".')
 
 
-def dump(content, output_file_path):
-    """Write a dictionary as a data file"""
+def dump(content: dict, output_file_path: Path | str) -> None:
+    """Write a dictionary as a data file."""
     ext = get_extension(output_file_path).lower()
     if ext == ".json":
         with open(output_file_path, "w", encoding="utf-8") as output_file:
@@ -56,22 +56,24 @@ def dump(content, output_file_path):
     elif ext in [".yaml", ".yml"]:
         with open(output_file_path, "w", encoding="utf-8") as out_file:
             yaml.dump(content, out_file, sort_keys=False)
-    elif ext in [".h", ".cpp", ".txt"]:
-        with open(output_file_path, "w", encoding="utf-8") as src:
-            src.write(content)
-            src.write("\n")
-
     else:
         raise ValueError(f'Unsupported output "{ext}".')
 
 
-def dump_to_string(content, output_type="json"):
+def dump_to_string(content: dict, output_type="json"):
     """Write a dictionary as a string"""
     if output_type == "json":
         return json.dumps(content, indent=4)
     if output_type in ["yaml", "yml"]:
         return yaml.dump(content, sort_keys=False)
     raise ValueError(f'Unsupported output "{output_type}".')
+
+
+def string_to_file(contents: str, output_file_path: Path):
+    """Write a string to file"""
+    with open(output_file_path, "w", encoding="utf-8") as dest:
+        dest.write(contents)
+        dest.write("\n")
 
 
 def translate(input_file, output_file):

@@ -1,5 +1,5 @@
 from jinja2 import Template
-from lattice.file_io import dump, make_dir
+from lattice.file_io import string_to_file, make_dir
 from lattice.util import snake_style, hyphen_separated_lowercase_style
 from pathlib import Path
 import lattice.cpp.header_entries as header_entries
@@ -21,7 +21,7 @@ def render_support_headers(namespace_name: str, output_directory: Path):
             header = Template(template.read_text())
             generated_file_name = "-".join(snake_style(template.stem).split("_"))
             make_dir(output_directory)
-            dump(
+            string_to_file(
                 header.render(namespace=namespace_name),
                 Path(output_directory) / generated_file_name,
             )
@@ -35,7 +35,7 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
     if project_cmake_file.exists():
         cmake_project = Template(project_cmake_file.read_text())
         make_dir(output_directory)
-        dump(
+        string_to_file(
             cmake_project.render(project_name=project_name),
             Path(output_directory) / generated_file_name,
         )
@@ -44,7 +44,7 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
         src_cmake = Template(src_cmake_file.read_text())
         submodule_names = [Path(submodule).stem for submodule in submodules]
         make_dir(output_directory / "src")
-        dump(
+        string_to_file(
             src_cmake.render(project_name=project_name, submodules=submodule_names),
             Path(output_directory) / "src" / generated_file_name,
         )
@@ -53,7 +53,7 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
         vendor_cmake = Template(vendor_cmake_file.read_text())
         submodule_names = [Path(submodule).stem for submodule in submodules]
         make_dir(output_directory / "vendor")
-        dump(
+        string_to_file(
             vendor_cmake.render(submodules=submodule_names),
             Path(output_directory) / "vendor" / generated_file_name,
         )
@@ -72,4 +72,4 @@ def generate_superclass_header(superclass: str, output_directory: Path):
 
     header = Path(output_directory / f"{hyphen_separated_lowercase_style(superclass)}.h")
     if not header.exists():
-        dump(superclass_contents, header)
+        string_to_file(superclass_contents, header)

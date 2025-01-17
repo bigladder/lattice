@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Union
 from jsonschema.exceptions import RefResolutionError
 
-from .file_io import check_dir, make_dir, load, dump, get_file_basename, get_base_stem
+from .file_io import check_dir, make_dir, load, string_to_file, get_file_basename, get_base_stem
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import MkDocsWeb, DocumentFile
@@ -262,9 +262,9 @@ class Lattice:  # pylint:disable=R0902
             h = HeaderTranslator(
                 schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name
             )
-            dump(str(h), schema.cpp_header_file_path)
+            string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
-            dump(str(c), schema.cpp_source_file_path)
+            string_to_file(str(c), schema.cpp_source_file_path)
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
         support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
         self.setup_cpp_repository(submodules)
