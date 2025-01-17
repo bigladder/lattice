@@ -5,7 +5,6 @@ Specifics for setting up schema tables.
 from copy import deepcopy
 import io
 import re
-from typing import Callable, Optional
 
 from .grid_table import write_table
 
@@ -52,7 +51,7 @@ def compress_notes(a_dict):
     notes = "Notes"
     if notes in a_dict:
         if isinstance(a_dict[notes], list):
-            a_dict[notes] = "\n\n".join([f"- {note}" for note in a_dict[notes]])
+            a_dict[notes] = "\n   ".join([f"- {note}" for note in a_dict[notes]])
 
 
 def data_elements_dict_from_data_groups(data_groups):
@@ -70,7 +69,7 @@ def data_elements_dict_from_data_groups(data_groups):
                 if isinstance(new_obj["Required"], bool):
                     if new_obj["Required"]:
                         check = "\N{check mark}"
-                        new_obj["Req"] = f"${check}$" if new_obj["Required"] else ""
+                        new_obj["Req"] = f"{check}" if new_obj["Required"] else ""
                     else:
                         new_obj["Req"] = ""
                 else:
@@ -161,122 +160,52 @@ def load_structure_from_object(instance):
     }
 
 
-def trailing_ws(flag):
-    """
-    - flag: bool, if True, return two newlines
-    RETURN: string
-    """
-    return "\n\n" if flag else ""
-
-
-def create_table_from_list(columns, data_list, defaults=None, caption=None, add_training_ws=True):
+def create_table_from_list(columns, data_list, description=None, style="2 Columns", level=1):
     """
     - columns: array of string, the column headers
     - data_list: array of dict with keys corresponding to columns array
-    - defaults: None or dict from string to value, the defaults to use for a
-      column if data missing
+    - description: None or string, if specified, adds a caption
     - caption: None or string, if specified, adds a caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
     RETURN: string, the table in Pandoc markdown grid table format
     """
     if len(data_list) == 0:
         return ""
-    data = {col: [] for col in columns}
-    for col in columns:
-        data[col] = []
+    if style == "Table":
+        data = {col: [] for col in columns}
+        for col in columns:
+            data[col] = []
+            for item in data_list:
+                if col in item:
+                    data[col].append(item[col])
+                else:
+                    data[col].append("")
+        table_string = write_table(data, columns, description) + "\n\n"
+    if style == "Descriptions":
+        table_string = write_header(f"{description} {{-}}", level)
         for item in data_list:
-            if col in item:
-                data[col].append(item[col])
-            elif defaults is not None and col in defaults:
-                data[col].append(defaults[col])
-            else:
-                raise Exception(f"Expected item to have key `{col}`: `{item}`")
-    return write_table(data, columns, caption) + trailing_ws(add_training_ws)
+            table_string += write_header(f"{item[columns[0]]} {{-}}", level + 1) + "\n"
+            for attribute in item:
+                if attribute != columns[0]:
+                    table_string += f"> {attribute}:\n>\n>   ~ {item[attribute]}\n>\n"
+            table_string += "\n"
+    if style == "2 Columns":
+        second_column_name = "Attributes"
+        data = {columns[0]: [], second_column_name: []}
+        table_string = write_header(f"{description}", level)
+        for item in data_list:
+            data[columns[0]].append(item[columns[0]])
+            details = ""
+            for column in columns[1:]:
+                for attribute in item:
+                    if attribute == column:
+                        details += f"**{attribute}:**\n\n:   {item[attribute]}\n\n"
+            data[second_column_name].append(details[:-1])  # drop last new line
+        table_string += write_table(data, [columns[0], second_column_name]) + "\n\n"
+
+    return table_string
 
 
-def data_types_table(data_types, caption=None, add_training_ws=True):
-    """
-    - data_types: array of ..., the data types
-    - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
-    RETURN: string, the table in Pandoc markdown grid table format
-    """
-    return create_table_from_list(
-        columns=["Data Type", "Description", "JSON Schema Type", "Examples"],
-        data_list=data_types,
-        defaults=None,
-        caption=caption,
-        add_training_ws=add_training_ws,
-    )
-
-
-def string_types_table(string_types, caption=None, add_training_ws=True):
-    """
-    - string_types: array of ..., the string types
-    - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
-    RETURN: string, the table in Pandoc markdown grid table format
-    """
-    return create_table_from_list(
-        columns=["String Type", "Description", "Regular Expression Pattern", "Examples"],
-        data_list=string_types,
-        caption=caption,
-        add_training_ws=add_training_ws,
-        defaults=None,
-    )
-
-
-def enumerators_table(enumerators, caption=None, add_training_ws=True):
-    """
-    - enumerators: array of ..., the enumerators array
-    - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
-    RETURN: string, the table in Pandoc markdown grid table format
-    """
-    return create_table_from_list(
-        columns=["Enumerator", "Description", "Notes"],
-        data_list=enumerators,
-        caption=caption,
-        add_training_ws=add_training_ws,
-        defaults={"Notes": ""},
-    )
-
-
-def data_groups_table(data_elements, caption=None, add_training_ws=True):
-    """
-    - data_elements: array of ..., the data elements
-    - caption: None or string, optional caption
-    - add_training_ws: Bool, if True, adds trailing whitespace
-    RETURN: string, the table in Pandoc markdown grid table format
-    """
-    return create_table_from_list(
-        columns=["Name", "Description", "Data Type", "Units", "Constraints", "Req", "Notes"],
-        data_list=data_elements,
-        caption=caption,
-        add_training_ws=add_training_ws,
-        defaults={"Notes": "", "Req": "", "Units": "", "Constraints": ""},
-    )
-
-
-# pylint: disable-next=too-many-arguments
-def _write_table_and_caption(
-    output_file: io.StringIO,
-    make_headers: bool,
-    table_from_struct,  # array or dict
-    table_write: Callable[[list, Optional[str], Optional[bool]], str],
-    table_title: str,
-    base_level: int,
-):
-    """Helper function to write parts of the data model"""
-    if make_headers:
-        output_file.writelines(write_header(table_title, base_level))
-        caption = None
-    else:
-        caption = table_title
-    output_file.writelines(table_write(table_from_struct, caption, None))
-
-
-def write_data_model(instance, make_headers=False, base_level=1):
+def write_data_model(instance, base_level=1, style="2 Columns"):
     """
     - instance:
     - make_headers:
@@ -288,22 +217,40 @@ def write_data_model(instance, make_headers=False, base_level=1):
         # Data Types
         table_type = "data_types"
         if len(struct[table_type]) > 0:
-            _write_table_and_caption(
-                output_file, make_headers, struct[table_type], data_types_table, "Data Types", base_level
+            output_file.writelines(write_header("Data Types", base_level))
+            output_file.writelines(
+                create_table_from_list(
+                    ["Data Type", "Description", "JSON Schema Type", "Examples"],
+                    struct["data_types"],
+                    level=base_level + 1,
+                    style=style,
+                )
             )
         # String Types
         table_type = "string_types"
         if len(struct[table_type]) > 0:
-            _write_table_and_caption(
-                output_file, make_headers, struct[table_type], string_types_table, "String Types", base_level
+            output_file.writelines(write_header("String Types", base_level))
+            output_file.writelines(
+                create_table_from_list(
+                    ["String Type", "Description", "JSON Schema Pattern", "Examples"],
+                    struct["string_types"],
+                    level=base_level + 1,
+                    style=style,
+                )
             )
         # Enumerations
         output_file.writelines(write_header("Enumerations", base_level))
         table_type = "enumerations"
         if len(struct[table_type]) > 0:
             for enum, enumerators in struct[table_type].items():
-                _write_table_and_caption(
-                    output_file, make_headers, enumerators, enumerators_table, enum, base_level + 1
+                output_file.writelines(
+                    create_table_from_list(
+                        ["Enumerator", "Description", "Notes"],
+                        enumerators,
+                        description=enum,
+                        level=base_level + 1,
+                        style=style,
+                    )
                 )
         else:
             output_file.writelines(["None.", "\n" * 2])
@@ -312,8 +259,14 @@ def write_data_model(instance, make_headers=False, base_level=1):
         table_type = "data_groups"
         if len(struct[table_type]) > 0:
             for dg, data_elements in struct[table_type].items():
-                _write_table_and_caption(
-                    output_file, make_headers, data_elements, data_groups_table, dg, base_level + 1
+                output_file.writelines(
+                    create_table_from_list(
+                        ["Name", "Description", "Data Type", "Units", "Constraints", "Req", "Scalable", "Notes"],
+                        data_elements,
+                        description=dg,
+                        level=base_level + 1,
+                        style=style,
+                    )
                 )
         else:
             output_file.writelines(["None.", "\n" * 2])
