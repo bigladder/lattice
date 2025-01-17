@@ -31,9 +31,9 @@ TimeIntervals:
   Data Elements:
     id:
       Description: Reference identification
-      Data Type: ID
-      Constraints: ":TimeIntervals:"
+      Data Type: String
       Required: true
+      ID: true
     starting_time:
       Description: Timestamp indicating the beginning of the data
       Data Type: Timestamp
@@ -47,15 +47,21 @@ TimeIntervals:
       Required: "if !timestamps"
     timestamps:
       Description: Array of timestamps
-      Data Type: "[Timestamp][1..]"
+      Data Type: "[Timestamp]"
+      Constraints:
+        - "[1..]"
       Required: "if !regular_interval"
     labels:
       Description: Informal labels describing each time interval
-      Data Type: "[String][1..]"
+      Data Type: "[String]"
+      Constraints:
+        - "[1..]"
       Notes: "e.g., month names for monthly intervals"
     notes:
       Description: Notes about each time interval
-      Data Type: "[String][1..]"
+      Data Type: "[String]"
+      Constraints:
+        - "[1..]"
 
 TimeSeries:
   Object Type: "Data Group"
@@ -74,10 +80,11 @@ TimeSeries:
       Required: true
     value_time_intervals:
       Description: Reference to a `TimeInterval` data group associated with this time series
-      Data Type: Reference
-      Constraints: ":TimeIntervals:"
+      Data Type: ":TimeIntervals:"
       Required: true
     values:
       Description: Time series data values
-      Data Type: "[Numeric][1..]"
+      Data Type: "[Numeric]"
+      Constraints:
+        - "[1..]"
       Required: true

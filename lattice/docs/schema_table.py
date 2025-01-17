@@ -28,9 +28,12 @@ def process_string_types(string_types):
     for str_typ in string_types:
         new_item = deepcopy(str_typ)
         if "Is Regex" in new_item and new_item["Is Regex"]:
-            new_item["JSON Schema Pattern"] = "(Not applicable)"
-        new_item["JSON Schema Pattern"] = (
-            new_item["JSON Schema Pattern"].replace("*", r"\*").replace(r"(?", "\n" r"(?").replace(r"-[", "\n" r"-[")
+            new_item["Regular Expression Pattern"] = "(Not applicable)"
+        new_item["Regular Expression Pattern"] = (
+            new_item["Regular Expression Pattern"]
+            .replace("*", r"\*")
+            .replace(r"(?", "\n" r"(?")
+            .replace(r"-[", "\n" r"-[")
         )
         new_list.append(new_item)
     return new_list

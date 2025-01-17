@@ -14,29 +14,17 @@ Schema:
 
 #Data Group Templates
 
-PerformanceMapTemplate:
+RepresentationSpecificationTemplate:
   Object Type: "Data Group Template"
   Required Data Elements:
-    grid_variables:
+    metadata:
       Required: True
-    lookup_variables:
+    performance:
       Required: True
+    description:
+      Required: False
 
-GridVariablesTemplate:
-  Object Type: "Data Group Template"
-  Required Data Types:
-    - "[Numeric]"
-    - "[Integer]"
-  Data Elements Required: True
-
-LookupVariablesTemplate:
-  Object Type: "Data Group Template"
-  Required Data Types:
-    - "[Numeric]"
-    - "[Integer]"
-  Data Elements Required: True
-
-RepresentationSpecificationTemplate:
+HeatSourceTemplate:
   Object Type: "Data Group Template"
   Required Data Elements:
     metadata:
@@ -65,6 +53,16 @@ SchemaType:
       Description: "Electronic Motor Drive"
     RS0007:
       Description: "Mechanical Drive"
+    RSINTEGRATEDWATERHEATER:
+      Description: "Integrated Heat-Pump Water Heater"
+    RSTANK:
+      Description: "Water Tank"
+    RSRESISTANCEWATERHEATSOURCE:
+      Description: "Resistance Water Heat Source"
+    RSCONDENSERWATERHEATSOURCE:
+      Description: "Condenser Water Heat Source"
+    HPWHSIMINPUT:
+       Description: "Input required to describe a heat pump water heating system in HPWHsim"
 
 CompressorType:
   Object Type: "Enumeration"
@@ -169,3 +167,4 @@ LiquidComponent:
       Data Type: "Numeric"
       Constraints: [">=0.0", "<=1.0"]
       Notes: "If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)"
+
