@@ -127,7 +127,13 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
-            "markdown_extensions": ["markdown_grid_tables", "pymdownx.smartsymbols", "def_list"],
+            "markdown_extensions": [
+                "markdown_grid_tables",
+                "pymdownx.smartsymbols",
+                "def_list",
+                "pymdownx.caret",  # Superscripts
+                "pymdownx.tilde",  # Subscripts
+            ],
         }
 
     def make_pages(self):
