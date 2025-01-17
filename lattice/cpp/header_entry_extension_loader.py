@@ -22,4 +22,3 @@ def load_extensions(from_path: Path) -> None:
     if from_path.is_dir():
         for plugin_file in [x for x in from_path.iterdir() if x.suffix == ".py"]:
             plugin = import_module(plugin_file)
-

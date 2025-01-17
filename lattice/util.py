@@ -10,5 +10,6 @@ def snake_style(s):
 def hyphen_separated_lowercase_style(s):
     return "-".join(snake_style(s).split("_"))
 
+
 def namespace_style(s):
     return snake_style(s)
