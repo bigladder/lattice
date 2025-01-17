@@ -84,7 +84,7 @@ def data_elements_dict_from_data_groups(data_groups):
                     new_obj["Units"] = r"\-"
                 else:
                     new_obj["Units"] = new_obj["Units"].replace("-", r"·")
-                    new_obj["Units"] = re.sub(r"(\d+)", r"^\1^", new_obj["Units"])
+                    new_obj["Units"] = re.sub(r"(\d+)", r"^\1", new_obj["Units"])
             compress_notes(new_obj)
             data_elements.append(new_obj)
         output[dat_gr] = data_elements
