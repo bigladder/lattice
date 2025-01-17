@@ -117,6 +117,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             str(Path(self.logo_path).relative_to(self.content_directory_path)) if self.logo_path is not None else None
         )
         return {
+            "extra_css": ["assets/stylesheets/extra_styles.css"],
             "site_name": self.title,
             "site_url": self.base_url,
             "site_author": self.author,
@@ -126,7 +127,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
-            "markdown_extensions": ["markdown_grid_tables", "pymdownx.smartsymbols"],
+            "markdown_extensions": ["markdown_grid_tables", "pymdownx.smartsymbols", "def_list"],
         }
 
     def make_pages(self):
@@ -177,6 +178,13 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
 
         if self.favicon_path is not None:
             self.favicon_path = str(shutil.copy(self.favicon_path, self.assets_directory_path))
+
+        # Make stylesheets directory and copy extra_styles.css into this path.
+        # Nesting inside stylesheets directory allows it to live with the other Mkdocs-generated css assets.
+        self.style_css_dir = make_dir(Path(self.assets_directory_path, "stylesheets"))
+        self.style_css_path = str(
+            shutil.copy(Path(Path(__file__).parent.resolve(), "extra_styles.css"), self.style_css_dir)
+        )
 
         # Specifications
         self.make_specification_pages()

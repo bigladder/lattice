@@ -1,0 +1,24 @@
+.md-typeset code {
+  word-break: unset;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5em 1ch;
+}
+
+:is([dir="ltr"], [dir="rtl"]) .md-typeset dt {
+  text-align: right;
+  grid-column: 1 / 2;
+}
+
+:is([dir="ltr"], [dir="rtl"]) .md-typeset dd {
+  margin: 0;
+  grid-column: 2 / -1;
+}
+
+dl > dd > * {
+  /* TODO: Increase selector specificity so we don't have to use !important. */
+  margin: 0 !important;
+}
