@@ -243,7 +243,6 @@ class Lattice:  # pylint:disable=R0902
         subprocess.run(["git", "init"], check=True)
         vendor_dir = make_dir("vendor")
         os.chdir(vendor_dir)
-        # subprocess.run(["git", "remote", "add", "-f -t", "main", "--no-tags", "origin_atheneum", "https://github.com/bigladder/atheneum.git"])
         try:
             for submodule in submodules:
                 subprocess.run(["git", "submodule", "add", submodule], check=False)
@@ -256,7 +255,7 @@ class Lattice:  # pylint:disable=R0902
         """Wrap list of template-generated headers."""
         return support.support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_project(self, submodules: list[str]):
+    def generate_cpp_project(self):
         """Generate CPP header files, source files, and build support files."""
         for schema in self.cpp_schemas:
             h = HeaderTranslator(
@@ -265,6 +264,16 @@ class Lattice:  # pylint:disable=R0902
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
+
+        submodule_names: list[str] = []
+        submodule_urls: list[str] = []
+
+        config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
+        if config_file.is_file():
+            config = load(config_file)
+            submodule_names:list[str] = [tuple["name"] for tuple in config["dependencies"]]
+            submodule_urls:list[str] = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
+
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
-        support.render_build_files(self.root_directory.name, submodules, self.cpp_output_dir)
-        self.setup_cpp_repository(submodules)
+        support.render_build_files(self.root_directory.name, submodule_names, self.cpp_output_dir)
+        self.setup_cpp_repository(submodule_urls)

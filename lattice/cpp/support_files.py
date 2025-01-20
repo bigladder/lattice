@@ -27,7 +27,7 @@ def render_support_headers(namespace_name: str, output_directory: Path):
             )
 
 
-def render_build_files(project_name: str, submodules: list, output_directory: Path):
+def render_build_files(project_name: str, submodule_names: list, output_directory: Path):
     """Generate the project-specific CMakeLists files."""
     generated_file_name = "CMakeLists.txt"
 
@@ -42,7 +42,6 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
     src_cmake_file = Path(__file__).with_name("templates") / "project-src-cmake.txt.j2"
     if src_cmake_file.exists():
         src_cmake = Template(src_cmake_file.read_text())
-        submodule_names = [Path(submodule).stem for submodule in submodules]
         make_dir(output_directory / "src")
         string_to_file(
             src_cmake.render(project_name=project_name, submodules=submodule_names),
@@ -51,7 +50,6 @@ def render_build_files(project_name: str, submodules: list, output_directory: Pa
     vendor_cmake_file = Path(__file__).with_name("templates") / "project-vendor-cmake.txt.j2"
     if vendor_cmake_file.exists():
         vendor_cmake = Template(vendor_cmake_file.read_text())
-        submodule_names = [Path(submodule).stem for submodule in submodules]
         make_dir(output_directory / "vendor")
         string_to_file(
             vendor_cmake.render(submodules=submodule_names),

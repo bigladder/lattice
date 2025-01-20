@@ -130,7 +130,7 @@ def task_generate_cpp_code(level):
             + example.cpp_support_headers + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
             "actions": [(set_log_level, [level]),
                         (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
-                        (example.generate_cpp_project, [["https://github.com/nlohmann/json.git", "https://github.com/bigladder/btwxt.git", "https://github.com/bigladder/courier.git", "https://github.com/fmtlib/fmt.git"]])],
+                        (example.generate_cpp_project)],
             "clean": True,
         }
 
