@@ -195,7 +195,7 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
     if number_of_matches == 1:
         return match_type(text, parent_data_element)
     if number_of_matches == 0:
-        raise Exception(f"No matching constraint for {text}.")
+        raise Exception(f"No matching constraint for {text} in element {parent_data_element.name}.")
     raise Exception(f"Multiple matches found for constraint, {text}")
 
 
