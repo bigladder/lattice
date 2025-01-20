@@ -171,7 +171,7 @@ class Lattice:  # pylint:disable=R0902
         # Collect list of example files
         self.examples = []
         if self.example_directory_path is not None:
-            for file_name in sorted(list(self.example_directory_path.iterdir())):
+            for file_name in sorted(self.example_directory_path.glob("*.[json][yaml][cbor]")):
                 if file_name.is_file():
                     self.examples.append(file_name.absolute())
 
