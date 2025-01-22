@@ -135,7 +135,7 @@ class HeaderTranslator:
             # TODO: Check naming assumptions and rules for pre-defined base class files
             if not base_class_file.exists():
                 class_entry = Struct(base_level_tag, self._namespace)
-                dtor = VirtualDestructor("", class_entry, "", base_level_tag, [])
+                dtor = VirtualDestructor("", class_entry, "", base_level_tag, [], "default")
             else:
                 # Copy contents into tree? Or copy whole file into build?
                 shutil.copyfile(base_class_file, output_path / f"{hyphen_separated_lowercase_style(base_level_tag)}.h")

@@ -392,9 +392,9 @@ class VirtualDestructor(FunctionalHeaderEntry):
     _explicit_definition: Optional[str] = None
 
     def __post_init__(self):
-        self._closure = f" = {self._explicit_definition};" if self._explicit_definition else ";"
         self._f_ret = "virtual"
         self._f_name = f"~{self._f_name}"
         self._f_args = []
         super().__post_init__()
+        self._closure = f" = {self._explicit_definition};" if self._explicit_definition else ";"
         self.trace()
