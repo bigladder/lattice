@@ -102,7 +102,7 @@ class HeaderTranslator:
         self._load_meta_info(self._contents["Schema"])
         self._add_standard_dependency_headers()
 
-        self._top_namespace = HeaderEntry(top_namespace, None)
+        self._top_namespace = HeaderEntry(namespace_style(top_namespace), None)
         self._namespace = HeaderEntry(f"{namespace_style(self._schema_name)}", self._top_namespace)
 
         for base_level_tag in [tag for tag in self._contents if self._contents[tag]["Object Type"] == "String Type"]:

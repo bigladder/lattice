@@ -1,6 +1,6 @@
 from jinja2 import Template
 from lattice.file_io import string_to_file, make_dir
-from lattice.util import snake_style, hyphen_separated_lowercase_style
+from lattice.util import snake_style, hyphen_separated_lowercase_style, namespace_style
 from pathlib import Path
 import lattice.cpp.header_entries as header_entries
 
@@ -22,7 +22,7 @@ def render_support_headers(namespace_name: str, output_directory: Path):
             generated_file_name = "-".join(snake_style(template.stem).split("_"))
             make_dir(output_directory)
             string_to_file(
-                header.render(namespace=namespace_name),
+                header.render(namespace=namespace_style(namespace_name)),
                 Path(output_directory) / generated_file_name,
             )
 

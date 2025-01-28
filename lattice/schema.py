@@ -4,6 +4,7 @@ from __future__ import (
 from typing import List, Union, Type, Dict, Any
 import pathlib
 import re
+import warnings
 
 from .file_io import load, get_file_basename
 
@@ -217,9 +218,7 @@ class DataElement:
             elif attribute == "Units":
                 self.units = self.dictionary[attribute]
             elif attribute == "Data Type":
-                self.data_type = self.parent_data_group.parent_schema.data_type_factory(
-                    self.dictionary[attribute], self
-                )
+                self.data_type = self.get_data_type(parent_data_group, self.dictionary[attribute])
             elif attribute == "Constraints":
                 self.set_constraints(self.dictionary[attribute])
             elif attribute == "Required":
@@ -237,12 +236,22 @@ class DataElement:
                         )
 
             else:
-                raise Exception(
+                warnings.warn(
                     f'Unrecognized attribute, "{attribute}".'
                     f"Schema={self.parent_data_group.parent_schema.file_path},"
                     f"Data Group={self.parent_data_group.name},"
                     f"Data Element={self.name}"
                 )
+
+    def get_data_type(self, parent_data_group: DataGroup, attribute_str: str):
+        try:
+            return self.parent_data_group.parent_schema.data_type_factory(attribute_str, self)
+        except:
+            for reference_schema in self.parent_data_group.parent_schema.reference_schemas.values():
+                try:
+                    return reference_schema.data_type_factory(attribute_str, self)
+                except Exception:
+                    continue
 
     def set_constraints(self, constraints_input: Union[str, List[str]]) -> None:
         if not isinstance(constraints_input, list):

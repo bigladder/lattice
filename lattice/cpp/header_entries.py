@@ -230,7 +230,8 @@ class DataElement(HeaderEntry):
 
         # Look through the references to assign a scope to the type
         for custom_type in self._referenced_datatypes:
-            if inner_type in custom_type.name:
+            if inner_type == custom_type.name:
+                print(f"{custom_type.namespace}", inner_type)
                 self.scoped_innertype = (f"{custom_type.namespace}", inner_type)
                 # namespace naming convention is snake_style, regardless of the schema file name
                 return "::".join(self.scoped_innertype)

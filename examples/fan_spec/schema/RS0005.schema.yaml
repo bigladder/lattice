@@ -5,7 +5,7 @@ Schema:
     - "RS0006"
   Title: "Motor"
   Description: "Schema for ASHRAE 205 annex RS0005: Motor"
-  Version: "0.2.0"
+  Version: "2.0.0"
   Root Data Group: "RS0005"
 
 # Data Groups
@@ -64,12 +64,14 @@ Performance:
       Constraints: ">=0.0"
       Notes: "Operational limit set to prevent overheating or overcurrent, not the rated name plate power"
       Required: True
+      Scalable: True
     standby_power:
       Description: "Power draw when motor is not operating"
       Data Type: "Numeric"
       Units: "W"
       Constraints: ">=0.0"
       Required: True
+      Scalable: True
     number_of_poles:
       Description: "Number of poles"
       Data Type: "Integer"
@@ -78,6 +80,10 @@ Performance:
     drive_representation:
       Description: "The corresponding Standard 205 drive representation"
       Data Type: "{RS0006}"
+    scaling:
+      Description: "Specifies the range the performance data can be scaled to represent different capacity equipment"
+      Data Type: "{Scaling}"
+      Notes: "If not present, scaling of the performance data is not allowed"
     performance_map:
       Description: "Data group describing motor performance when operating"
       Data Type: "{PerformanceMap}"
@@ -105,16 +111,17 @@ GridVariables:
       Description: "Delivered rotational shaft power"
       Data Type: "[Numeric]"
       Constraints:
-        - ">=0.0"
-        - "[1..]"
+      - ">=0.0"
+      - "[1..]"
       Units: "W"
       Required: True
+      Scalable: True
     shaft_rotational_speed:
       Description: "Rotational speed of shaft"
       Data Type: "[Numeric]"
       Constraints:
-        - ">=0.0"
-        - "[1..]"
+      - ">=0.0"
+      - "[1..]"
       Units: "rev/s"
       Required: True
 
@@ -126,9 +133,9 @@ LookupVariables:
       Description: "Efficiency of motor"
       Data Type: "[Numeric]"
       Constraints:
-        - ">=0.0"
-        - "<=1.0"
-        - "[1..]"
+      - ">=0.0"
+      - "<=1.0"
+      - "[1..]"
       Units: "-"
       Notes: "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
       Required: True
@@ -136,8 +143,13 @@ LookupVariables:
       Description: "Power factor of the motor"
       Data Type: "[Numeric]"
       Constraints:
-        - ">=0.0"
-        - "<=1.0"
-        - "[1..]"
+      - ">=0.0"
+      - "<=1.0"
+      - "[1..]"
+      Units: "-"
+      Required: True
+    operation_state:
+      Description: "The operation state at the operating conditions"
+      Data Type: "[<OperationState>]"
       Units: "-"
       Required: True

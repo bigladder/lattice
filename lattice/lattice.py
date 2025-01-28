@@ -171,9 +171,10 @@ class Lattice:  # pylint:disable=R0902
         # Collect list of example files
         self.examples = []
         if self.example_directory_path is not None:
-            for file_name in sorted(self.example_directory_path.glob("*.[json][yaml][cbor]")):
-                if file_name.is_file():
-                    self.examples.append(file_name.absolute())
+            extensions = ["json", "yaml", "cbor"]
+            for ext in extensions:
+                self.examples.extend(self.example_directory_path.glob(f"*.{ext}"))
+        self.examples.sort()
 
     def validate_example_files(self):
         """Validate example instance(s) against JSON schema"""
@@ -271,8 +272,8 @@ class Lattice:  # pylint:disable=R0902
         config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
         if config_file.is_file():
             config = load(config_file)
-            submodule_names:list[str] = [tuple["name"] for tuple in config["dependencies"]]
-            submodule_urls:list[str] = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
+            submodule_names: list[str] = [tuple["name"] for tuple in config["dependencies"]]
+            submodule_urls: list[str] = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
 
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
         support.render_build_files(self.root_directory.name, submodule_names, self.cpp_output_dir)

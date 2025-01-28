@@ -4,7 +4,7 @@ Schema:
     - "ASHRAE205"
   Title: "Mechanical Drive"
   Description: "Schema for ASHRAE 205 annex RS0007: Mechanical Drive" # TODO: Scope includes power transmission couplings. Allow chaining of drives?
-  Version: "0.1.0"
+  Version: "2.0.0"
   Root Data Group: "RS0007"
 
 # Local Enumerations
@@ -75,6 +75,10 @@ Performance:
       Units: "-"
       Constraints: ">0.0"
       Required: True
+    scaling:
+      Description: "Specifies the range the performance data can be scaled to represent different capacity equipment"
+      Data Type: "{Scaling}"
+      Notes: "If not present, scaling of the performance data is not allowed"
     performance_map:
       Description: "Data group describing drive performance when operating"
       Data Type: "{PerformanceMap}"
@@ -101,10 +105,11 @@ GridVariables:
       Description: "Output shaft power"
       Data Type: "[Numeric]"
       Constraints:
-        - ">=0.0"
-        - "[1..]"
+      - ">=0.0"
+      - "[1..]"
       Units: "W"
       Required: True
+      Scalable: True
 
 LookupVariables:
   Object Type: "Data Group"
@@ -114,9 +119,14 @@ LookupVariables:
       Description: "Efficiency of drive"
       Data Type: "[Numeric]"
       Constraints:
-        - ">=0.0"
-        - "<=1.0"
-        - "[1..]"
+      - ">=0.0"
+      - "<=1.0"
+      - "[1..]"
       Units: "-"
       Notes: "Defined as the ratio of output shaft power to input shaft power"
+      Required: True
+    operation_state:
+      Description: "The operation state at the operating conditions"
+      Data Type: "[<OperationState>]"
+      Units: "-"
       Required: True

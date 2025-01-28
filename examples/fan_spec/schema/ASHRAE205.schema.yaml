@@ -10,7 +10,8 @@ Schema:
   Object Type: "Meta"
   Title: "ASHRAE 205"
   Description: "Base schema for ASHRAE 205 representations"
-  Version: "0.2.0"
+  Version: "2.0.1"
+
 
 #Data Group Templates
 
@@ -34,6 +35,7 @@ LookupVariablesTemplate:
   Required Data Types:
     - "[Numeric]"
     - "[Integer]"
+    - "[<OperationState>]"
   Data Elements Required: True
 
 RepresentationSpecificationTemplate:
@@ -46,19 +48,26 @@ RepresentationSpecificationTemplate:
     description:
       Required: False
 
+RatingTemplate:
+  Object Type: "Data Group Template"
+  Required Data Elements:
+    rating_reproducible_from_data:
+      Data Type: Boolean
+  Unit System: IPUnits
+
 # Common Enumerations
 
 SchemaType:
   Object Type: "Enumeration"
   Enumerators:
     RS0001:
-      Description: "Liquid-Cooled Chiller"
+      Description: "Chiller"
     RS0002:
       Description: "Unitary Cooling Air-Conditioning Equipment"
     RS0003:
       Description: "Fan Assembly"
     RS0004:
-      Description: "Air-to-Air Direct Expansion Refrigerant Coil System"
+      Description: "Air-to-Air Direct Expansion Refrigerant System"
     RS0005:
       Description: "Motor"
     RS0006:
@@ -85,14 +94,14 @@ CompressorType:
       Description: "Scroll compressor"
       Display Text: "Scroll"
 
-CompressorSpeedControlType:
+SpeedControlType:
   Object Type: "Enumeration"
   Enumerators:
     DISCRETE:
-      Description: "Compressor loading is controlled by cycling between one or more discrete stages"
+      Description: "Loading is controlled by cycling between one or more discrete stages"
       Display Text: "Discrete"
     CONTINUOUS:
-      Description: "Compressor loading is controlled by continuously varying the speed of the compressor"
+      Description: "Loading is controlled by continuously varying the speed"
       Display Text: "Continuous"
 
 CondenserType:
@@ -107,6 +116,7 @@ CondenserType:
     EVAPORATIVE:
       Description: "Evaporative condenser"
       Display Text: "Evaporative"
+      Notes: "Evaporative condensers include adiabatically-cooled condensers"
 
 LiquidConstituent:
   Object Type: "Enumeration"
@@ -143,6 +153,15 @@ ConcentrationType:
       Description: "Concentration is defined as a fraction of total liquid mixture mass"
       Display Text: "By Mass"
 
+OperationState:
+  Object Type: "Enumeration"
+  Enumerators:
+    NORMAL:
+      Description: "Indicates that the equipment is in normal operating state"
+      Display Text: "Normal"
+    STANDBY:
+      Description: "Indicates that the equipment is in standby operating state"
+      Display Text: "Standby"
 # Reusable Data Groups
 LiquidMixture:
   Object Type: "Data Group"
@@ -169,3 +188,19 @@ LiquidComponent:
       Data Type: "Numeric"
       Constraints: [">=0.0", "<=1.0"]
       Notes: "If omitted, assume equal distribution with any other component with no defined concentration (e.g., can be left blank for the primary component)"
+
+Scaling:
+  Object Type: "Data Group"
+  Data Elements:
+    minimum:
+      Description: "Minimum scaling factor"
+      Data Type: "Numeric"
+      Units: "-"
+      Constraints: [">0.0", "<=1.0"]
+      Notes: "If not specified, may be scaled down to any value greater than zero"
+    maximum:
+      Description: "Maximum scaling factor"
+      Data Type: "Numeric"
+      Units: "-"
+      Constraints: [">=1.0"]
+      Notes: "If not specified, unlimited"
