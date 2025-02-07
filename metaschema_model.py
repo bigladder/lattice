@@ -8,6 +8,8 @@ from pydantic import BaseModel, RootModel, Field, model_validator, field_validat
 from pydantic.types import StringConstraints
 from typing_extensions import Annotated, Self
 
+from lattice import schema
+
 schema_path: Path = Path().cwd()
 
 # TODO: IPUnits
@@ -30,6 +32,7 @@ class ObjectType(Enum):
     Data_Group_Template = 'Data Group Template'
 
 def get_references(refs: List[str]) -> List[LatticeSchema]:
+    # TODO: validate the strings (schema.ReferenceType) first? or just allow the open to throw?
     schema: List[LatticeSchema] = []
     for ref in refs:
         with open(LatticeSchema.schema_path / f"{ref}.schema.yaml", 'r') as stream:
@@ -108,7 +111,7 @@ class EnumeratorAttributes(BaseModel):
 
 
 class Enumerants(BaseModel):
-    root: Dict[Annotated[str, StringConstraints(pattern=r'^([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*$')], Optional[EnumeratorAttributes]] = Field(
+    root: Dict[Annotated[str, StringConstraints(pattern=schema.EnumerationType.value_pattern)], Optional[EnumeratorAttributes]] = Field(
         None)
 
 
