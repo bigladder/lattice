@@ -2,9 +2,17 @@ from __future__ import annotations
 import yaml
 from pathlib import Path
 from enum import Enum
-from typing import Dict, List, Optional, Union, Literal, Any, ClassVar
+from typing import Dict, List, Optional, Union, Literal, Any, ClassVar, Type
 
-from pydantic import BaseModel, RootModel, Field, model_validator, field_validator, BeforeValidator, AfterValidator
+from pydantic import (
+    BaseModel,
+    RootModel,
+    Field,
+    model_validator,
+    create_model,
+    BeforeValidator,
+    InstanceOf
+)
 from pydantic.types import StringConstraints
 from typing_extensions import Annotated, Self
 
@@ -22,6 +30,7 @@ schema_path: Path = Path().cwd()
 # TODO: So, for a schema group in lattice, each meta.schema.json only references definitions inside itself.
 # This is posing a problem for Unit Systems that are defined in ASHRAE205.schema.yaml but used in a RatingsTemplate in other schema.
 # I added the Unit Systems attribute to the Meta group in each sub-schema to get them to validate.
+# TODO: Can we use pydantic-native types like UUID?
 
 class ObjectType(Enum):
     Meta = 'Meta'
@@ -40,6 +49,25 @@ def get_references(refs: List[str]) -> List[LatticeSchema]:
             schema.append(LatticeSchema(lattice_schema=config))
     return schema
 
+
+def get_unit_systems(systems: Dict[str, List[str]]) -> List[DynamicUnitSystem]:
+    UnitSystemClasses: List[DynamicUnitSystem] = []
+    for system in systems:
+        units = systems[system]
+        UnitSystemClasses.append(create_model(system, name=(str,system), units=(List[str], units), __base__=DynamicUnitSystem))
+    return UnitSystemClasses
+
+
+# def extend_enum(enum_class: type[Enum], new_members: Dict[str, str]) -> type[Enum]:
+#     """Extends an existing Enum class with new members dynamically."""
+#     new_enum = Enum(enum_class.__name__, {**enum_class.__members__, **new_members})
+#     return type(new_enum)
+
+
+class DynamicUnitSystem(BaseModel):
+    name: str
+    units: Annotated[List[str], BeforeValidator(get_unit_systems)]
+
 class Meta(BaseModel):
     class Config:
         extra = "forbid"
@@ -50,9 +78,12 @@ class Meta(BaseModel):
     Version: Optional[str] = None
     Root_Data_Group: Optional[str] = Field(None, alias='Root Data Group')
     References: Optional[Annotated[List[LatticeSchema], BeforeValidator(get_references)]] = None
-    Unit_Systems: Optional[Dict[Annotated[str, StringConstraints(pattern=r'^[A-Z]([A-Z]|[a-z]|[0-9])*$')], List[str]]] = Field(
+    #Unit_Systems: Optional[List[DynamicUnitSystem]] = Field(None, alias='Unit Systems')
+    #Unit_Systems: Optional[Dict[str, List[str]]] = Field(None, alias='Unit Systems')
+    Unit_Systems: Optional[Annotated[List[Type[DynamicUnitSystem]], BeforeValidator(get_unit_systems)]] = Field(
         None, alias='Unit Systems'
     )
+
 
 class JSONSchemaType(Enum):
     string = 'string'
@@ -111,7 +142,7 @@ class EnumeratorAttributes(BaseModel):
 
 
 class Enumerants(BaseModel):
-    root: Dict[Annotated[str, StringConstraints(pattern=schema.EnumerationType.value_pattern)], Optional[EnumeratorAttributes]] = Field(
+    root: Dict[Annotated[str, StringConstraints(pattern=schema.EnumerationType.value_pattern.pattern)], Optional[EnumeratorAttributes]] = Field(
         None)
 
 
@@ -158,7 +189,7 @@ class DataTypePattern(RootModel):
 class DataElementAttributes(BaseModel):
     Description: Optional[str] = None
     Data_Type: Optional[DataTypePattern] = Field(None, alias='Data Type')
-    #Units: Optional[Union[StandardUnits, IPUnits]] = None
+    Units: Optional[StandardUnits] = None
     Constraints: Optional[ConstraintsAttribute] = None
     Required: Optional[RequiredAttribute] = None
     Notes: Optional[Union[str, List[str]]] = None
@@ -218,8 +249,9 @@ class LatticeSchema(BaseModel):
 
 
 if __name__ == "__main__":
+    schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/ratings/schema/Rating.schema.yaml")
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0003.schema.yaml")
-    schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/lattice/core.schema.yaml")
+    #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/lattice/core.schema.yaml")
     path_to_schema = schema_file.parent
     with open(schema_file, 'r') as stream:
         config = yaml.load(stream, Loader=yaml.CLoader)
