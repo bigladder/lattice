@@ -1,5 +1,18 @@
-.md-typeset code {
-  word-break: unset;
+.md-typeset__table {
+  width: 100%;
+}
+
+.md-typeset table:not([class]) {
+  display: table;
+}
+
+thead tr th:first-child,
+tbody tr td:first-child {
+  --first-column-width: 33%;
+  width: var(--first-column-width);
+  min-width: var(--first-column-width);
+  max-width: var(--first-column-width);
+  word-break: break-word;
 }
 
 dl {
