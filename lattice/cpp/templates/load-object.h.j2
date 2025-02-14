@@ -4,7 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <nlohmann/json.hpp>
-#include <courierr/courierr.h>
+#include <courier/courier.h>
 
 namespace {{namespace}} {
 
@@ -53,6 +53,7 @@ namespace {{namespace}} {
 
     template<class T>
     void json_get(nlohmann::json j,
+                  Courier::Courier* logger,
                   const char *subnode,
                   T& object,
                   bool& object_is_set,
@@ -68,18 +69,10 @@ namespace {{namespace}} {
             object_is_set = false;
             if (required)
             {
-                logger.warning(ex.what());
+                logger->send_warning(ex.what());
             }
         }
     }
-
-{% for root_object in root_objects %}
-    {{root_object}} create_instance(const char* instance_file, {{root_object}}& object)
-    {
-        auto j = load_json(instance_file);
-        j.get<{{root_object}}>(object);
-    }
-{% endfor %}
 }
 
 #endif

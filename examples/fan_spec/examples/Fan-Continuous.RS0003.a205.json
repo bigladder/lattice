@@ -1,12 +1,13 @@
 {
     "metadata": {
         "schema_author": "ASHRAE_205",
-        "schema": "RS0003",
+        "schema_name": "RS0003",
         "schema_version": "0.2.0",
+        "author": "SSPC 205 Working Group",
         "description": "Continuous Fan",
         "id": "123e4567-e89b-12d3-a456-426614174000",
-        "timestamp": "2020-05-11T00:00Z",
-        "version": 1,
+        "time_of_creation": "2020-05-11T00:00Z",
+        "version": "1.0.0",
         "disclaimer": "Example data not to be used for simulation"
     },
     "description": {
