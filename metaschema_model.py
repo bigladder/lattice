@@ -2,7 +2,7 @@ from __future__ import annotations
 import yaml
 from pathlib import Path
 from enum import Enum
-from typing import Dict, List, Optional, Union, Literal, Any, ClassVar, Type
+from typing import Dict, List, Optional, Union, Literal, Any, ClassVar, Type, Set
 
 from pydantic import (
     BaseModel,
@@ -20,16 +20,13 @@ from lattice import schema
 
 schema_path: Path = Path().cwd()
 
-# TODO: IPUnits
+# TODO: A template may have a Unit System attribute that must be available in "Unit Systems"
 # TODO: validate and include core.schema.yaml items
 # TODO: Different constraints, requirements
 # TODO: Add Schema class' regexs and stuff
 # TODO: Things like RequiredDataTypes, that are read in as strs, should be valid types
 # TODO: If enum type (etc), has correct regex
 # TODO: find missing required data elements in template-derived Data Groups, and Array constraints like [Numeric][1..] where I guess the size value has been moved to the Constraints list.
-# TODO: So, for a schema group in lattice, each meta.schema.json only references definitions inside itself.
-# This is posing a problem for Unit Systems that are defined in ASHRAE205.schema.yaml but used in a RatingsTemplate in other schema.
-# I added the Unit Systems attribute to the Meta group in each sub-schema to get them to validate.
 # TODO: Can we use pydantic-native types like UUID?
 
 class ObjectType(Enum):
@@ -51,22 +48,49 @@ def get_references(refs: List[str]) -> List[LatticeSchema]:
 
 
 def get_unit_systems(systems: Dict[str, List[str]]) -> List[DynamicUnitSystem]:
-    UnitSystemClasses: List[DynamicUnitSystem] = []
+    UnitSystemClasses: List[DynamicUnitSystem] = [StandardUnits]
     for system in systems:
         units = systems[system]
-        UnitSystemClasses.append(create_model(system, name=(str,system), units=(List[str], units), __base__=DynamicUnitSystem))
+        UnitSystemClass = DynamicUnitSystem(system, {k:str(k) for k in units})
+        # print(type(UnitSystemClass), UnitSystemClass.__name__)
+        UnitSystemClasses.append(UnitSystemClass)
+    # LatticeSchema.model_rebuild(force=True)
+    # for c in UnitSystemClasses:
+    #     for u in c:
+    #         print(u.name, u.value)
+
     return UnitSystemClasses
 
 
-# def extend_enum(enum_class: type[Enum], new_members: Dict[str, str]) -> type[Enum]:
-#     """Extends an existing Enum class with new members dynamically."""
-#     new_enum = Enum(enum_class.__name__, {**enum_class.__members__, **new_members})
-#     return type(new_enum)
+class DynamicUnitSystem(Enum):
+    pass
 
 
-class DynamicUnitSystem(BaseModel):
-    name: str
-    units: Annotated[List[str], BeforeValidator(get_unit_systems)]
+class StandardUnits(DynamicUnitSystem):
+    field_ = '-'
+    m = 'm'
+    m2 = 'm2'
+    m3 = 'm3'
+    s = 's'
+    m_s = 'm/s'
+    m2_s = 'm2/s'
+    m3_s = 'm3/s'
+    kg = 'kg'
+    kg_s = 'kg/s'
+    N = 'N'
+    J = 'J'
+    W = 'W'
+    Pa = 'Pa'
+    K = 'K'
+    J_K = 'J/K'
+    W_K = 'W/K'
+    m2_K_W = 'm2-K/W'
+    V = 'V'
+    A = 'A'
+    C = 'C'
+    Hz = 'Hz'
+    rev_s = 'rev/s'
+
 
 class Meta(BaseModel):
     class Config:
@@ -78,10 +102,8 @@ class Meta(BaseModel):
     Version: Optional[str] = None
     Root_Data_Group: Optional[str] = Field(None, alias='Root Data Group')
     References: Optional[Annotated[List[LatticeSchema], BeforeValidator(get_references)]] = None
-    #Unit_Systems: Optional[List[DynamicUnitSystem]] = Field(None, alias='Unit Systems')
-    #Unit_Systems: Optional[Dict[str, List[str]]] = Field(None, alias='Unit Systems')
     Unit_Systems: Optional[Annotated[List[Type[DynamicUnitSystem]], BeforeValidator(get_unit_systems)]] = Field(
-        None, alias='Unit Systems'
+        [StandardUnits], alias='Unit Systems'
     )
 
 
@@ -125,11 +147,17 @@ class ConstraintsAttribute(RootModel):
 
 
 class ElementBasedConditionalRequiredPattern(RootModel):
-    # TODO: Find all instances of data element pattern ^([a-z][a-z,0-9]*)(_([a-z,0-9])+)*$
-    root: Annotated[str, StringConstraints(pattern=r'if (([a-z][a-z,0-9]*)(_([a-z,0-9])+)*)(!=|=)(True|False)')]
+    # TODO: Should we use schema.DataElementValueConstraint.pattern? What about the "if"?
+    root: Annotated[str, StringConstraints(pattern=r'if (([a-z][a-z,0-9]*)(_([a-z,0-9])+)*)(!=|=)(schema.BooleanType.value_pattern)')]
+
+
+class EnumValueBasedConditionalRequiredPattern(RootModel):
+    # TODO: Should we use schema.DataElementValueConstraint.pattern? What about the "if"?
+    root: Annotated[str, StringConstraints(pattern=rf'if (([a-z][a-z,0-9]*)(_([a-z,0-9])+)*)(!=|=)({schema.EnumerationType.value_pattern})')]
+
 
 class RequiredAttribute(RootModel):
-    root: Union[bool, ElementBasedConditionalRequiredPattern]
+    root: Union[bool, ElementBasedConditionalRequiredPattern, EnumValueBasedConditionalRequiredPattern]
 
 
 class EnumeratorAttributes(BaseModel):
@@ -154,32 +182,6 @@ class Enumeration(BaseModel):
     Enumerators: Enumerants
 
 
-class StandardUnits(Enum):
-    field_ = '-'
-    m = 'm'
-    m2 = 'm2'
-    m3 = 'm3'
-    s = 's'
-    m_s = 'm/s'
-    m2_s = 'm2/s'
-    m3_s = 'm3/s'
-    kg = 'kg'
-    kg_s = 'kg/s'
-    N = 'N'
-    J = 'J'
-    W = 'W'
-    Pa = 'Pa'
-    K = 'K'
-    J_K = 'J/K'
-    W_K = 'W/K'
-    m2_K_W = 'm2-K/W'
-    V = 'V'
-    A = 'A'
-    C = 'C'
-    Hz = 'Hz'
-    rev_s = 'rev/s'
-
-
 class DataTypePattern(RootModel):
     root: Annotated[str, StringConstraints(
         pattern=r'^(((Integer|Numeric|Boolean|String|Pattern)|(UUID|Date|Timestamp|Version)|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>|:[A-Z]([A-Z]|[a-z]|[0-9])*:))|(\((((Integer|Numeric|Boolean|String|Pattern)|(UUID|Date|Timestamp|Version)|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>|:[A-Z]([A-Z]|[a-z]|[0-9])*:))(,\s*((Integer|Numeric|Boolean|String|Pattern)|(UUID|Date|Timestamp|Version)|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>|:[A-Z]([A-Z]|[a-z]|[0-9])*:))+\))|(\[([A-Z]([A-Z]|[a-z]|[0-9])*|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>)\])$'
@@ -189,7 +191,7 @@ class DataTypePattern(RootModel):
 class DataElementAttributes(BaseModel):
     Description: Optional[str] = None
     Data_Type: Optional[DataTypePattern] = Field(None, alias='Data Type')
-    Units: Optional[StandardUnits] = None
+    Units: Optional[str] = None # Re-validate with available unit systems
     Constraints: Optional[ConstraintsAttribute] = None
     Required: Optional[RequiredAttribute] = None
     Notes: Optional[Union[str, List[str]]] = None
@@ -202,7 +204,7 @@ class DataGroup(BaseModel):
 
     Object_Type: Literal['Data Group'] = Field( alias='Object Type')
     Data_Group_Template: Optional[str] = Field(None, alias='Data Group Template')
-    Data_Elements: Dict[Annotated[str, StringConstraints(pattern=r'^([a-z][a-z,0-9]*)(_([a-z,0-9])+)*$')], DataElementAttributes] = Field(
+    Data_Elements: Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern)], DataElementAttributes] = Field(
         ..., alias='Data Elements'
     )
 
@@ -213,7 +215,7 @@ class DataGroupTemplate(BaseModel):
 
     Object_Type: Literal['Data Group Template'] = Field( alias='Object Type')
     Required_Data_Elements: Optional[
-        Dict[Annotated[str, StringConstraints(pattern=r'^([a-z][a-z,0-9]*)(_([a-z,0-9])+)*$')], DataElementAttributes]
+        Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern)], DataElementAttributes]
     ] = Field(None, alias='Required Data Elements')
     Unit_System: Optional[str] = Field(None, alias='Unit System')
     Required_Data_Types: Optional[List[str]] = Field(None, alias='Required Data Types', min_items=1)
@@ -247,10 +249,31 @@ class LatticeSchema(BaseModel):
                 raise Exception(f"Data Group Template definition {datagroup.root.Data_Group_Template} not found.")
         return self
 
+    @model_validator(mode='after')
+    def validate_data_element_units(self) -> Self:
+        unit_names: Set[str] = set()
+        for group in self.lattice_schema.values(): # All the subdictionaries in self
+            if isinstance(group.root, Meta):
+                if group.root.Unit_Systems:
+                    for unit_system in group.root.Unit_Systems:
+                        unit_names.update([unit.value for unit in unit_system])
+                if group.root.References:
+                    for reference in group.root.References:
+                        for (name,item) in reference.lattice_schema.items():
+                            if isinstance(item.root, Meta) and item.root.Unit_Systems:
+                                for unit_system in item.root.Unit_Systems:
+                                    unit_names.update([unit.value for unit in unit_system])
+
+        for _, group in [(k,v) for (k,v) in self.lattice_schema.items() if isinstance(v.root, DataGroup)]:
+            for name in group.root.Data_Elements:
+                attributes = group.root.Data_Elements[name]
+                if attributes.Units and attributes.Units not in unit_names:
+                    raise Exception(f"{attributes.Units} was not found in any available Unit Systems.")
+        return self
 
 if __name__ == "__main__":
-    schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/ratings/schema/Rating.schema.yaml")
-    #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0003.schema.yaml")
+    #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/ratings/schema/Rating.schema.yaml")
+    schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0001.schema.yaml")
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/lattice/core.schema.yaml")
     path_to_schema = schema_file.parent
     with open(schema_file, 'r') as stream:
