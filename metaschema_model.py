@@ -138,7 +138,7 @@ class StringType(BaseModel):
 
 class ConstraintsPattern(RootModel):
     root: Annotated[str, StringConstraints(
-        pattern=r'^((>|>=|<=|<)(([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)))|(%(([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)))|(\[([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)(, ?([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?))*\])|((([a-z][a-z,0-9]*)(_([a-z,0-9])+)*)=(((([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?))|(".*")|(([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*)|(True|False))))|(:[A-Z]([A-Z]|[a-z]|[0-9])*:)|(([a-z][a-z,0-9]*)(_([a-z,0-9])+)*\(([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*(, ?([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*)*\))|(\[(\d*)\.\.(\d*)\])|(".*")$'
+        pattern=rf'^((>|>=|<=|<)(([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)))|(%(([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)))|(\[([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)(, ?([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?))*\])|(({schema._data_element_names.pattern.pattern})=(((([-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?))|(".*")|(([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*)|(True|False))))|(:[A-Z]([A-Z]|[a-z]|[0-9])*:)|(([a-z][a-z,0-9]*)(_([a-z,0-9])+)*\(([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*(, ?([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*)*\))|(\[(\d*)\.\.(\d*)\])|(".*")$'
     )]
 
 
@@ -148,16 +148,21 @@ class ConstraintsAttribute(RootModel):
 
 class ElementBasedConditionalRequiredPattern(RootModel):
     # TODO: Should we use schema.DataElementValueConstraint.pattern? What about the "if"?
-    root: Annotated[str, StringConstraints(pattern=r'if (([a-z][a-z,0-9]*)(_([a-z,0-9])+)*)(!=|=)(schema.BooleanType.value_pattern)')]
+    root: Annotated[str, StringConstraints(pattern=rf'if ({schema._data_element_names.pattern.pattern})(!=|=)({schema.BooleanType.value_pattern})')]
 
 
 class EnumValueBasedConditionalRequiredPattern(RootModel):
     # TODO: Should we use schema.DataElementValueConstraint.pattern? What about the "if"?
-    root: Annotated[str, StringConstraints(pattern=rf'if (([a-z][a-z,0-9]*)(_([a-z,0-9])+)*)(!=|=)({schema.EnumerationType.value_pattern})')]
+    root: Annotated[str, StringConstraints(pattern=rf'if ({schema._data_element_names.pattern.pattern})(!=|=)({schema.EnumerationType.value_pattern})')]
+
+
+class ExclusionaryRequiredPattern(RootModel):
+    # TODO: Should we use schema.DataElementValueConstraint.pattern? What about the "if"?
+    root: Annotated[str, StringConstraints(pattern=rf'if !({schema._data_element_names.pattern.pattern})')]
 
 
 class RequiredAttribute(RootModel):
-    root: Union[bool, ElementBasedConditionalRequiredPattern, EnumValueBasedConditionalRequiredPattern]
+    root: Union[bool, ElementBasedConditionalRequiredPattern, EnumValueBasedConditionalRequiredPattern, ExclusionaryRequiredPattern]
 
 
 class EnumeratorAttributes(BaseModel):
@@ -185,6 +190,7 @@ class Enumeration(BaseModel):
 class DataTypePattern(RootModel):
     root: Annotated[str, StringConstraints(
         pattern=r'^(((Integer|Numeric|Boolean|String|Pattern)|(UUID|Date|Timestamp|Version)|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>|:[A-Z]([A-Z]|[a-z]|[0-9])*:))|(\((((Integer|Numeric|Boolean|String|Pattern)|(UUID|Date|Timestamp|Version)|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>|:[A-Z]([A-Z]|[a-z]|[0-9])*:))(,\s*((Integer|Numeric|Boolean|String|Pattern)|(UUID|Date|Timestamp|Version)|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>|:[A-Z]([A-Z]|[a-z]|[0-9])*:))+\))|(\[([A-Z]([A-Z]|[a-z]|[0-9])*|\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}|<[A-Z]([A-Z]|[a-z]|[0-9])*>)\])$'
+        #pattern=schema._type_base_names.pattern
     )]
 
 
@@ -204,7 +210,7 @@ class DataGroup(BaseModel):
 
     Object_Type: Literal['Data Group'] = Field( alias='Object Type')
     Data_Group_Template: Optional[str] = Field(None, alias='Data Group Template')
-    Data_Elements: Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern)], DataElementAttributes] = Field(
+    Data_Elements: Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern.pattern)], DataElementAttributes] = Field(
         ..., alias='Data Elements'
     )
 
@@ -215,7 +221,7 @@ class DataGroupTemplate(BaseModel):
 
     Object_Type: Literal['Data Group Template'] = Field( alias='Object Type')
     Required_Data_Elements: Optional[
-        Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern)], DataElementAttributes]
+        Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern.pattern)], DataElementAttributes]
     ] = Field(None, alias='Required Data Elements')
     Unit_System: Optional[str] = Field(None, alias='Unit System')
     Required_Data_Types: Optional[List[str]] = Field(None, alias='Required Data Types', min_items=1)
@@ -272,8 +278,9 @@ class LatticeSchema(BaseModel):
         return self
 
 if __name__ == "__main__":
+    #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/time_series/schema/TimeSeries.schema.yaml")
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/ratings/schema/Rating.schema.yaml")
-    schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0001.schema.yaml")
+    schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0003.schema.yaml")
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/lattice/core.schema.yaml")
     path_to_schema = schema_file.parent
     with open(schema_file, 'r') as stream:
