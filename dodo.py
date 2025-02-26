@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from lattice import Lattice
-from lattice.cpp.header_entry_extension_loader import load_extensions
+from lattice.cpp.extension_loader import load_extensions
 
 from doit import task_params
 from doit.tools import create_folder

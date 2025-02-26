@@ -11,6 +11,13 @@ Schema:
   Title: "ASHRAE 205"
   Description: "Base schema for ASHRAE 205 representations"
   Version: "2.0.1"
+  Unit Systems:
+    IPUnits:
+      - "-"
+      - ft
+      - Btu/h
+      - kW
+      - Btu/W-h
 
 
 #Data Group Templates
