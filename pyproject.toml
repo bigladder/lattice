@@ -1,36 +1,31 @@
-[tool.poetry]
+[project]
 name = "lattice"
 version = "0.0.0" # Generated from git on CI
 description = "A framework for developing data models, including schema development and documentation."
-authors = ["Big Ladder Software"]
-license = "BSD-3"
+#authors = ["Big Ladder Software"]
+#license = "BSD-3"
 readme = "README.md"
 keywords = ["data-modeling", "schema", "lattice"]
 repository = "https://github.com/bigladder/lattice"
+requires-python = ">=3.10"
+dependencies = [
+    "jsonschema",
+    "pyyaml",
+    "cbor2",
+    "Jinja2 >=3.1.4",
+    "stringcase >=1.2.0",
+    "pygit2 >=1.15.1",
+    "mkdocs-material",
+    "markdown-grid-tables",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-jsonschema = "*"
-pyyaml = "*"
-cbor2 = "*"
-Jinja2 = ">=3.1.4"
-stringcase = ">=1.2.0"
-pygit2 = ">=1.15.1"
-mkdocs-material = "*"
-markdown-grid-tables = "*"
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=7.1.3"
-doit = "*"
-pylint = "*"
-black = "*"
-
-[tool.poetry.group.extras.dependencies]
-pyinstrument = "*"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+dev-dependencies = [
+    "pytest >= 7.1.3",
+    "doit",
+    "pylint",
+    "black"
+]
 
 [tool.black]
 line-length = 120
