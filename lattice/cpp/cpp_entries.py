@@ -238,9 +238,7 @@ class CPPExtensionInterface(ABC):
         cls.extensions.append(cls)
 
     @abstractmethod
-    def process_data_group(self,
-                           reference_header_entry: HeaderEntry,
-                           parent_node: ImplementationEntry): ...
+    def process_data_group(self, reference_header_entry: HeaderEntry, parent_node: ImplementationEntry): ...
 
 
 class CPPTranslator:

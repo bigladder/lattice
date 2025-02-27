@@ -69,7 +69,8 @@ class HeaderTranslator:
 
         for base_class in HeaderEntryExtensionInterface.extensions:
             self._extensions[base_class] = [
-                HeaderEntryExtensionInterface.extensions[base_class][i]() for i in range(len(HeaderEntryExtensionInterface.extensions[base_class]))
+                HeaderEntryExtensionInterface.extensions[base_class][i]()
+                for i in range(len(HeaderEntryExtensionInterface.extensions[base_class]))
             ]
 
         self._translate(input_file_path, forward_declarations_path, output_path, top_namespace)
