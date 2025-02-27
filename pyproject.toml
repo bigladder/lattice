@@ -27,7 +27,7 @@ dev-dependencies = [
     "black"
 ]
 
-[tool.black]
+[tool.ruff]
 line-length = 120
 
 [tool.mypy]
