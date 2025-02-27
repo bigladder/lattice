@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 logger = logging.getLogger()
 
 
-class PluginInterface(ABC):
+class HeaderEntryExtensionInterface(ABC):
     extensions: dict[str, list[Callable]] = {}  # TODO: list should be a set
 
     def __init_subclass__(cls, **kwargs):
@@ -65,11 +65,12 @@ class HeaderTranslator:
         self._epilogue = []
         self._data_group_types = {"Data Group"}
         self._forward_declaration_dir: Optional[pathlib.Path] = None
-        self._extensions: dict[str, list[PluginInterface]] = {}
+        self._extensions: dict[str, list[HeaderEntryExtensionInterface]] = {}
 
-        for base_class in PluginInterface.extensions:
+        for base_class in HeaderEntryExtensionInterface.extensions:
             self._extensions[base_class] = [
-                PluginInterface.extensions[base_class][i]() for i in range(len(PluginInterface.extensions[base_class]))
+                HeaderEntryExtensionInterface.extensions[base_class][i]()
+                for i in range(len(HeaderEntryExtensionInterface.extensions[base_class]))
             ]
 
         self._translate(input_file_path, forward_declarations_path, output_path, top_namespace)
@@ -156,12 +157,10 @@ class HeaderTranslator:
             self._process_data_elements(s, base_level_tag, data_group_template)
             self._add_function_overrides(s, output_path, data_group_template)
 
-        # Process customizations
-        for base_level_tag in self._list_objects_of_type(self._data_group_types):
-            data_group_template = self._contents[base_level_tag].get("Data Group Template", "")
-            if data_group_template in self._extensions:
-                [self._extensions[data_group_template][i].process_data_group(self.root) for i in range(len(self._extensions[data_group_template]))]
-                self._extensions.pop(data_group_template)
+            # Process customizations
+            if scoped_superclass in self._extensions:
+                [self._extensions[scoped_superclass][i].process_data_group(self._namespace) for i in range(len(self._extensions[scoped_superclass]))]
+                self._extensions.pop(scoped_superclass)
 
         self._add_header_dependencies()
         modified_insertion_sort(self._namespace.child_entries)
