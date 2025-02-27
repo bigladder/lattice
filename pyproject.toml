@@ -38,3 +38,7 @@ check_untyped_defs = true
 [[tool.mypy.overrides]]
 module = "lattice.*"
 disable_error_code = ["annotation-unchecked","import"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

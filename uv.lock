@@ -388,7 +388,7 @@ wheels = [
 [[package]]
 name = "lattice"
 version = "0.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "cbor2" },
     { name = "jinja2" },
