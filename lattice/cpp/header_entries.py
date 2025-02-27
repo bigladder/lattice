@@ -121,12 +121,12 @@ class Enumeration(HeaderEntry):
 
         # Incorporate an enum_info map into this object
         map_type = f"const static std::unordered_map<{self.name}, enum_info>"
-        entry += f"\n" f"{self._indent}{map_type} {self.name}_info {self._opener}\n"
+        entry += f"\n{self._indent}{map_type} {self.name}_info {self._opener}\n"
         for e in self._enumerants:
             display_text = self._enumerants[e].get("Display Text", e)
             description = self._enumerants[e].get("Description")
-            entry += f"{self._indent}\t" f'{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
-        entry += f"{self._indent}\t" f'{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
+            entry += f'{self._indent}\t{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
+        entry += f'{self._indent}\t{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
         entry += f"{self._indent}{self._closure}"
 
         return entry
@@ -304,7 +304,6 @@ class DataElement(HeaderEntry):
 
 @dataclass
 class DataElementIsSetFlag(HeaderEntry):
-
     def __str__(self):
         tab = "\t"
         return f"{self._indent}bool {self.name}_is_set;"

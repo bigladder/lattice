@@ -75,9 +75,7 @@ def generate_meta_schema(output_path, schema=None):
         schema_patterns.data_element_names.anchored()
     ] = meta_schema["definitions"]["DataGroupTemplate"]["properties"]["Required Data Elements"][
         "patternProperties"
-    ].pop(
-        "**GENERATED**"
-    )
+    ].pop("**GENERATED**")
     meta_schema["definitions"]["ConstraintsPattern"]["pattern"] = schema_patterns.constraints.anchored()
     meta_schema["definitions"]["Required"]["oneOf"][1]["pattern"] = schema_patterns.conditional_requirements.anchored()
     meta_schema["definitions"]["Enumerator"]["patternProperties"][schema_patterns.enumerator.anchored()] = meta_schema[
@@ -208,15 +206,7 @@ def generate_meta_schema(output_path, schema=None):
                     "patternProperties"
                 ][exclusive_element_names_anchored] = meta_schema["definitions"][
                     f"{data_group_template_name}DataGroup"
-                ][
-                    "properties"
-                ][
-                    "Data Elements"
-                ][
-                    "patternProperties"
-                ].pop(
-                    schema_patterns.data_element_names.anchored()
-                )
+                ]["properties"]["Data Elements"]["patternProperties"].pop(schema_patterns.data_element_names.anchored())
                 meta_schema["definitions"][f"{data_group_template_name}DataGroup"]["properties"]["Data Elements"][
                     "patternProperties"
                 ][exclusive_element_names_anchored][
