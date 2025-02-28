@@ -1,14 +1,15 @@
 from __future__ import annotations
-import logging
-import shutil
-import re
-from pathlib import Path
-from typing import Optional, Union, Callable
-from abc import ABC, abstractmethod
 
-from lattice.cpp.header_entries import * # noqa: F403
-from lattice.file_io import load, get_base_stem
-from lattice.util import snake_style, namespace_style, hyphen_separated_lowercase_style
+import logging
+import re
+import shutil
+from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Callable, Optional, Union
+
+from lattice.cpp.header_entries import *  # noqa: F403
+from lattice.file_io import get_base_stem, load
+from lattice.util import hyphen_separated_lowercase_style, namespace_style, snake_style
 
 logger = logging.getLogger()
 

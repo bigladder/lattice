@@ -1,20 +1,21 @@
 from __future__ import (
     annotations,
 )  # Allows us to annotate types that are not yet fully defined; i.e. ImplementationEntry
+
 import logging
-from typing import Optional, Callable
-from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Callable, Optional
 
 from .header_entries import (
-    EntryFormat,
-    HeaderEntry,
-    Struct,
     DataElement,
     DataElementStaticMetainfo,
+    EntryFormat,
     FunctionalHeaderEntry,
-    ObjectSerializationDeclaration,
+    HeaderEntry,
     InlineDependency,
+    ObjectSerializationDeclaration,
+    Struct,
     VirtualDestructor,
 )
 

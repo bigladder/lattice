@@ -1,8 +1,9 @@
 from __future__ import annotations
-import re
+
 import logging
-from typing import Optional, Union
+import re
 from dataclasses import dataclass, field
+from typing import Optional, Union
 
 logger = logging.getLogger()
 

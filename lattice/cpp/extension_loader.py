@@ -4,6 +4,7 @@ import sys
 from importlib import util
 from pathlib import Path
 
+
 def import_module(path: Path):
     """Imports a module given a path."""
     spec = util.spec_from_file_location(path.stem, path)

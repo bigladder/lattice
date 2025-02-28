@@ -1,8 +1,10 @@
-from jinja2 import Template
-from lattice.file_io import string_to_file, make_dir
-from lattice.util import snake_style, hyphen_separated_lowercase_style, namespace_style
 from pathlib import Path
+
+from jinja2 import Template
+
 from lattice.cpp import header_entries
+from lattice.file_io import make_dir, string_to_file
+from lattice.util import hyphen_separated_lowercase_style, namespace_style, snake_style
 
 
 def support_header_pathnames(output_directory: Path):
