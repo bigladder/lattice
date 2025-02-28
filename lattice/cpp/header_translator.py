@@ -15,6 +15,7 @@ logger = logging.getLogger()
 
 # ruff: noqa: F841
 
+
 class HeaderEntryExtensionInterface(ABC):
     extensions: dict[str, list[Callable]] = {}  # TODO: list should be a set
 
@@ -68,10 +69,7 @@ class HeaderTranslator:
         self._extensions: dict[str, list[HeaderEntryExtensionInterface]] = {}
 
         for base_class, extension in HeaderEntryExtensionInterface.extensions.items():
-            self._extensions[base_class] = [
-                extension[i]()
-                for i in range(len(extension))
-            ]
+            self._extensions[base_class] = [extension[i]() for i in range(len(extension))]
 
         self._translate(input_file_path, forward_declarations_path, output_path, top_namespace)
 

@@ -62,7 +62,7 @@ def render_build_files(project_name: str, submodule_names: list, output_director
 def generate_superclass_header(superclass: str, output_directory: Path):
     s1 = f"#ifndef {superclass.upper()}_H_"
     s2 = f"#define {superclass.upper()}_H_"
-    s3 = f"#endif" # noqa: F541
+    s3 = f"#endif"  # noqa: F541
 
     class_entry = header_entries.Struct(superclass, None)
     header_entries.VirtualDestructor("", class_entry, "", superclass, [])
