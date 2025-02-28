@@ -11,10 +11,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
-      # Update output format to enable automatic inline annotations.
-      - name: Run Ruff
-        run: ruff format --check lattice
+      - name: Run Ruff Format
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: 0.9.9
+          args: format --check
+          src: "lattice"
+      - name: Run Ruff Linter
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: 0.9.9
+          args: check
+          src: "lattice"
