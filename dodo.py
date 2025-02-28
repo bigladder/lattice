@@ -1,14 +1,17 @@
 import logging
 from pathlib import Path
-from lattice import Lattice
-from lattice.cpp.extension_loader import load_extensions
 
 from doit import task_params
 from doit.tools import create_folder
 
-logging.basicConfig(level=logging.CRITICAL,
-                    format='%(asctime)s: [%(levelname)s]  %(message)s',
-                    handlers=[logging.FileHandler("lattice.log", mode='w')])
+from lattice import Lattice
+from lattice.cpp.extension_loader import load_extensions
+
+logging.basicConfig(
+    level=logging.CRITICAL,
+    format="%(asctime)s: [%(levelname)s]  %(message)s",
+    handlers=[logging.FileHandler("lattice.log", mode="w")],
+)
 
 SOURCE_PATH = "lattice"
 EXAMPLES_PATH = "examples"
@@ -104,16 +107,22 @@ def task_generate_markdown():
         }
 
 
-@task_params([{'name':'level',
-                'short':'l',
-                'long': 'level',
-                'type': str,
-                'default': "CRITICAL",
-                'choices': (("DEBUG",""),("INFO",""),("WARNING",""),("ERROR",""),("CRITICAL","")),
-                'help': 'Set the logger level.'}]
+@task_params(
+    [
+        {
+            "name": "level",
+            "short": "l",
+            "long": "level",
+            "type": str,
+            "default": "CRITICAL",
+            "choices": (("DEBUG", ""), ("INFO", ""), ("WARNING", ""), ("ERROR", ""), ("CRITICAL", "")),
+            "help": "Set the logger level.",
+        }
+    ]
 )
 def task_generate_cpp_code(level):
     """Generate CPP headers and source for example schema."""
+
     def set_log_level(level):
         logging.getLogger().setLevel(level)
 
@@ -124,13 +133,21 @@ def task_generate_cpp_code(level):
             "task_dep": [f"validate_schemas:{name}"],
             "file_dep": [schema.file_path for schema in example.cpp_schemas]
             + [schema.meta_schema_path for schema in example.schemas]
-            + [CORE_SCHEMA_PATH, BASE_META_SCHEMA_PATH, Path(SOURCE_PATH, "cpp", "header_entries.py"), Path(SOURCE_PATH, "cpp", "cpp_entries.py")],
+            + [
+                CORE_SCHEMA_PATH,
+                BASE_META_SCHEMA_PATH,
+                Path(SOURCE_PATH, "cpp", "header_entries.py"),
+                Path(SOURCE_PATH, "cpp", "cpp_entries.py"),
+            ],
             "targets": [schema.cpp_header_file_path for schema in example.cpp_schemas]
             + [schema.cpp_source_file_path for schema in example.cpp_schemas]
-            + example.cpp_support_headers + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
-            "actions": [(set_log_level, [level]),
-                        (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
-                        (example.generate_cpp_project)],
+            + example.cpp_support_headers
+            + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
+            "actions": [
+                (set_log_level, [level]),
+                (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
+                (example.generate_cpp_project),
+            ],
             "clean": True,
         }
 
