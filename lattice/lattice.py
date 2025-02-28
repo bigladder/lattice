@@ -1,6 +1,5 @@
 """Classes that encapsulate the basic data model architecture for lattice"""
 
-import re
 import warnings
 import os
 import subprocess
@@ -9,14 +8,14 @@ from pathlib import Path
 from typing import List, Union
 from jsonschema.exceptions import RefResolutionError
 
-from .file_io import check_dir, make_dir, load, string_to_file, get_file_basename, get_base_stem
+import lattice.cpp.support_files as support
+from .file_io import check_dir, make_dir, load, string_to_file, get_file_basename
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
 from .docs import MkDocsWeb, DocumentFile
 from .docs.process_template import process_template
 from .cpp.header_translator import HeaderTranslator
 from .cpp.cpp_entries import CPPTranslator
-import lattice.cpp.support_files as support
 from .schema import Schema
 
 

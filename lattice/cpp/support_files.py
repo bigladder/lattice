@@ -2,7 +2,7 @@ from jinja2 import Template
 from lattice.file_io import string_to_file, make_dir
 from lattice.util import snake_style, hyphen_separated_lowercase_style, namespace_style
 from pathlib import Path
-import lattice.cpp.header_entries as header_entries
+from lattice.cpp import header_entries
 
 
 def support_header_pathnames(output_directory: Path):
@@ -60,11 +60,10 @@ def render_build_files(project_name: str, submodule_names: list, output_director
 def generate_superclass_header(superclass: str, output_directory: Path):
     s1 = f"#ifndef {superclass.upper()}_H_"
     s2 = f"#define {superclass.upper()}_H_"
-    s3 = f"#endif"
+    s3 = f"#endif" # noqa: F541
 
     class_entry = header_entries.Struct(superclass, None)
-    # initialize_fn = InitializeFunction(None, class_entry)
-    dtor = header_entries.VirtualDestructor("", class_entry, "", superclass, [])
+    header_entries.VirtualDestructor("", class_entry, "", superclass, [])
 
     superclass_contents = f"{s1}\n{s2}\n{class_entry}\n{s3}"
 

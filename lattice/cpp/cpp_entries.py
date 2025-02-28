@@ -5,7 +5,6 @@ import logging
 from typing import Optional, Callable
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-import sys
 
 from .header_entries import (
     EntryFormat,
@@ -21,6 +20,7 @@ from .header_entries import (
 
 logger = logging.getLogger()
 
+# ruff: noqa: F841
 
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
@@ -154,7 +154,7 @@ class ElementSerialization(ImplementationEntry):
     def __post_init__(self):
         super().__post_init__()
         self._funclines = [
-            f'json_get<{self._type}>(j, logger.get(), "{self._name}", {self._name}, {self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'
+            f'json_get<{self._type}>(j, logger.get(), "{self._name}", {self._name}, {self._name}_is_set, {"true" if self._header_entry.is_required else "false"});' # noqa: E501
         ]
         self.trace()
 
@@ -167,7 +167,7 @@ class OwnedElementSerialization(ElementSerialization):
     def __post_init__(self):
         super().__post_init__()
         self._funclines = [
-            f'json_get<{self._type}>(j, logger.get(), "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'
+            f'json_get<{self._type}>(j, logger.get(), "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if self._header_entry.is_required else "false"});' # noqa: E501
         ]
         self.trace()
 
@@ -184,7 +184,7 @@ class OwnedElementCreation(ElementSerialization):
                 f"if (x.{data_element} == {enum}) {{",
                 f"\tx.{self._name} = std::make_unique<{self._header_entry.selector[data_element][enum]}>();",
                 f"\tif (x.{self._name}) {{",
-                f'\t\tfrom_json(j.at("{self._name}"), *dynamic_cast<{self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));',
+                f'\t\tfrom_json(j.at("{self._name}"), *dynamic_cast<{self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));', # noqa: E501
                 "\t}",
                 "}",
             ]

@@ -1,10 +1,7 @@
 from __future__ import annotations
 import re
 import logging
-import pprint
-from lattice.util import snake_style
-from typing import Callable, Optional, Union
-from pathlib import Path
+from typing import Optional, Union
 from dataclasses import dataclass, field
 
 logger = logging.getLogger()
@@ -81,7 +78,6 @@ class HeaderEntry(EntryFormat):
         return lt
 
     def __str__(self):
-        tab = "\t"
         entry = f"{self._indent}{self.type} {self.name} {self._opener}\n"
         entry += "\n".join([str(c) for c in self.child_entries])
         entry += f"\n{self._indent}{self._closure}"
@@ -98,7 +94,6 @@ class Typedef(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         return f"{self._indent}{self.type} {self._typedef} {self.name};"
 
 
@@ -113,7 +108,6 @@ class Enumeration(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         entry = f"{self._indent}{self.type} {self.name} {self._opener}\n"
         for e in self._enumerants:
             entry += f"{self._indent}\t{e},\n"
@@ -147,13 +141,8 @@ class EnumSerializationDeclaration(HeaderEntry):
 
     def __str__(self):
         enums_with_placeholder = ["UNKNOWN"] + (list(self._enumerants.keys()))
-        tab = "\t"
         entry = f"{self._indent}{self.type} {self._opener}\n"
         entry += ",\n".join([f'{self._indent}\t{{{self.name}::{e}, "{e}"}}' for e in enums_with_placeholder])
-        # for e in enums_with_placeholder:
-        #     entry += (self._level + 1) * "\t"
-        #     mapping = "{" + self.name + "::" + e + ', "' + e + '"}'
-        #     entry += mapping + ",\n"
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
@@ -169,7 +158,6 @@ class Struct(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         entry = f"{self._indent}{self.type} {self.name}"
         if self.superclass:
             entry += f" : {self.superclass}"
@@ -197,7 +185,6 @@ class DataElement(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         return f"{self._indent}{self.type} {self.name}{self._closure}"
 
     def _create_type_entry(self, element_attributes: dict) -> None:
@@ -211,7 +198,7 @@ class DataElement(HeaderEntry):
                 self._get_constrained_base_type(element_attributes, m.group("comma_separated_selection_types"))
             else:
                 self.type = self._get_scoped_inner_type(element_attributes["Data Type"])
-        except KeyError as ke:
+        except KeyError:
             pass
 
     def _get_scoped_inner_type(self, type_str: str) -> str:
@@ -287,7 +274,8 @@ class DataElement(HeaderEntry):
         ]
 
         # the self.selector dictionary will have a form like:
-        # { operation_speed_control_type : { OperationSpeedControlType::CONTINUOUS : PerformanceMapContinuous, OperationSpeedControlType::DISCRETE : PerformanceMapDiscrete} }
+        # { operation_speed_control_type : { OperationSpeedControlType::CONTINUOUS : PerformanceMapContinuous, OperationSpeedControlType::DISCRETE : PerformanceMapDiscrete} } # noqa: E501
+
         # save this mapping to generate the source file contents
         self.selector[selection_key] = dict(zip(constraints, selection_types))
 
@@ -305,7 +293,6 @@ class DataElement(HeaderEntry):
 @dataclass
 class DataElementIsSetFlag(HeaderEntry):
     def __str__(self):
-        tab = "\t"
         return f"{self._indent}bool {self.name}_is_set;"
 
 
@@ -325,7 +312,6 @@ class DataElementStaticMetainfo(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         return f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
 
 
@@ -340,7 +326,6 @@ class InlineDependency(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         return (
             f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
             "\n"
@@ -361,7 +346,6 @@ class FunctionalHeaderEntry(HeaderEntry):
         self.trace()
 
     def __str__(self):
-        tab = "\t"
         return f"{self._indent}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
 
