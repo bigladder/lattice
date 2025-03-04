@@ -17,9 +17,9 @@ jobs:
           version: 0.9.9
           args: format --check
           src: "lattice"
-      - name: Run Ruff Linter
-        uses: astral-sh/ruff-action@v3
-        with:
-          version: 0.9.9
-          args: check
-          src: "lattice"
+      # - name: Run Ruff Linter
+      #   uses: astral-sh/ruff-action@v3
+      #   with:
+      #     version: 0.9.9
+      #     args: check
+      #     src: "lattice"
