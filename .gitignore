@@ -5,3 +5,4 @@ build/
 .vscode/
 __pycache__/
 dist/
+.venv/

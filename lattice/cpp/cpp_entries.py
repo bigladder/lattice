@@ -1,25 +1,27 @@
 from __future__ import (
     annotations,
 )  # Allows us to annotate types that are not yet fully defined; i.e. ImplementationEntry
+
 import logging
-from typing import Optional, Callable
-from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-import sys
+from dataclasses import dataclass, field
+from typing import Callable, Optional
 
 from .header_entries import (
-    EntryFormat,
-    HeaderEntry,
-    Struct,
     DataElement,
     DataElementStaticMetainfo,
+    EntryFormat,
     FunctionalHeaderEntry,
-    ObjectSerializationDeclaration,
+    HeaderEntry,
     InlineDependency,
+    ObjectSerializationDeclaration,
+    Struct,
     VirtualDestructor,
 )
 
 logger = logging.getLogger()
+
+# ruff: noqa: F841
 
 
 def remove_prefix(text, prefix):
@@ -154,7 +156,7 @@ class ElementSerialization(ImplementationEntry):
     def __post_init__(self):
         super().__post_init__()
         self._funclines = [
-            f'json_get<{self._type}>(j, logger.get(), "{self._name}", {self._name}, {self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'
+            f'json_get<{self._type}>(j, logger.get(), "{self._name}", {self._name}, {self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'  # noqa: E501
         ]
         self.trace()
 
@@ -167,7 +169,7 @@ class OwnedElementSerialization(ElementSerialization):
     def __post_init__(self):
         super().__post_init__()
         self._funclines = [
-            f'json_get<{self._type}>(j, logger.get(), "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'
+            f'json_get<{self._type}>(j, logger.get(), "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'  # noqa: E501
         ]
         self.trace()
 
@@ -184,7 +186,7 @@ class OwnedElementCreation(ElementSerialization):
                 f"if (x.{data_element} == {enum}) {{",
                 f"\tx.{self._name} = std::make_unique<{self._header_entry.selector[data_element][enum]}>();",
                 f"\tif (x.{self._name}) {{",
-                f'\t\tfrom_json(j.at("{self._name}"), *dynamic_cast<{self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));',
+                f'\t\tfrom_json(j.at("{self._name}"), *dynamic_cast<{self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));',  # noqa: E501
                 "\t}",
                 "}",
             ]
@@ -209,25 +211,25 @@ class ClassFactoryCreation(ElementSerialization):
         self.trace()
 
 
-@dataclass
-class SerializeFromInitFunction(ElementSerialization):
-    _header_entry: ObjectSerializationDeclaration
+# @dataclass
+# class SerializeFromInitFunction(ElementSerialization):
+#     _header_entry: ObjectSerializationDeclaration
 
-    def __post_init__(self):
-        super().__post_init__()
-        self._func = "x.initialize(j);\n"
-        self.trace()
+#     def __post_init__(self):
+#         super().__post_init__()
+#         self._func = "x.initialize(j);\n"
+#         self.trace()
 
-    def __str__(self):
-        return self._indent + self._func
+#     def __str__(self):
+#         return self._indent + self._func
 
 
-class SimpleReturnProperty(ImplementationEntry):
+# class SimpleReturnProperty(ImplementationEntry):
 
-    def __str__(self):
-        self._func = f'return "{self._name}";'
-        entry = self._indent + f'return "{self._name}";' + "\n"
-        return entry
+#     def __str__(self):
+#         self._func = f'return "{self._name}";'
+#         entry = self._indent + f'return "{self._name}";' + "\n"
+#         return entry
 
 
 class CPPExtensionInterface(ABC):
@@ -238,7 +240,7 @@ class CPPExtensionInterface(ABC):
         cls.extensions.append(cls)
 
     @abstractmethod
-    def process_data_group(self, reference_header_entry: HeaderEntry): ...
+    def process_data_group(self, reference_header_entry: HeaderEntry, parent_node: ImplementationEntry): ...
 
 
 class CPPTranslator:

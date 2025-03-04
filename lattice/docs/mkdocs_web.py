@@ -202,7 +202,6 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.make_examples_page()
 
     def make_specification_pages(self):  # pylint: disable=missing-function-docstring
-
         # Collect list of doc template files
         if self.specification_order is not None:
             for specification_name in self.specification_order:
@@ -211,9 +210,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                 if file_path.exists():
                     self.specification_templates.append(DocumentFile(file_path))
                 else:
-                    raise Exception(
-                        f'Unable to find specification file, "{file_path}", ' "referenced in configuration."
-                    )
+                    raise Exception(f'Unable to find specification file, "{file_path}", referenced in configuration.')
         else:
             for file in Path(self.docs_source_directory).iterdir():
                 file_path = Path(self.docs_source_directory, file)
@@ -335,7 +332,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         if content_path is not None:
             front_matter["github_content"] = content_path
 
-        file_name = "index.md" if primary_index else f"{title.lower().replace(' ','-')}.md"
+        file_name = "index.md" if primary_index else f"{title.lower().replace(' ', '-')}.md"
 
         if sub_page_list is None:
             page_path = Path(page_dir_path, file_name)
@@ -401,7 +398,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
 
 
 def make_front_matter(front_matter):  # pylint: disable=missing-function-docstring
-    return f"---\n{dump_to_string(front_matter,'yaml')}---\n\n"
+    return f"---\n{dump_to_string(front_matter, 'yaml')}---\n\n"
 
 
 def prepend_file_content(file_path, new_content):  # pylint: disable=missing-function-docstring

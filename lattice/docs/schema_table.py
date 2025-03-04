@@ -68,7 +68,7 @@ def data_elements_dict_from_data_groups(data_groups):
             if "Required" in new_obj:
                 if isinstance(new_obj["Required"], bool):
                     if new_obj["Required"]:
-                        check = "\N{check mark}"
+                        check = "\N{CHECK MARK}"
                         new_obj["Req"] = f"{check}" if new_obj["Required"] else ""
                     else:
                         new_obj["Req"] = ""
@@ -81,7 +81,7 @@ def data_elements_dict_from_data_groups(data_groups):
                 lte = "\N{LESS-THAN OR EQUAL TO}"
                 if isinstance(new_obj["Constraints"], list):
                     new_obj["Constraints"] = ", ".join(new_obj["Constraints"])
-                new_obj["Constraints"] = f"`{new_obj['Constraints'].replace('<=',lte).replace('>=',gte)}`"
+                new_obj["Constraints"] = f"`{new_obj['Constraints'].replace('<=', lte).replace('>=', gte)}`"
             if "Units" in new_obj:
                 if new_obj["Units"] == "-":
                     new_obj["Units"] = r"\-"
