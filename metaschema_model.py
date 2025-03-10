@@ -21,13 +21,72 @@ from lattice import schema
 schema_path: Path = Path().cwd()
 
 # TODO: A template may have a Unit System attribute that must be available in "Unit Systems"
-# TODO: validate and include core.schema.yaml items
 # TODO: Different constraints, requirements
 # TODO: Add Schema class' regexs and stuff
 # TODO: Things like RequiredDataTypes, that are read in as strs, should be valid types
 # TODO: If enum type (etc), has correct regex
 # TODO: find missing required data elements in template-derived Data Groups, and Array constraints like [Numeric][1..] where I guess the size value has been moved to the Constraints list.
-# TODO: Can we use pydantic-native types like UUID?
+
+class JSONSchemaType(Enum):
+    string = 'string'
+    number = 'number'
+    integer = 'integer'
+    boolean = 'boolean'
+    null = 'null'
+
+
+class DataType(BaseModel):
+    class Config:
+        extra = "forbid"
+
+    Object_Type: Literal['Data Type'] = Field( alias='Object Type')
+    Description: str
+    JSON_Schema_Type: JSONSchemaType = Field(..., alias='JSON Schema Type')
+    Examples: List[str]
+
+
+class StringType(BaseModel):
+    class Config:
+        extra = "forbid"
+
+    Object_Type: Literal['String Type'] = Field( alias='Object Type')
+    Description: str
+    Regular_Expression_Pattern: Optional[str] = Field(None, alias='Regular Expression Pattern')
+    Examples: List[str]
+    Is_Regex: Optional[bool] = Field(None, alias='Is Regex')
+
+
+# class Integer(DataType):
+#     JSON_Schema_Type: JSONSchemaType = Field(JSONSchemaType.integer, alias='JSON Schema Type')
+
+
+# class Numeric(DataType):
+#     JSON_Schema_Type: JSONSchemaType = Field(JSONSchemaType.number, alias='JSON Schema Type')
+
+
+# class Boolean(DataType):
+#     JSON_Schema_Type: JSONSchemaType = Field(JSONSchemaType.boolean, alias='JSON Schema Type')
+
+
+# class String(DataType):
+#     JSON_Schema_Type: JSONSchemaType = Field(JSONSchemaType.string, alias='JSON Schema Type')
+
+
+# class Pattern(DataType):
+#     JSON_Schema_Type: JSONSchemaType = Field(JSONSchemaType.string, alias='JSON Schema Type')
+
+
+# class UUID(StringType):
+#     ...
+
+# class Date(StringType):
+#     ...
+
+# class Timestamp(StringType):
+#     ...
+
+# class Version(StringType):
+#     ...
 
 class ObjectType(Enum):
     Meta = 'Meta'
@@ -36,6 +95,7 @@ class ObjectType(Enum):
     Enumeration = 'Enumeration'
     Data_Group = 'Data Group'
     Data_Group_Template = 'Data Group Template'
+
 
 def get_references(refs: List[str]) -> List[LatticeSchema]:
     # TODO: validate the strings (schema.ReferenceType) first? or just allow the open to throw?
@@ -52,18 +112,13 @@ def get_unit_systems(systems: Dict[str, List[str]]) -> List[DynamicUnitSystem]:
     for system in systems:
         units = systems[system]
         UnitSystemClass = DynamicUnitSystem(system, {k:str(k) for k in units})
-        # print(type(UnitSystemClass), UnitSystemClass.__name__)
         UnitSystemClasses.append(UnitSystemClass)
-    # LatticeSchema.model_rebuild(force=True)
-    # for c in UnitSystemClasses:
-    #     for u in c:
-    #         print(u.name, u.value)
 
     return UnitSystemClasses
 
 
 class DynamicUnitSystem(Enum):
-    pass
+    ...
 
 
 class StandardUnits(DynamicUnitSystem):
@@ -105,35 +160,6 @@ class Meta(BaseModel):
     Unit_Systems: Optional[Annotated[List[Type[DynamicUnitSystem]], BeforeValidator(get_unit_systems)]] = Field(
         [StandardUnits], alias='Unit Systems'
     )
-
-
-class JSONSchemaType(Enum):
-    string = 'string'
-    number = 'number'
-    integer = 'integer'
-    boolean = 'boolean'
-    null = 'null'
-
-
-class DataType(BaseModel):
-    class Config:
-        extra = "forbid"
-
-    Object_Type: Literal['Data Type'] = Field( alias='Object Type')
-    Description: str
-    JSON_Schema_Type: JSONSchemaType = Field(..., alias='JSON Schema Type')
-    Examples: List
-
-
-class StringType(BaseModel):
-    class Config:
-        extra = "forbid"
-
-    Object_Type: Literal['String Type'] = Field( alias='Object Type')
-    Description: str
-    Regular_Expression_Pattern: Optional[str] = Field(None, alias='Regular Expression Pattern')
-    Examples: List
-    Is_Regex: Optional[bool] = Field(None, alias='Is Regex')
 
 
 class ConstraintsPattern(RootModel):
@@ -213,6 +239,7 @@ class DataGroup(BaseModel):
     Data_Elements: Dict[Annotated[str, StringConstraints(pattern=schema.DataElement.pattern.pattern)], DataElementAttributes] = Field(
         ..., alias='Data Elements'
     )
+    Unit_System: Optional[str] = Field(None, alias='Unit System')
 
 
 class DataGroupTemplate(BaseModel):
@@ -229,12 +256,13 @@ class DataGroupTemplate(BaseModel):
 
 
 class Item(RootModel):
-    root: Union[DataGroup, DataGroupTemplate, Enumeration, Meta] = Field(..., discriminator="Object_Type")
+    root: Union[DataType, StringType, DataGroup, DataGroupTemplate, Enumeration, Meta] = Field(..., discriminator="Object_Type")
 
 
 class LatticeSchema(BaseModel):
-    schema_path: ClassVar[Path] = Path().cwd()
     lattice_schema: Dict[str, Item]
+    model_unit_systems: Dict[str, List[str]] = Field(default={})
+    schema_path: ClassVar[Path] = Path().cwd()
 
     @model_validator(mode='after')
     def find_data_group_template(self) -> Self:
@@ -242,12 +270,14 @@ class LatticeSchema(BaseModel):
         for group in self.lattice_schema.values(): # All the subdictionaries in self
             if isinstance(group.root, Meta) and group.root.References:
                 for reference in group.root.References:
-                    for (name,item) in reference.lattice_schema.items():
-                        if isinstance(item.root, DataGroupTemplate):
-                            referenceable_templates.append((name,item))
+                    for (template_name,template) in reference.lattice_schema.items():
+                        if isinstance(template.root, DataGroupTemplate):
+                            referenceable_templates.append((template_name, template))
 
+        # Iterate over all the Data Groups in self that have a Data Group Template attribute
         for _, datagroup in [(k,v) for (k,v) in self.lattice_schema.items() if isinstance(v.root, DataGroup) and v.root.Data_Group_Template]:
             matched = False
+            # Iterate over all the possible template names that could be referenced by the group's DGT attribute
             for template_name, _ in [(k,v) for (k,v) in self.lattice_schema.items() if isinstance(v.root, DataGroupTemplate)] + referenceable_templates:
                 if datagroup.root.Data_Group_Template == template_name:
                     matched = True
@@ -257,30 +287,52 @@ class LatticeSchema(BaseModel):
 
     @model_validator(mode='after')
     def validate_data_element_units(self) -> Self:
-        unit_names: Set[str] = set()
+        # Gather all possible unit systems that are declared in the Meta attribute(s)
         for group in self.lattice_schema.values(): # All the subdictionaries in self
             if isinstance(group.root, Meta):
                 if group.root.Unit_Systems:
                     for unit_system in group.root.Unit_Systems:
-                        unit_names.update([unit.value for unit in unit_system])
+                        self.model_unit_systems[unit_system.__name__] = [unit.value for unit in unit_system]
                 if group.root.References:
                     for reference in group.root.References:
                         for (name,item) in reference.lattice_schema.items():
                             if isinstance(item.root, Meta) and item.root.Unit_Systems:
                                 for unit_system in item.root.Unit_Systems:
-                                    unit_names.update([unit.value for unit in unit_system])
+                                    self.model_unit_systems[unit_system.__name__] = [unit.value for unit in unit_system]
 
-        for _, group in [(k,v) for (k,v) in self.lattice_schema.items() if isinstance(v.root, DataGroup)]:
-            for name in group.root.Data_Elements:
-                attributes = group.root.Data_Elements[name]
-                if attributes.Units and attributes.Units not in unit_names:
-                    raise Exception(f"{attributes.Units} was not found in any available Unit Systems.")
+        # Ensure that any unit that is used corresponds to a valid Unit System: one which is declared either in the
+        # Data Group itself, or one declared in the Data Group Template that the group derives from
+        for _, datagroup in [(k,v) for (k,v) in self.lattice_schema.items() if isinstance(v.root, DataGroup)]:
+            # Iterate over all the Data Groups in self
+            for name, attributes in datagroup.root.Data_Elements.items():
+                if attributes.Units:
+                    if datagroup.root.Data_Group_Template:
+                        # Look for the DGT object in self + references first, find Unit System defined there
+                        for object in self.lattice_schema.values(): # All the subdictionaries in self
+                            if isinstance(object.root, Meta) and object.root.References:
+                                for reference in object.root.References:
+                                    for (template_name,template) in reference.lattice_schema.items():
+                                        if isinstance(template.root, DataGroupTemplate):
+                                            if datagroup.root.Data_Group_Template == template_name:
+                                                if template.root.Unit_System:
+                                                    if attributes.Units not in self.model_unit_systems[template.root.Unit_System]:
+                                                        raise Exception(f"Unit {attributes.Units} for element {name} was not found in Unit System {template.root.Unit_System}.")
+                                                else:
+                                                    if attributes.Units not in [u.value for u in StandardUnits]:
+                                                        raise Exception(f"Unit {attributes.Units} for element {name} was not found in Standard Units.")
+                    elif datagroup.root.Unit_System:
+                        if attributes.Units not in self.model_unit_systems[datagroup.root.Unit_System]:
+                            raise Exception(f"Unit {attributes.Units} for element {name} was not found in Unit System {datagroup.root.Unit_System}.")
+                    else:
+                        if attributes.Units not in [u.value for u in StandardUnits]:
+                            raise Exception(f"Unit {attributes.Units} for element {name} was not found in Standard Units.")
         return self
 
 if __name__ == "__main__":
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/time_series/schema/TimeSeries.schema.yaml")
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/ratings/schema/Rating.schema.yaml")
     schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0003.schema.yaml")
+    #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/examples/fan_spec/schema/RS0001.schema.yaml")
     #schema_file = Path("C:/Users/Tanaya Mankad/source/repos/lattice/lattice/core.schema.yaml")
     path_to_schema = schema_file.parent
     with open(schema_file, 'r') as stream:
