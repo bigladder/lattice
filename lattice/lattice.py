@@ -142,9 +142,8 @@ class Lattice:  # pylint:disable=R0902
         if schema_type is None:
             if len(self.schemas) > 1:
                 raise Exception(
-                    f"Multiple schemas defined, and no schema type provided. "
-                    f'Unable to validate file, "{input_path}".'
-                )
+                    f'Too many schema available for validation; cannot find a match to "schema_name" in "{input_path}." Unable to validate file.'
+                ) from None
             validate_file(input_path, self.schemas[0].json_schema_path)
             postvalidate_file(input_path, self.schemas[0].json_schema_path)
         else:
