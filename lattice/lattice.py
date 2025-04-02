@@ -1,23 +1,24 @@
 """Classes that encapsulate the basic data model architecture for lattice"""
 
-import re
-import warnings
 import os
 import subprocess
+import warnings
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Union
+
 from jsonschema.exceptions import RefResolutionError
 
-from .file_io import check_dir, make_dir, load, string_to_file, get_file_basename, get_base_stem
-from .meta_schema import generate_meta_schema, meta_validate_file
-from .schema_to_json import generate_json_schema, validate_file, postvalidate_file
-from .docs import MkDocsWeb, DocumentFile
-from .docs.process_template import process_template
-from .cpp.header_translator import HeaderTranslator
-from .cpp.cpp_entries import CPPTranslator
 import lattice.cpp.support_files as support
+
+from .cpp.cpp_entries import CPPTranslator
+from .cpp.header_translator import HeaderTranslator
+from .docs import DocumentFile, MkDocsWeb
+from .docs.process_template import process_template
+from .file_io import check_dir, get_file_basename, load, make_dir, string_to_file
+from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema import Schema
+from .schema_to_json import generate_json_schema, postvalidate_file, validate_file
 
 
 class Lattice:  # pylint:disable=R0902
@@ -142,9 +143,9 @@ class Lattice:  # pylint:disable=R0902
         if schema_type is None:
             if len(self.schemas) > 1:
                 raise Exception(
-                    f"Multiple schemas defined, and no schema type provided. "
-                    f'Unable to validate file, "{input_path}".'
-                )
+                    "Too many schema available for validation; cannot find a match to"
+                    ' "schema_name" in "{input_path}." Unable to validate file.'
+                ) from None
             validate_file(input_path, self.schemas[0].json_schema_path)
             postvalidate_file(input_path, self.schemas[0].json_schema_path)
         else:
