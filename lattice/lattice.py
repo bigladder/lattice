@@ -86,7 +86,7 @@ class Lattice:  # pylint:disable=R0902
         # Collect list of schema files
         self.schemas: List[Schema] = []
         for file_name in sorted(list(self.schema_directory_path.iterdir())):
-            if fnmatch(file_name, "*.schema.yaml") or fnmatch(file_name, "*.schema.yml"):
+            if fnmatch(str(file_name), "*.schema.yaml") or fnmatch(str(file_name), "*.schema.yml"):
                 self.schemas.append(Schema(file_name))
 
         if len(self.schemas) == 0:

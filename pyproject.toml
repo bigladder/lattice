@@ -25,7 +25,8 @@ dev-dependencies = [
     "doit",
     "pre-commit",
     "pylint",
-    "ruff"
+    "ruff",
+    "pydantic"
 ]
 
 [tool.ruff]
