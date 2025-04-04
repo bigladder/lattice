@@ -1,18 +1,19 @@
 from __future__ import annotations
-import pprint
-import pathlib
-import logging
-import shutil
-from typing import Optional, Union
 
-from .header_entries import *
-from lattice.file_io import load, get_base_stem
-from lattice.util import snake_style, namespace_style, hyphen_separated_lowercase_style
-import lattice.cpp.support_files as support
+import logging
+import re
+import shutil
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable, Optional, Union
+
+from lattice.cpp.header_entries import *  # noqa: F403
+from lattice.file_io import get_base_stem, load
+from lattice.util import hyphen_separated_lowercase_style, namespace_style, snake_style
 
 logger = logging.getLogger()
+
+# ruff: noqa: F841
 
 
 class HeaderEntryExtensionInterface(ABC):
@@ -51,9 +52,9 @@ def modified_insertion_sort(obj_list):
 class HeaderTranslator:
     def __init__(
         self,
-        input_file_path: pathlib.Path,
-        forward_declarations_path: pathlib.Path,
-        output_path: pathlib.Path,
+        input_file_path: Path,
+        forward_declarations_path: Path,
+        output_path: Path,
         top_namespace: str,
     ):
         self._referenced_data_types: list[ReferencedDataType] = []
@@ -64,21 +65,18 @@ class HeaderTranslator:
         self._doxynotes = "/// @note  This class has been auto-generated. Local changes will not be saved!\n"
         self._epilogue = []
         self._data_group_types = {"Data Group"}
-        self._forward_declaration_dir: Optional[pathlib.Path] = None
+        self._forward_declaration_dir: Optional[Path] = None
         self._extensions: dict[str, list[HeaderEntryExtensionInterface]] = {}
 
-        for base_class in HeaderEntryExtensionInterface.extensions:
-            self._extensions[base_class] = [
-                HeaderEntryExtensionInterface.extensions[base_class][i]()
-                for i in range(len(HeaderEntryExtensionInterface.extensions[base_class]))
-            ]
+        for base_class, extension in HeaderEntryExtensionInterface.extensions.items():
+            self._extensions[base_class] = [extension[i]() for i in range(len(extension))]
 
         self._translate(input_file_path, forward_declarations_path, output_path, top_namespace)
 
     def __str__(self):
-        s = "\n".join([p for p in self._preamble])
+        s = "\n".join(self._preamble)
         s += f"\n\n{self._doxynotes}\n{self.root}\n"
-        s += "\n".join([e for e in self._epilogue])
+        s += "\n".join(self._epilogue)
         return s
 
     @property
@@ -87,9 +85,9 @@ class HeaderTranslator:
 
     # fmt: off
     def _translate(self,
-                  input_file_path: pathlib.Path,
-                  forward_declarations_path: pathlib.Path,
-                  output_path: pathlib.Path,
+                  input_file_path: Path,
+                  forward_declarations_path: Path,
+                  output_path: Path,
                   top_namespace: str):
         """Translate schema into C++ header file, but store locally as a data structure."""
         self._source_dir = input_file_path.parent.resolve()
@@ -159,7 +157,8 @@ class HeaderTranslator:
 
             # Process customizations
             if scoped_superclass in self._extensions:
-                [self._extensions[scoped_superclass][i].process_data_group(self._namespace) for i in range(len(self._extensions[scoped_superclass]))]
+                [self._extensions[scoped_superclass][i].process_data_group(self._namespace)
+                    for i in range(len(self._extensions[scoped_superclass]))]
                 self._extensions.pop(scoped_superclass)
 
         self._add_header_dependencies()
@@ -187,9 +186,9 @@ class HeaderTranslator:
     def _load_meta_info(self, schema_section):
         """Store the global/common types and the types defined by any named references."""
         #self._root_data_group = schema_section.get("Root Data Group") #TODO: used?
-        refs: dict[str, pathlib.Path] = {
+        refs: dict[str, Path] = {
             f"{self._schema_name}": self._source_dir / f"{self._schema_name}.schema.yaml",
-            "core": pathlib.Path(__file__).parent.with_name("core.schema.yaml"),
+            "core": Path(__file__).parent.with_name("core.schema.yaml"),
         }
         if "References" in schema_section:
             for ref in schema_section["References"]:
@@ -205,10 +204,13 @@ class HeaderTranslator:
                 refs.update({ref: file})
 
         # Load every explicitly listed reference and collect the base classes therein
-        for ref_file in refs:
-            ext_dict = load(refs[ref_file])
-            for item in [name for name in ext_dict if ext_dict[name]["Object Type"] in list(self._data_group_types) + ["Data Group Template", "Enumeration"]]:
-                self._referenced_data_types.append(ReferencedDataType(item, namespace_style(ref_file), ext_dict[item].get("Data Group Template")))
+        for reference_name, reference_path in refs.items():
+            ext_dict = load(reference_path)
+            for item in [name for name in ext_dict if ext_dict[name]["Object Type"] in list(self._data_group_types)
+                          + ["Data Group Template", "Enumeration"]]:
+                self._referenced_data_types.append(ReferencedDataType(item,
+                                                                      namespace_style(reference_name),
+                                                                      ext_dict[item].get("Data Group Template")))
 
             cpp_types = {"integer": "int",
                          "string": "std::string",
@@ -224,7 +226,7 @@ class HeaderTranslator:
         """Populate the file's include guards."""
         s1 = f"#ifndef {header_name.upper()}_H_"
         s2 = f"#define {header_name.upper()}_H_"
-        s3 = f"#endif"
+        s3 = "#endif"
         self._preamble.extend([s1, s2])
         self._epilogue.append(s3)
 
@@ -292,7 +294,7 @@ class HeaderTranslator:
     def _add_function_overrides(self, parent_node, output_path, base_class_name):
         """Get base class virtual functions to be overridden."""
         # TODO: Not looking in a base class file anymore
-        base_class = pathlib.Path(output_path) / f"{hyphen_separated_lowercase_style(base_class_name)}.h"
+        base_class = Path(output_path) / f"{hyphen_separated_lowercase_style(base_class_name)}.h"
         try:
             with open(base_class) as b:
                 for line in b:
@@ -304,17 +306,16 @@ class HeaderTranslator:
                                                               m.group("return_type"),
                                                               m.group("name"),
                                                               m.group("arguments").split(","))
-        except:
+        except FileNotFoundError: # TODO: other exceptions from re?
             pass
     # fmt: on
 
     def _list_objects_of_type(self, object_type_or_list: Union[str, list[str], set[str]]) -> list:
         if isinstance(object_type_or_list, str):
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") == object_type_or_list]
-        elif isinstance(object_type_or_list, list) or isinstance(object_type_or_list, set):
+        if isinstance(object_type_or_list, (list, set)):
             return [tag for tag in self._contents if self._contents[tag].get("Object Type") in object_type_or_list]
-        else:
-            return []
+        return []
 
     # def _search_references_for_base_types(self, data_element) -> str | None:
     #     """
@@ -339,6 +340,7 @@ class HeaderTranslator:
     #         for listing in self._contents:
     #             if "Data Elements" in self._contents[listing]:
     #                 for element in self._contents[listing]["Data Elements"]:
-    #                     if element == data_element and "Data Type" in self._contents[listing]["Data Elements"][element]:
+    #                     if element == data_element and "Data Type" in
+    #                         self._contents[listing]["Data Elements"][element]:
     #                         return self._contents[listing]["Data Elements"][element]["Data Type"]
     #     return "MissingType"  # Placeholder base class

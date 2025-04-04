@@ -1,0 +1,25 @@
+name: Check Ruff formatting
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Ruff Format
+        uses: astral-sh/ruff-action@v3
+        with:
+          version: 0.9.9
+          args: format --check
+          src: "lattice"
+      # - name: Run Ruff Linter
+      #   uses: astral-sh/ruff-action@v3
+      #   with:
+      #     version: 0.9.9
+      #     args: check
+      #     src: "lattice"
