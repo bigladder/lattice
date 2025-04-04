@@ -209,25 +209,25 @@ class ClassFactoryCreation(ElementSerialization):
         self.trace()
 
 
-@dataclass
-class SerializeFromInitFunction(ElementSerialization):
-    _header_entry: ObjectSerializationDeclaration
+# @dataclass
+# class SerializeFromInitFunction(ElementSerialization):
+#     _header_entry: ObjectSerializationDeclaration
 
-    def __post_init__(self):
-        super().__post_init__()
-        self._func = "x.initialize(j);\n"
-        self.trace()
+#     def __post_init__(self):
+#         super().__post_init__()
+#         self._func = "x.initialize(j);\n"
+#         self.trace()
 
-    def __str__(self):
-        return self._indent + self._func
+#     def __str__(self):
+#         return self._indent + self._func
 
 
-class SimpleReturnProperty(ImplementationEntry):
+# class SimpleReturnProperty(ImplementationEntry):
 
-    def __str__(self):
-        self._func = f'return "{self._name}";'
-        entry = self._indent + f'return "{self._name}";' + "\n"
-        return entry
+#     def __str__(self):
+#         self._func = f'return "{self._name}";'
+#         entry = self._indent + f'return "{self._name}";' + "\n"
+#         return entry
 
 
 class CPPExtensionInterface(ABC):
@@ -238,7 +238,7 @@ class CPPExtensionInterface(ABC):
         cls.extensions.append(cls)
 
     @abstractmethod
-    def process_data_group(self, reference_header_entry: HeaderEntry): ...
+    def process_data_group(self, reference_header_entry: HeaderEntry, parent_node: ImplementationEntry): ...
 
 
 class CPPTranslator:
