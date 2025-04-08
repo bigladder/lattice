@@ -5,7 +5,8 @@ import re
 import warnings
 from pathlib import Path
 from typing import Optional
-from .file_io import load, dump, get_base_stem
+
+from .file_io import dump, get_base_stem, load
 from .meta_schema import MetaSchema
 
 # 'once': Suppress multiple warnings from the same location.
@@ -265,8 +266,8 @@ class DataGroup:  # pylint: disable=R0903
         :param requirement:             This item's presence is dependent on the above condition
         """
         separator = r"\sand\s"
-        collector = "allOf"
-        selector_dict: dict = {"properties": {collector: {}}}
+        # collector = "allOf"
+        selector_dict: dict = {"properties": {}}
         requirement_list = re.split(separator, requirement_str)
         # pylint: disable-next=line-too-long
         dependent_req = r"(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?"
@@ -282,19 +283,17 @@ class DataGroup:  # pylint: disable=R0903
                         selector_state = True
                     elif "false" in selector_state.lower():
                         selector_state = False
-                    selector_dict["properties"][collector][selector] = (
+                    selector_dict["properties"][selector] = (
                         {"const": selector_state} if is_equal else {"not": {"const": selector_state}}
                     )
-                else:  # prerequisite type
-                    if dependencies_list.get(selector):
-                        dependencies_list[selector].append(requirement)
-                    else:
-                        if "!" in selector:
-                            dependencies_list[selector.lstrip("!")] = {"not": {"required": [requirement]}}
-                        else:
-                            dependencies_list[selector] = [requirement]
+                elif dependencies_list.get(selector):
+                    dependencies_list[selector].append(requirement)
+                elif "!" in selector:
+                    dependencies_list[selector.lstrip("!")] = {"not": {"required": [requirement]}}
+                else:
+                    dependencies_list[selector] = [requirement]
 
-        if selector_dict["properties"][collector].keys():
+        if selector_dict["properties"].keys():
             # Conditional requirements are each a member of a list
             if conditionals_list.get("allOf") is None:
                 conditionals_list["allOf"] = []
@@ -549,11 +548,11 @@ def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
         except KeyError:
             subbed = False  # leave schema subdictionary as-is
     else:
-        for key in subdict:
-            if isinstance(subdict[key], dict):
-                subbed = replace_reference(referenced_schemas, subdict[key])
-            if isinstance(subdict[key], list):
-                for entry in [item for item in subdict[key] if isinstance(item, dict)]:
+        for key, value in subdict.items():
+            if isinstance(value, dict):
+                subbed = replace_reference(referenced_schemas, value)
+            if isinstance(value, list):
+                for entry in [item for item in value if isinstance(item, dict)]:
                     subbed = replace_reference(referenced_schemas, entry)
     return subbed
 
@@ -599,13 +598,13 @@ def get_scope_locations(
     """
     if not lineage:
         lineage = []
-    for key in schema:
-        if key == "scopedType" and schema[key] == scope_key:
+    for key, value in schema.items():
+        if key == "scopedType" and value == scope_key:
             scopes_dict[".".join(lineage)] = schema["scope"]  # key is a dot-separated path
-        elif isinstance(schema[key], dict):
-            get_scope_locations(schema[key], scopes_dict, scope_key, lineage + [key])
-        elif isinstance(schema[key], list):
-            for entry in [item for item in schema[key] if isinstance(item, dict)]:
+        elif isinstance(value, dict):
+            get_scope_locations(value, scopes_dict, scope_key, lineage + [key])
+        elif isinstance(value, list):
+            for entry in [item for item in value if isinstance(item, dict)]:
                 get_scope_locations(entry, scopes_dict, scope_key, lineage + [key])
 
 

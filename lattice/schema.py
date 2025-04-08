@@ -1,12 +1,13 @@
 from __future__ import (
     annotations,
 )  # Needed for type hinting classes that are not yet fully defined
-from typing import List, Union, Type, Dict, Any
+
 import pathlib
 import re
 import warnings
+from typing import Any, Dict, List, Type, Union
 
-from .file_io import load, get_file_basename
+from .file_io import get_file_basename, load
 
 core_schema_path = pathlib.Path(pathlib.Path(__file__).parent, "core.schema.yaml")
 
@@ -114,11 +115,12 @@ class ArrayType(DataType):
 
 
 _value_pattern = RegularExpressionPattern(
-    f"(({NumericType.value_pattern})|"
+    f"({_type_base_names})|"
+    f"({NumericType.value_pattern})|"
     f"({StringType.value_pattern})|"
     f"({EnumerationType.value_pattern})|"
-    f"({BooleanType.value_pattern}))"
-)
+    f"({BooleanType.value_pattern})"
+)  # A constraint can be the name of a Data Group
 
 
 # Constraints
@@ -155,7 +157,7 @@ class StringPatternConstraint(Constraint):
         super().__init__(text, parent_data_element)
         try:
             re.compile(text)
-        except:
+        except re.error:
             raise Exception(f"Invalid regular expression: {text}")  # pylint:disable=W0707
 
 
@@ -232,7 +234,8 @@ class DataElement:
                         self.parent_data_group.id_data_element = self
                     else:
                         raise RuntimeError(
-                            f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}': '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
+                            f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}':"
+                            f" '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
                         )
 
             else:
@@ -246,11 +249,11 @@ class DataElement:
     def get_data_type(self, parent_data_group: DataGroup, attribute_str: str):
         try:
             return self.parent_data_group.parent_schema.data_type_factory(attribute_str, self)
-        except:
+        except RuntimeError:
             for reference_schema in self.parent_data_group.parent_schema.reference_schemas.values():
                 try:
                     return reference_schema.data_type_factory(attribute_str, self)
-                except Exception:
+                except RuntimeError:
                     continue
 
     def set_constraints(self, constraints_input: Union[str, List[str]]) -> None:
@@ -415,7 +418,7 @@ class SchemaPatterns:
 
 
 class Schema:
-    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):
+    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):  # noqa: PLR0912
         self.file_path = file_path.absolute()
         self.source_dictionary = load(self.file_path)
         self.name = get_file_basename(self.file_path, depth=2)
@@ -559,9 +562,9 @@ class Schema:
         if number_of_matches == 1:
             return match_type(text, parent_data_element)
         if number_of_matches == 0:
-            raise Exception(f"No matching data type for {text}.")
+            raise RuntimeError(f"No matching data type for {text}.")
         else:
-            raise Exception(f"Multiple matches found for data type, {text}")
+            raise RuntimeError(f"Multiple matches found for data type, {text}")
 
     def add_data_type(self, data_type: Type[DataType]) -> None:
         if data_type not in self._data_type_list:
