@@ -115,12 +115,12 @@ class ArrayType(DataType):
 
 
 _value_pattern = RegularExpressionPattern(
-    f"({_type_base_names})|"
+    f"({_type_base_names})|"  # A constraint can be the name of a Data Group
     f"({NumericType.value_pattern})|"
     f"({StringType.value_pattern})|"
     f"({EnumerationType.value_pattern})|"
     f"({BooleanType.value_pattern})"
-)  # A constraint can be the name of a Data Group
+)
 
 
 # Constraints

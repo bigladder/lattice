@@ -1,7 +1,7 @@
-import lattice.schema
-
 # Needed for python versions < 3.9. 3.8 reaches end-of-life 2024-10.
 from typing import List
+
+import lattice.schema
 
 
 def execute_pattern_test(
@@ -10,7 +10,6 @@ def execute_pattern_test(
     invalid_examples: List[str],
     anchored: bool = True,
 ) -> None:
-
     pattern_text = pattern.anchored() if anchored else pattern.pattern
 
     for test in valid_examples:
@@ -40,7 +39,6 @@ def test_integer_pattern():
 
 
 def test_data_type_pattern():
-
     execute_pattern_test(
         pattern=lattice.schema.SchemaPatterns().data_types,
         valid_examples=[
@@ -53,7 +51,6 @@ def test_data_type_pattern():
 
 
 def test_enumerator_pattern():
-
     execute_pattern_test(
         pattern=lattice.schema.EnumerationType.value_pattern,
         valid_examples=[
@@ -70,14 +67,23 @@ def test_enumerator_pattern():
 def test_value_pattern():
     execute_pattern_test(
         pattern=lattice.schema._value_pattern,
-        valid_examples=["3.14", '""', '"String"', "True", "False", "ENUMERATOR", "ENUMERATOR_2", "NEW_ENUMERATOR"],
-        invalid_examples=["Wrong", "true", "false"],
+        valid_examples=[
+            "3.14",
+            '""',
+            '"String"',
+            "RightOh",
+            "True",
+            "False",
+            "ENUMERATOR",
+            "ENUMERATOR_2",
+            "NEW_ENUMERATOR",
+        ],
+        invalid_examples=["true", "false"],
         anchored=True,
     )
 
 
 def test_data_element_value_constraint_pattern():
-
     execute_pattern_test(
         pattern=lattice.schema.DataElementValueConstraint.pattern,
         valid_examples=["schema=RS0001"],
@@ -87,7 +93,6 @@ def test_data_element_value_constraint_pattern():
 
 
 def test_selector_constraint_pattern():
-
     execute_pattern_test(
         pattern=lattice.schema.SelectorConstraint.pattern,
         valid_examples=["operation_speed_control_type(CONTINUOUS, DISCRETE)"],
