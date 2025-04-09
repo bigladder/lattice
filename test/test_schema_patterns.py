@@ -67,18 +67,8 @@ def test_enumerator_pattern():
 def test_value_pattern():
     execute_pattern_test(
         pattern=lattice.schema._value_pattern,
-        valid_examples=[
-            "3.14",
-            '""',
-            '"String"',
-            "RightOh",
-            "True",
-            "False",
-            "ENUMERATOR",
-            "ENUMERATOR_2",
-            "NEW_ENUMERATOR",
-        ],
-        invalid_examples=["true", "false"],
+        valid_examples=["3.14", '""', '"String"', "True", "False", "ENUMERATOR", "ENUMERATOR_2", "NEW_ENUMERATOR"],
+        invalid_examples=["Wrong", "true", "false"],
         anchored=True,
     )
 

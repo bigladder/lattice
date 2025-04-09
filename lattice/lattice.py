@@ -158,7 +158,7 @@ class Lattice:  # pylint:disable=R0902
                     except RefResolutionError as e:
                         raise Exception(f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}") from e
                     return
-            raise Exception(f'Unable to find matching schema, "{schema_type}", for file, "{input_path}".')
+            raise Exception(f'Unable to find matching schema, "{schema_type}", for file "{input_path}".')
 
     def collect_example_files(self) -> None:
         """Collect data model instances from examples subdirectory"""

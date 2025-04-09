@@ -115,11 +115,10 @@ class ArrayType(DataType):
 
 
 _value_pattern = RegularExpressionPattern(
-    f"({_type_base_names})|"  # A constraint can be the name of a Data Group
-    f"({NumericType.value_pattern})|"
+    f"(({NumericType.value_pattern})|"
     f"({StringType.value_pattern})|"
     f"({EnumerationType.value_pattern})|"
-    f"({BooleanType.value_pattern})"
+    f"({BooleanType.value_pattern}))"
 )
 
 
@@ -498,8 +497,8 @@ class Schema:
                     if isinstance(constraint, DataElementValueConstraint):
                         if constraint.data_element_name == "schema_author":
                             self.schema_author = constraint.data_element_value
-                        elif constraint.data_element_name == "schema":
-                            self.schema_name = constraint.data_element_value
+                        elif constraint.data_element_name == "schema_name":
+                            self.schema_name = constraint.data_element_value.strip('"')
 
         for data_group in self.data_groups.values():
             data_group.resolve()
