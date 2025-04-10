@@ -143,8 +143,8 @@ class Lattice:  # pylint:disable=R0902
         if schema_type is None:
             if len(self.schemas) > 1:
                 raise Exception(
-                    "Too many schema available for validation; cannot find a match to"
-                    ' "schema_name" in "{input_path}." Unable to validate file.'
+                    f"Too many schema available for validation; cannot find a match to"
+                    f' "schema_name" {schema_type} in "{input_path}." Unable to validate file.'
                 ) from None
             validate_file(input_path, self.schemas[0].json_schema_path)
             postvalidate_file(input_path, self.schemas[0].json_schema_path)
@@ -158,7 +158,7 @@ class Lattice:  # pylint:disable=R0902
                     except RefResolutionError as e:
                         raise Exception(f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}") from e
                     return
-            raise Exception(f'Unable to find matching schema, "{schema_type}", for file, "{input_path}".')
+            raise Exception(f'Unable to find matching schema, "{schema_type}", for file "{input_path}".')
 
     def collect_example_files(self) -> None:
         """Collect data model instances from examples subdirectory"""
