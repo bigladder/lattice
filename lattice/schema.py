@@ -130,6 +130,9 @@ class Constraint:
         self.text = text
         self.parent_data_element = parent_data_element
 
+    def resolve(self):
+        pass
+
 
 class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
@@ -168,8 +171,29 @@ class DataElementValueConstraint(Constraint):
         self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
         match = self.pattern.match(self.text)
         assert match is not None
+        # parent data element must be a data group
+        if not isinstance(self.parent_data_element.data_type, DataGroupType):
+            raise Exception(
+                f"Data Element Value Constraint must be a Data Group Type, not {type(self.parent_data_element)}"
+            )
+
         self.data_element_name = match.group(1)  # TODO: Named groups?
-        self.data_element_value = match.group(5)  # TODO: Named groups?
+        self.data_element_value = match.group(5)
+        self.data_element: DataElement
+
+    def resolve(self):
+        assert isinstance(self.parent_data_element.data_type, DataGroupType)
+        if self.data_element_name not in self.parent_data_element.data_type.data_group.data_elements:
+            raise Exception(
+                f"Data Element Value Constraint '{self.data_element_name}' not found in Data Group '{self.parent_data_element.data_type.data_group_name}'"
+            )
+
+        self.data_element = self.parent_data_element.data_type.data_group.data_elements[self.data_element_name]
+        match = self.data_element.data_type.value_pattern.match(self.data_element_value)
+        if match is None:
+            raise Exception(
+                f"Data Element Value Constraint '{self.data_element_value}' does not match the value pattern of '{self.data_element.name}'"
+            )
 
 
 class ArrayLengthLimitsConstraint(Constraint):
@@ -245,7 +269,10 @@ class DataElement:
                     f"Data Element={self.name}"
                 )
 
-    def get_data_type(self, parent_data_group: DataGroup, attribute_str: str):
+    def get_data_type(self, parent_data_group: DataGroup, attribute_str: str) -> DataType:
+        """
+        Returns the data type from the attribute string.
+        """
         try:
             return self.parent_data_group.parent_schema.data_type_factory(attribute_str, self)
         except RuntimeError:
@@ -264,6 +291,8 @@ class DataElement:
 
     def resolve(self):
         self.data_type.resolve()
+        for constraint in self.constraints:
+            constraint.resolve()
 
 
 class FundamentalDataType:
@@ -302,7 +331,7 @@ class DataGroup:
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
-        self.data_elements = {}
+        self.data_elements: dict[str, DataElement] = {}
         self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
         for data_element in self.dictionary["Data Elements"]:
             self.data_elements[data_element] = DataElement(

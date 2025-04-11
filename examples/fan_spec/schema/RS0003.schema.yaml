@@ -74,7 +74,7 @@ RS0003:
     metadata:
       Description: "Metadata data group"
       Data Type: "{Metadata}"
-      Constraints: "schema=RS0003"
+      Constraints: schema_name="RS0003"
       Required: True
     description:
       Description: "Data group describing product and rating information"
@@ -156,17 +156,23 @@ Performance:
       Description: "Type of performance map"
       Data Type: "<SpeedControlType>"
       Required: True
-      Notes: ["Determines which performance map data group is used for `performance_map`",
-              "If `operation_speed_control_type` is `DISCRETE` performance map data is provided at individual impeller speeds",
-              "If `operation_speed_control_type` is `CONTINUOUS` performance map data is provided over a range of impeller speeds"]
+      Notes:
+        [
+          "Determines which performance map data group is used for `performance_map`",
+          "If `operation_speed_control_type` is `DISCRETE` performance map data is provided at individual impeller speeds",
+          "If `operation_speed_control_type` is `CONTINUOUS` performance map data is provided over a range of impeller speeds",
+        ]
     installation_speed_control_type:
       Description: "Type of fan impeller speed control"
       Data Type: "<InstallationSpeedControlType>"
       Required: True
-      Notes: ["If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single discrete speed",
-              "If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be restricted to a set of two or more discrete speeds",
-              "If `operation_speed_control_type` is `CONTINUOUS` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single speed (which may be interpolated from `impeller_speed` values provided in the performance map)",
-              "If `operation_speed_control_type` is `CONTINUOUS` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be unrestricted within operational limits"]
+      Notes:
+        [
+          "If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single discrete speed",
+          "If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be restricted to a set of two or more discrete speeds",
+          "If `operation_speed_control_type` is `CONTINUOUS` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single speed (which may be interpolated from `impeller_speed` values provided in the performance map)",
+          "If `operation_speed_control_type` is `CONTINUOUS` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be unrestricted within operational limits",
+        ]
     motor_representation:
       Description: "The corresponding Standard 205 motor representation"
       Notes: "If the fan assembly is packaged with a motor, a motor representation shall be provided"
@@ -204,8 +210,11 @@ AssemblyComponent:
       Data Type: "Numeric"
       Constraints: ">=0.0"
       Units: "Pa"
-      Notes: ["Corresponds to additional pressure difference at `nominal_standard_air_volumetric_flow_rate`",
-              "If unknown, a value of 75 Pa shall be used"]
+      Notes:
+        [
+          "Corresponds to additional pressure difference at `nominal_standard_air_volumetric_flow_rate`",
+          "If unknown, a value of 75 Pa shall be used",
+        ]
       Required: True
       Scalable: True
 
@@ -216,8 +225,8 @@ SystemCurve:
       Description: "Volumetric air flow rate through an air distribution system at standard air conditions"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[2..]"
+        - ">=0.0"
+        - "[2..]"
       Units: "m3/s"
       Required: True
       Scalable: True
@@ -225,8 +234,8 @@ SystemCurve:
       Description: "Static pressure difference of an air distribution system"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[2..]"
+        - ">=0.0"
+        - "[2..]"
       Units: "Pa"
       Required: True
       Scalable: True
@@ -252,8 +261,8 @@ GridVariablesContinuous:
       Description: "Volumetric air flow rate through fan assembly at standard air conditions"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "m3/s"
       Required: True
       Scalable: True
@@ -261,8 +270,8 @@ GridVariablesContinuous:
       Description: "External static pressure across fan assembly at dry coil conditions"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "Pa"
       Notes: "Any static pressure deduction (or addition) for wet coil is specified by `wet_pressure_difference` in 'assembly_components' data group"
       Required: True
@@ -275,16 +284,16 @@ LookupVariablesContinuous:
       Description: "Rotational speed of fan impeller"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "rev/s"
       Required: True
     shaft_power:
       Description: "Mechanical shaft power input to fan assembly"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "W"
       Notes: "Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller"
       Required: True
@@ -316,8 +325,8 @@ GridVariablesDiscrete:
       Description: "Number indicating discrete speed of fan impeller in rank order (with 1 being the lowest speed)"
       Data Type: "[Integer]"
       Constraints:
-      - ">=0"
-      - "[1..]"
+        - ">=0"
+        - "[1..]"
       Units: "-"
       Notes: "Data shall be provided for all allowable discrete speeds or settings"
       Required: True
@@ -325,8 +334,8 @@ GridVariablesDiscrete:
       Description: "External static pressure across fan assembly at dry coil conditions"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "Pa"
       Notes: "Any static pressure deduction (or addition) for wet coil is specified by `wet_pressure_difference` in 'assembly_components' data group"
       Required: True
@@ -339,8 +348,8 @@ LookupVariablesDiscrete:
       Description: "Volumetric air flow rate through fan assembly at standard air conditions"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "m3/s"
       Required: True
       Scalable: True
@@ -348,8 +357,8 @@ LookupVariablesDiscrete:
       Description: "Mechanical shaft power input to fan assembly"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "W"
       Notes: "Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller"
       Required: True
@@ -358,8 +367,8 @@ LookupVariablesDiscrete:
       Description: "Rotational speed of fan impeller"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "rev/s"
       Required: True
     operation_state:
