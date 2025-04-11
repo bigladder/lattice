@@ -20,14 +20,8 @@ class RegularExpressionPattern:
     def __str__(self):
         return self.pattern.pattern
 
-    def match(
-        self, test_string: str, anchored: bool = False
-    ) -> Union[re.Match[str], None]:
-        return (
-            self.pattern.match(test_string)
-            if not anchored
-            else self.anchored_pattern.match(test_string)
-        )
+    def match(self, test_string: str, anchored: bool = False) -> Union[re.Match[str], None]:
+        return self.pattern.match(test_string) if not anchored else self.anchored_pattern.match(test_string)
 
     def anchored(self):
         return self.anchored_pattern.pattern
@@ -71,9 +65,7 @@ class IntegerType(DataType):
 
 class NumericType(DataType):
     pattern = RegularExpressionPattern("(Numeric)")
-    value_pattern = RegularExpressionPattern(
-        "([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)"
-    )
+    value_pattern = RegularExpressionPattern("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
 
 
 class BooleanType(DataType):
@@ -102,11 +94,7 @@ class DataGroupType(DataType):
         self.data_group = None  # only valid once resolve() is called
 
     def resolve(self):
-        self.data_group = (
-            self.parent_data_element.parent_data_group.parent_schema.get_data_group(
-                self.data_group_name
-            )
-        )
+        self.data_group = self.parent_data_element.parent_data_group.parent_schema.get_data_group(self.data_group_name)
 
 
 class EnumerationType(DataType):
@@ -123,9 +111,7 @@ class ReferenceType(DataType):
 
 
 class ArrayType(DataType):
-    pattern = RegularExpressionPattern(
-        rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]"
-    )
+    pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
 
 
 _value_pattern = RegularExpressionPattern(
@@ -157,9 +143,7 @@ class MultipleConstraint(Constraint):
 
 
 class SetConstraint(Constraint):
-    pattern = RegularExpressionPattern(
-        rf"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]"
-    )
+    pattern = RegularExpressionPattern(rf"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]")
 
 
 class SelectorConstraint(Constraint):
@@ -176,9 +160,7 @@ class StringPatternConstraint(Constraint):
         try:
             re.compile(text)
         except re.error:
-            raise Exception(
-                f"Invalid regular expression: {text}"
-            )  # pylint:disable=W0707
+            raise Exception(f"Invalid regular expression: {text}")  # pylint:disable=W0707
 
 
 class DataElementValueConstraint(Constraint):
@@ -186,9 +168,7 @@ class DataElementValueConstraint(Constraint):
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
-        self.pattern = (
-            parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
-        )
+        self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
         match = self.pattern.match(self.text)
         assert match is not None
         # parent data element must be a data group
@@ -203,17 +183,12 @@ class DataElementValueConstraint(Constraint):
 
     def resolve(self):
         assert isinstance(self.parent_data_element.data_type, DataGroupType)
-        if (
-            self.data_element_name
-            not in self.parent_data_element.data_type.data_group.data_elements
-        ):
+        if self.data_element_name not in self.parent_data_element.data_type.data_group.data_elements:
             raise Exception(
                 f"Data Element Value Constraint '{self.data_element_name}' not found in Data Group '{self.parent_data_element.data_type.data_group_name}'"
             )
 
-        self.data_element = self.parent_data_element.data_type.data_group.data_elements[
-            self.data_element_name
-        ]
+        self.data_element = self.parent_data_element.data_type.data_group.data_elements[self.data_element_name]
         match = self.data_element.data_type.value_pattern.match(self.data_element_value)
         if match is None:
             raise Exception(
@@ -246,9 +221,7 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
     if number_of_matches == 1:
         return match_type(text, parent_data_element)
     if number_of_matches == 0:
-        raise Exception(
-            f"No matching constraint for {text} in element {parent_data_element.name}."
-        )
+        raise Exception(f"No matching constraint for {text} in element {parent_data_element.name}.")
     raise Exception(f"Multiple matches found for constraint, {text}")
 
 
@@ -258,9 +231,7 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 class DataElement:
     pattern = _data_element_names
 
-    def __init__(
-        self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup
-    ):
+    def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):
         self.name = name
         self.dictionary = data_element_dictionary
         self.parent_data_group = parent_data_group
@@ -272,9 +243,7 @@ class DataElement:
             elif attribute == "Units":
                 self.units = self.dictionary[attribute]
             elif attribute == "Data Type":
-                self.data_type = self.get_data_type(
-                    parent_data_group, self.dictionary[attribute]
-                )
+                self.data_type = self.get_data_type(parent_data_group, self.dictionary[attribute])
             elif attribute == "Constraints":
                 self.set_constraints(self.dictionary[attribute])
             elif attribute == "Required":
@@ -300,20 +269,14 @@ class DataElement:
                     f"Data Element={self.name}"
                 )
 
-    def get_data_type(
-        self, parent_data_group: DataGroup, attribute_str: str
-    ) -> DataType:
+    def get_data_type(self, parent_data_group: DataGroup, attribute_str: str) -> DataType:
         """
         Returns the data type from the attribute string.
         """
         try:
-            return self.parent_data_group.parent_schema.data_type_factory(
-                attribute_str, self
-            )
+            return self.parent_data_group.parent_schema.data_type_factory(attribute_str, self)
         except RuntimeError:
-            for (
-                reference_schema
-            ) in self.parent_data_group.parent_schema.reference_schemas.values():
+            for reference_schema in self.parent_data_group.parent_schema.reference_schemas.values():
                 try:
                     return reference_schema.data_type_factory(attribute_str, self)
                 except RuntimeError:
@@ -369,9 +332,7 @@ class DataGroup:
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
         self.data_elements: dict[str, DataElement] = {}
-        self.id_data_element: Union[DataElement, None] = (
-            None  # data element containing unique id for this data group
-        )
+        self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
         for data_element in self.dictionary["Data Elements"]:
             self.data_elements[data_element] = DataElement(
                 data_element, self.dictionary["Data Elements"][data_element], self
@@ -385,9 +346,7 @@ class DataGroup:
 class Enumerator:
     pattern = EnumerationType.value_pattern
 
-    def __init__(
-        self, name: str, enumerator_dictionary: dict, parent_enumeration: Enumeration
-    ):
+    def __init__(self, name: str, enumerator_dictionary: dict, parent_enumeration: Enumeration):
         self.name = name
         self.dictionary = enumerator_dictionary
         self.parent_enumeration = parent_enumeration
@@ -400,15 +359,11 @@ class Enumeration:
         self.parent_schema = parent_schema
         self.enumerators = {}
         for enumerator in self.dictionary["Enumerators"]:
-            self.enumerators[enumerator] = Enumerator(
-                enumerator, self.dictionary["Enumerators"][enumerator], self
-            )
+            self.enumerators[enumerator] = Enumerator(enumerator, self.dictionary["Enumerators"][enumerator], self)
 
 
 class DataGroupTemplate:
-    def __init__(
-        self, name: str, data_group_template_dictionary: dict, parent_schema: Schema
-    ):
+    def __init__(self, name: str, data_group_template_dictionary: dict, parent_schema: Schema):
         self.name = name
         self.dictionary = data_group_template_dictionary
         self.parent_schema = parent_schema
@@ -456,9 +411,7 @@ class SchemaPatterns:
         single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types}|{references})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
         arrays = ArrayType.pattern
-        self.data_types = RegularExpressionPattern(
-            f"({single_type})|({alternatives})|({arrays})"
-        )
+        self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
         self.values = RegularExpressionPattern(
@@ -493,9 +446,7 @@ class SchemaPatterns:
 
 
 class Schema:
-    def __init__(
-        self, file_path: pathlib.Path, parent_schema: Schema | None = None
-    ):  # noqa: PLR0912
+    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):  # noqa: PLR0912
         self.file_path = file_path.absolute()
         self.source_dictionary = load(self.file_path)
         self.name = get_file_basename(self.file_path, depth=2)
@@ -538,13 +489,9 @@ class Schema:
         for object_name in self.source_dictionary:
             object_type = self.source_dictionary[object_name]["Object Type"]
             if object_type == "Data Group":
-                self.data_groups[object_name] = DataGroup(
-                    object_name, self.source_dictionary[object_name], self
-                )
+                self.data_groups[object_name] = DataGroup(object_name, self.source_dictionary[object_name], self)
             elif object_type == "Enumeration":
-                self.enumerations[object_name] = Enumeration(
-                    object_name, self.source_dictionary[object_name], self
-                )
+                self.enumerations[object_name] = Enumeration(object_name, self.source_dictionary[object_name], self)
             elif object_type == "Data Type":
                 self.data_types[object_name] = FundamentalDataType(
                     object_name, self.source_dictionary[object_name], self
@@ -593,9 +540,7 @@ class Schema:
             parent_directory = self.file_path.parent
             for reference in self.source_dictionary["Schema"]["References"]:
                 if reference == "core":
-                    raise Exception(
-                        f"Illegal reference schema name, {reference}. This name is reserved."
-                    )
+                    raise Exception(f"Illegal reference schema name, {reference}. This name is reserved.")
                 self.set_reference_schema(
                     reference,
                     pathlib.Path(parent_directory, f"{reference}.schema.yaml"),
@@ -631,15 +576,11 @@ class Schema:
                 matching_schemas.append(reference_schema)
 
         if len(matching_schemas) == 0:
-            raise Exception(
-                f'Data Group "{data_group_name}" not found in "{self.file_path}" or its referenced schemas'
-            )
+            raise Exception(f'Data Group "{data_group_name}" not found in "{self.file_path}" or its referenced schemas')
 
         return matching_schemas[0].data_groups[data_group_name]
 
-    def data_type_factory(
-        self, text: str, parent_data_element: DataElement
-    ) -> DataType:
+    def data_type_factory(self, text: str, parent_data_element: DataElement) -> DataType:
         number_of_matches = 0
         for data_type in self._data_type_list:
             if data_type.pattern.match(text):
