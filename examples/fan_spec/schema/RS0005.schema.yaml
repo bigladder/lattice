@@ -16,7 +16,7 @@ RS0005:
     metadata:
       Description: "Metadata data group"
       Data Type: "{Metadata}"
-      Constraints: "schema=RS0005"
+      Constraints: schema_name="RS0005"
       Required: True
     description:
       Description: "Data group describing product and rating information"
@@ -87,8 +87,11 @@ Performance:
     performance_map:
       Description: "Data group describing motor performance when operating"
       Data Type: "{PerformanceMap}"
-      Notes: ["If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power",
-              "***Informative note:*** This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data"]
+      Notes:
+        [
+          "If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power",
+          "***Informative note:*** This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data",
+        ]
 
 PerformanceMap:
   Object Type: "Data Group"
@@ -111,8 +114,8 @@ GridVariables:
       Description: "Delivered rotational shaft power"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "W"
       Required: True
       Scalable: True
@@ -120,8 +123,8 @@ GridVariables:
       Description: "Rotational speed of shaft"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "rev/s"
       Required: True
 
@@ -133,9 +136,9 @@ LookupVariables:
       Description: "Efficiency of motor"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "<=1.0"
-      - "[1..]"
+        - ">=0.0"
+        - "<=1.0"
+        - "[1..]"
       Units: "-"
       Notes: "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
       Required: True
@@ -143,9 +146,9 @@ LookupVariables:
       Description: "Power factor of the motor"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "<=1.0"
-      - "[1..]"
+        - ">=0.0"
+        - "<=1.0"
+        - "[1..]"
       Units: "-"
       Required: True
     operation_state:
