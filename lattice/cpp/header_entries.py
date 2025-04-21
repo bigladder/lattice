@@ -294,7 +294,7 @@ class DataElement(HeaderEntry):
 @dataclass
 class DataElementIsSetFlag(HeaderEntry):
     def __str__(self):
-        return f"{self._indent}bool {self.name}_is_set;"
+        return f"{self._indent}bool {self.name}_is_set = false;"
 
 
 @dataclass
