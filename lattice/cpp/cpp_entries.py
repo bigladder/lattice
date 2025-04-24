@@ -14,6 +14,7 @@ from .header_entries import (
     FunctionalHeaderEntry,
     HeaderEntry,
     InlineDependency,
+    ObjectDeserializationDeclaration,
     ObjectSerializationDeclaration,
     Struct,
     VirtualDestructor,
@@ -340,6 +341,7 @@ class CPPTranslator:
             elif (
                 isinstance(h_entry, FunctionalHeaderEntry)
                 and not isinstance(h_entry, ObjectSerializationDeclaration)
+                and not isinstance(h_entry, ObjectDeserializationDeclaration)
                 and not isinstance(h_entry, VirtualDestructor)
             ):
                 cpp_entry = MemberFunctionDefinition(
