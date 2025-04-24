@@ -53,7 +53,7 @@ class HeaderTranslator:
     def __init__(
         self,
         input_file_path: Path,
-        forward_declarations_path: Path,
+        forward_declarations_path: Optional[Path],
         output_path: Path,
         top_namespace: str,
     ):
@@ -129,7 +129,7 @@ class HeaderTranslator:
                                           "Description")
 
         for base_level_tag in self._list_objects_of_type("Data Group Template"):
-            predefined_code_dir: Path = self._forward_declaration_dir.parent / "cpp" / "base_classes"
+            predefined_code_dir: Path = self._source_dir.parent / "cpp" / "base_classes"
             base_class_file = Path(predefined_code_dir / f"{hyphen_separated_lowercase_style(base_level_tag)}.h")
             # TODO: Check naming assumptions and rules for pre-defined base class files
             if not base_class_file.exists():
@@ -170,9 +170,10 @@ class HeaderTranslator:
                                          self._namespace,
                                          self._contents[base_level_tag]["Enumerators"])
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
-            # from_json declarations are necessary in top container, as the header-declared
+            # from_json/to_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
+            ObjectDeserializationDeclaration(base_level_tag, self._namespace)
 
     def _reset_parsing(self):
         """Clear member containers for a new translation."""
@@ -220,6 +221,8 @@ class HeaderTranslator:
                 self._fundamental_data_types[base_item] = cpp_types[ext_dict[base_item]["JSON Schema Type"]]
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
+            if reference_name not in [self._schema_name, "core"]:
+                self._load_meta_info(ext_dict["Schema"]) # Recursively collect references, as C++ does
     # fmt: on
 
     def _add_include_guard(self, header_name):

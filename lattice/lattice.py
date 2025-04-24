@@ -260,9 +260,7 @@ class Lattice:  # pylint:disable=R0902
     def generate_cpp_project(self):
         """Generate CPP header files, source files, and build support files."""
         for schema in self.cpp_schemas:
-            h = HeaderTranslator(
-                schema.file_path, self.schema_directory_path, self._cpp_output_include_dir, self.root_directory.name
-            )
+            h = HeaderTranslator(schema.file_path, None, self._cpp_output_include_dir, self.root_directory.name)
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
