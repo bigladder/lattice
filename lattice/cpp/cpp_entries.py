@@ -209,9 +209,7 @@ class OwnedElementCreation(ElementSerialization):
 class OwnedElementDeserialization(ElementSerialization):
     def __post_init__(self):
         super().__post_init__()
-        self._funclines = [
-            f'json_set<{self._type}>(j, logger.get(), "{self._name}", x.{self._name}, x.{self._name}_is_set, {"true" if self._header_entry.is_required else "false"});'  # noqa: E501
-        ]
+        self._funclines = [f'json_set<{self._type}>(j, "{self._name}", x.{self._name}, x.{self._name}_is_set);']
         self.trace()
 
 
