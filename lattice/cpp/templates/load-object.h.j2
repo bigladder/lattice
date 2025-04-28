@@ -84,7 +84,7 @@ namespace {{namespace}} {
     {
         if (object_is_set)
         {
-            j[subnode] = object;
+            j = nlohmann::json{{subnode, object}};
         }
     }
 {%- endraw %}
