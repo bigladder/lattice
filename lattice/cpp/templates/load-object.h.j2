@@ -74,7 +74,6 @@ namespace {{namespace}} {
         }
     }
 
-{% raw -%}
     template<class T>
     void json_set(nlohmann::json &j,
                   const char *subnode,
@@ -84,10 +83,9 @@ namespace {{namespace}} {
     {
         if (object_is_set)
         {
-            j = nlohmann::json{{subnode, object}};
+            j[subnode] = object;
         }
     }
-{%- endraw %}
 }
 
 #endif
