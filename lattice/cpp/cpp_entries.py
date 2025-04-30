@@ -223,7 +223,7 @@ class OwnedElementDownload(ElementSerialization):
         for enum in self._header_entry.selector[data_element]:
             self._funclines += [
                 f"if (x.{data_element} == {enum}) {{",
-                f'\tto_json(j.at("{self._name}"), *dynamic_cast<{self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));',  # noqa: E501
+                f'\tjson_set<{self._header_entry.selector[data_element][enum]}>(j, "{self._name}", *dynamic_cast<const {self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()), x.{self._name}_is_set);',  # noqa: E501
                 "}",
             ]
         self.trace()
