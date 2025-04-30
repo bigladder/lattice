@@ -35,7 +35,7 @@ RS0007:
     metadata:
       Description: "Metadata data group"
       Data Type: "{Metadata}"
-      Constraints: "schema=RS0007"
+      Constraints: schema_name="RS0007"
       Required: True
     description:
       Description: "Data group describing product and rating information"
@@ -55,16 +55,16 @@ Description:
 ProductInformation:
   Object Type: "Data Group"
   Data Elements:
-      manufacturer:
-        Description: "Manufacturer name"
-        Data Type: "String"
-      model_number:
-        Description: "Model number"
-        Data Type: "Pattern"
-        Notes: "Pattern shall match all model numbers that can be represented by the representation"
-      drive_type:
-        Description: "Type of mechanical drive"
-        Data Type: "<DriveType>"
+    manufacturer:
+      Description: "Manufacturer name"
+      Data Type: "String"
+    model_number:
+      Description: "Model number"
+      Data Type: "Pattern"
+      Notes: "Pattern shall match all model numbers that can be represented by the representation"
+    drive_type:
+      Description: "Type of mechanical drive"
+      Data Type: "<DriveType>"
 
 Performance:
   Object Type: "Data Group"
@@ -105,8 +105,8 @@ GridVariables:
       Description: "Output shaft power"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "[1..]"
+        - ">=0.0"
+        - "[1..]"
       Units: "W"
       Required: True
       Scalable: True
@@ -119,9 +119,9 @@ LookupVariables:
       Description: "Efficiency of drive"
       Data Type: "[Numeric]"
       Constraints:
-      - ">=0.0"
-      - "<=1.0"
-      - "[1..]"
+        - ">=0.0"
+        - "<=1.0"
+        - "[1..]"
       Units: "-"
       Notes: "Defined as the ratio of output shaft power to input shaft power"
       Required: True
