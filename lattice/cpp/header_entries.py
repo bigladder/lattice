@@ -219,7 +219,6 @@ class DataElement(HeaderEntry):
         # Look through the references to assign a scope to the type
         for custom_type in self._referenced_datatypes:
             if inner_type == custom_type.name:
-                print(f"{custom_type.namespace}", inner_type)
                 self.scoped_innertype = (f"{custom_type.namespace}", inner_type)
                 # namespace naming convention is snake_style, regardless of the schema file name
                 return "::".join(self.scoped_innertype)
@@ -368,6 +367,20 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
         self._f_ret = "void"
         self._f_name = "from_json"
         self._f_args = ["const nlohmann::json& j", f"{self.name}& x"]
+        super().__post_init__()
+        self.trace()
+
+
+@dataclass
+class ObjectDeserializationDeclaration(FunctionalHeaderEntry):
+    _f_ret: str = field(init=False)
+    _f_name: str = field(init=False)
+    _f_args: list[str] = field(init=False)
+
+    def __post_init__(self):
+        self._f_ret = "void"
+        self._f_name = "to_json"
+        self._f_args = ["nlohmann::json& j", f"const {self.name}& x"]
         super().__post_init__()
         self.trace()
 
