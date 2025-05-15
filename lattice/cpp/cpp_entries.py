@@ -328,10 +328,6 @@ class CPPTranslator:
                     else:
                         c = OwnedElementDeserialization(data_element_entry, cpp_entry)
 
-            elif isinstance(h_entry, DataElementStaticMetainfo):
-                logger.debug(f"{h_entry.name} under {type(h_entry.parent)} under {self._namespace._name}")
-                cpp_entry = DataElementStaticInitialization(h_entry, self._namespace)
-
             elif isinstance(h_entry, InlineDependency):
                 cpp_entry = DependencyInitialization(h_entry, self._namespace)
 

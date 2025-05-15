@@ -303,11 +303,11 @@ class DataElementStaticMetainfo(HeaderEntry):
 
     def __post_init__(self):
         super().__post_init__()
-        self._type_specifier = "const static"
+        self._type_specifier = "static constexpr"
         self.type = "std::string_view"
-        self.init_val = self.element.get(self.metainfo_key, "") if self.metainfo_key != "Name" else self.name
+        self._init_val = self.element.get(self.metainfo_key, "") if self.metainfo_key != "Name" else self.name
         self.name = self.name + "_" + self.metainfo_key.lower()
-        self._closure = ";"
+        self._closure = f' = "{self._init_val}";'
 
         self.trace()
 
