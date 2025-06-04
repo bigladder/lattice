@@ -179,7 +179,7 @@ class DataElement(HeaderEntry):
         super().__post_init__()
         self._closure = ";"
         self._element_attributes = self._data_group_attributes[self.name]
-        self.is_required: bool = self._element_attributes.get("Required", False)  # used externally
+        self.is_required: bool = True if self._element_attributes.get("Required") == True else False  # noqa E712
         self.scoped_innertype: tuple[str, str] = ("", "")
 
         self._create_type_entry(self._element_attributes)
