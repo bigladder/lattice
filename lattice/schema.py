@@ -243,7 +243,13 @@ class DataElement:
             elif attribute == "Units":
                 self.units = self.dictionary[attribute]
             elif attribute == "Data Type":
-                self.data_type = self.get_data_type(parent_data_group, self.dictionary[attribute])
+                data_type_str = self.dictionary[attribute]
+                if data_type_str == "Numeric":
+                    if "Units" not in self.dictionary:
+                        raise ValueError(
+                            f"Units are required for Numeric data type in '{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}."
+                        )
+                self.data_type = self.get_data_type(parent_data_group, data_type_str)
             elif attribute == "Constraints":
                 self.set_constraints(self.dictionary[attribute])
             elif attribute == "Required":
