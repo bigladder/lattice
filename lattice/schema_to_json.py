@@ -463,7 +463,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
             f"{self._schema_name}": load(self._source_dir / f"{self._schema_name}.schema.yaml"),
         }
         if self._schema_name == "core" and self._forward_declaration_dir and self._forward_declaration_dir.is_dir():
-            for file in self._forward_declaration_dir.iterdir():
+            for file in (iter for iter in self._forward_declaration_dir.iterdir() if iter.suffix in [".yaml", ".yml"]):
                 refs.update({f"{get_base_stem(file)}": load(file)})
         elif "References" in schema_section:
             for ref in schema_section["References"]:

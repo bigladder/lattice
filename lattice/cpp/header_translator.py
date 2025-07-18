@@ -37,15 +37,19 @@ def modified_insertion_sort(obj_list):
     # Start on the second element as we assume the first element is sorted
     for i in range(1, len(obj_list)):
         item_to_insert = obj_list[i]
+        logger.debug(f"Item to insert is {item_to_insert.name} at index {i}")
         # And keep a reference of the index of the previous element
         j = i - 1
         # Move all items of the sorted segment forward if they are larger than the item to insert
         while j >= 0 and any(obj > item_to_insert for obj in obj_list[0 : j + 1]):
+            logger.debug(f"Swapping object {obj_list[j].name} at index {j} into location {j + 1}")
             obj_list[j + 1] = obj_list[j]
             swapped = True
             j -= 1
         # Insert the item
         obj_list[j + 1] = item_to_insert
+        for index in range(j + 1, 0, -1):
+            logger.debug(f"Object at index {index} is now {obj_list[index].name}")
     return swapped
 
 
@@ -173,7 +177,8 @@ class HeaderTranslator:
             # from_json/to_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
-            ObjectDeserializationDeclaration(base_level_tag, self._namespace)
+            # ObjectDeserializationDeclaration(base_level_tag, self._namespace)
+            pass
 
     def _reset_parsing(self):
         """Clear member containers for a new translation."""

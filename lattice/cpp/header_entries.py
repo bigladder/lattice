@@ -67,14 +67,17 @@ class HeaderEntry(EntryFormat):
         t = f"{other._f_ret} {other.args}" if isinstance(other, FunctionalHeaderEntry) else f"{other.type} {other.name}"
         # \b is a "boundary" character, or specifier for a whole word
         if re.search(r"\b" + this.name + r"\b", t):
+            logger.debug(f"'{this.name}' is in '{t}'")
             return True
         for c in other.child_entries:
             t = f"{c._f_ret} {c.args}" if isinstance(c, FunctionalHeaderEntry) else f"{c.type} {c.name}"
-            if re.search(r"\b" + this.name + r"\b", t):
-                # Shortcut around checking siblings; if one child matches, then self < other
+            if re.search(r"\b" + this.name + r"\b", t):  # if 'this' is in 'other.child', this < other
+                logger.debug(f"'{this.name}' is in '{t}'")
+                # Shortcut around checking siblings; if one child matches, then this < other
                 return True
             else:
                 # Check grandchildren
+                logger.debug(f"'{this.name}' is NOT in '{t}'; checking child '{c.name}'")
                 lt = HeaderEntry._less_than(this, c)
         return lt
 
@@ -303,11 +306,12 @@ class DataElementStaticMetainfo(HeaderEntry):
 
     def __post_init__(self):
         super().__post_init__()
-        self._type_specifier = "static constexpr"
+        # self._type_specifier = "static constexpr"
+        self._type_specifier = "const static"
         self.type = "std::string_view"
-        self._init_val = self.element.get(self.metainfo_key, "") if self.metainfo_key != "Name" else self.name
+        self.init_val = self.element.get(self.metainfo_key, "") if self.metainfo_key != "Name" else self.name
         self.name = self.name + "_" + self.metainfo_key.lower()
-        self._closure = f' = "{self._init_val}";'
+        self._closure = ";"
 
         self.trace()
 
