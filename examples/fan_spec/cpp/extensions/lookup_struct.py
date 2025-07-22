@@ -1,15 +1,19 @@
-import re
 import copy
+import re
 from dataclasses import dataclass
+
 from lattice.cpp.header_entries import DataElement, HeaderEntry, Struct
+
 # from lattice.cpp.header_entries import register_data_group_operation
 from lattice.cpp.header_translator import HeaderEntryExtensionInterface
+
 
 @dataclass
 class LookupStruct(HeaderEntry):
     """
     Special case struct for Lookup Variables. Its str overload adds a LookupStruct declaration.
     """
+
     def __post_init__(self):
         super().__post_init__()
         self.name = f"{self.name}Struct"
@@ -22,16 +26,19 @@ class LookupStruct(HeaderEntry):
         # Add a LookupStruct that offers a SOA access rather than AOS
         struct = f"{self._indent}{self.type} {self.name} {self._opener}\n"
         for c in [ch for ch in self.child_entries if isinstance(ch, DataElement)]:
-            m = re.match(r'std::vector\<(.*)\>', c.type)
+            m = re.match(r"std::vector\<(.*)\>", c.type)
             assert m is not None
             struct += f"{self._indent}\t{m.group(1)} {c.name};\n"
         struct += f"{self._indent}{self._closure}"
 
         return struct
 
+    __hash__ = HeaderEntry.__hash__
+
 
 class LookupStructPlugin(HeaderEntryExtensionInterface, base_class="ashrae205::LookupVariablesTemplate"):
     """"""
+
     def process_data_group(self, parent_node: HeaderEntry):
         for entry in parent_node.child_entries:
             if isinstance(entry, Struct) and entry.superclass == "ashrae205::LookupVariablesTemplate":
