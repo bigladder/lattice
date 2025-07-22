@@ -5,7 +5,21 @@ import re
 from dataclasses import dataclass, field
 from typing import Optional, Union
 
+import networkx
+
 logger = logging.getLogger()
+
+
+def DAG_sort(obj_list: list[HeaderEntry]) -> list[HeaderEntry]:
+    dependency_graph = networkx.DiGraph()
+    for this in obj_list:
+        dependency_graph.add_node(this)
+    for this in obj_list:
+        for other in [obj for obj in obj_list if obj != this]:
+            if this < other:
+                dependency_graph.add_edge(this, other)
+    dependency_graph.remove_nodes_from(list(networkx.isolates(dependency_graph)))
+    return list(networkx.topological_sort(dependency_graph))
 
 
 def remove_prefix(text, prefix):
@@ -53,6 +67,13 @@ class HeaderEntry(EntryFormat):
         else:
             return level
 
+    def __hash__(self):
+        """Explicitly define hashability for networkx graph"""
+        return hash(f"{self.type}{self.name}")  # Use a unique and immutable attribute for hashing
+
+    def __eq__(self, other):
+        return self.name == other.name and self.type == other.type
+
     def __lt__(self, other):
         """
         A Header_entry must be "less than" any another Header_entry that references it, i.e.
@@ -61,23 +82,24 @@ class HeaderEntry(EntryFormat):
         return self._less_than(self, other)
 
     @staticmethod
-    def _less_than(this: HeaderEntry | FunctionalHeaderEntry, other: HeaderEntry | FunctionalHeaderEntry):
+    def _less_than(
+        this: HeaderEntry | FunctionalHeaderEntry,
+        other: HeaderEntry | FunctionalHeaderEntry,
+        root: Optional[HeaderEntry] = None,
+    ):
         """ """
         lt = False
         t = f"{other._f_ret} {other.args}" if isinstance(other, FunctionalHeaderEntry) else f"{other.type} {other.name}"
         # \b is a "boundary" character, or specifier for a whole word
         if re.search(r"\b" + this.name + r"\b", t):
-            logger.debug(f"'{this.name}' is in '{t}'")
             return True
         for c in other.child_entries:
             t = f"{c._f_ret} {c.args}" if isinstance(c, FunctionalHeaderEntry) else f"{c.type} {c.name}"
             if re.search(r"\b" + this.name + r"\b", t):  # if 'this' is in 'other.child', this < other
-                logger.debug(f"'{this.name}' is in '{t}'")
                 # Shortcut around checking siblings; if one child matches, then this < other
                 return True
             else:
                 # Check grandchildren
-                logger.debug(f"'{this.name}' is NOT in '{t}'; checking child '{c.name}'")
                 lt = HeaderEntry._less_than(this, c)
         return lt
 
@@ -99,6 +121,8 @@ class Typedef(HeaderEntry):
 
     def __str__(self):
         return f"{self._indent}{self.type} {self._typedef} {self.name};"
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -129,6 +153,8 @@ class Enumeration(HeaderEntry):
 
         return entry
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class EnumSerializationDeclaration(HeaderEntry):
@@ -150,6 +176,8 @@ class EnumSerializationDeclaration(HeaderEntry):
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class Struct(HeaderEntry):
@@ -169,6 +197,8 @@ class Struct(HeaderEntry):
         entry += "\n".join([str(c) for c in self.child_entries])
         entry += f"\n{self._indent}{self._closure}"
         return entry
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -292,11 +322,15 @@ class DataElement(HeaderEntry):
                         self.type = f"std::unique_ptr<{base_type.namespace}::{custom_type.superclass_name}>"
                         break
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class DataElementIsSetFlag(HeaderEntry):
     def __str__(self):
         return f"{self._indent}bool {self.name}_is_set = false;"
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -318,6 +352,8 @@ class DataElementStaticMetainfo(HeaderEntry):
     def __str__(self):
         return f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class InlineDependency(HeaderEntry):
@@ -336,6 +372,8 @@ class InlineDependency(HeaderEntry):
             f"{self._indent}void set_{self.name}({self.type} value);"
         )
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class FunctionalHeaderEntry(HeaderEntry):
@@ -352,6 +390,9 @@ class FunctionalHeaderEntry(HeaderEntry):
     def __str__(self):
         return f"{self._indent}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
+    def __hash__(self):
+        return hash(f"{self._f_ret}{self._f_name}")
+
 
 @dataclass
 class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
@@ -359,6 +400,8 @@ class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
         super().__post_init__()
         self._closure = " override;"
         self.trace()
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -374,6 +417,8 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
         super().__post_init__()
         self.trace()
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class ObjectDeserializationDeclaration(FunctionalHeaderEntry):
@@ -388,6 +433,8 @@ class ObjectDeserializationDeclaration(FunctionalHeaderEntry):
         super().__post_init__()
         self.trace()
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class VirtualDestructor(FunctionalHeaderEntry):
@@ -400,3 +447,5 @@ class VirtualDestructor(FunctionalHeaderEntry):
         super().__post_init__()
         self._closure = f" = {self._explicit_definition};" if self._explicit_definition else ";"
         self.trace()
+
+    __hash__ = HeaderEntry.__hash__
