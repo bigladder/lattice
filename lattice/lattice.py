@@ -112,7 +112,7 @@ class Lattice:  # pylint:disable=R0902
     def validate_schemas(self) -> list[ValidationError | Any]:
         """Validate source schema using metaschema file"""
 
-        validation_errors = []
+        validation_errors: list[ValidationError | Any] = []
         for schema in self.schemas:
             validation_errors += meta_validate_file(Path(schema.file_path), Path(schema.meta_schema_path))
         return validation_errors
@@ -185,7 +185,7 @@ class Lattice:  # pylint:disable=R0902
     def validate_example_files(self) -> list[ValidationError | Any]:
         """Validate example instance(s) against JSON schema"""
 
-        validation_errors = []
+        validation_errors: list[ValidationError | Any] = []
         for example in self.examples:
             validation_errors += self.validate_file(example)
         return validation_errors
