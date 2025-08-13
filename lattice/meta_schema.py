@@ -1,6 +1,9 @@
 import os
 import json
 import posixpath
+from typing import Any
+
+from jsonschema import ValidationError
 import jsonschema
 import yaml
 import copy
@@ -19,25 +22,27 @@ class MetaSchema:
             resolver = jsonschema.RefResolver(f"file://{uri_path}/", meta_schema_file)
             self.validator = jsonschema.Draft7Validator(json.load(meta_schema_file), resolver=resolver)
 
-    def validate(self, instance_path):
+    def validate(self, instance_path) -> list[ValidationError | Any]:
         with open(os.path.join(instance_path), "r", encoding="utf-8") as input_file:
             instance = yaml.load(input_file, Loader=yaml.FullLoader)
-        errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
+        validation_errors = sorted(self.validator.iter_errors(instance), key=lambda e: e.path)
         file_name = os.path.basename(instance_path)
-        if len(errors) == 0:
+        if len(validation_errors) == 0:
             print(f"Validation successful for {file_name}")
         else:
             messages = []
-            for error in errors:
+            for error in validation_errors:
                 messages.append(f"{error.message} ({'.'.join([str(x) for x in error.path])})")
             messages = [f"{i}. {message}" for i, message in enumerate(messages, start=1)]
             message_str = "\n  ".join(messages)
-            raise Exception(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
+            print(f"Validation failed for {file_name} with {len(messages)} errors:\n  {message_str}")
+        return validation_errors
 
 
-def meta_validate_file(file_path, meta_schema_path):
+def meta_validate_file(file_path, meta_schema_path) -> list[ValidationError | Any]:
     meta_schema = MetaSchema(meta_schema_path)
-    meta_schema.validate(file_path)
+    validation_errors = meta_schema.validate(file_path)
+    return validation_errors
 
 
 # Generate Meta Schema

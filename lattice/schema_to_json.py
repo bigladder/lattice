@@ -4,7 +4,9 @@ import os
 import re
 import warnings
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+from jsonschema import ValidationError
 
 from .file_io import dump, get_base_stem, load
 from .meta_schema import MetaSchema
@@ -630,7 +632,7 @@ def get_reference_value(data_dict: dict, lineage: list) -> dict:
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_references(input_file: Path, input_schema: Path):
+def postvalidate_references(input_file: Path, input_schema: Path) -> list[ValidationError | Any]:
     """
     Make sure IDs and References match in scope.
 
@@ -644,6 +646,7 @@ def postvalidate_references(input_file: Path, input_schema: Path):
     get_scope_locations(load(input_schema), scope_key="Reference", scopes_dict=reference_scopes)
     data = load(input_file)
     ids = []
+    validation_errors = []
     for id_loc in [id for id in id_scopes if id.startswith("properties")]:
         lineage = [level for level in id_loc.split(".") if level not in ["properties", "items"]]
         ids.append(get_reference_value(data, lineage))
@@ -651,11 +654,13 @@ def postvalidate_references(input_file: Path, input_schema: Path):
         lineage = [level for level in ref.split(".") if level not in ["properties", "items"]]
         reference_scope = get_reference_value(data, lineage)
         if reference_scope and reference_scope not in ids:
-            raise ValueError(f"Scope mismatch in {input_file}; {reference_scope} not in ID scope list {ids}.")
+            value_error = ValueError(f"Scope mismatch in {input_file}; {reference_scope} not in ID scope list {ids}.")
+            validation_errors.append(value_error)
+    return validation_errors
 
 
 # -------------------------------------------------------------------------------------------------
-def validate_file(input_file: Path, input_schema: Path):
+def validate_file(input_file: Path, input_schema: Path) -> list[ValidationError | Any]:
     """
     Validate example against schema.
 
@@ -663,15 +668,17 @@ def validate_file(input_file: Path, input_schema: Path):
     :param input_schema:    JSON schema to validate against
     """
     v = MetaSchema(input_schema)
-    v.validate(input_file)
+    validation_errors = v.validate(input_file)
+    return validation_errors
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_file(input_file: Path, input_schema: Path):
+def postvalidate_file(input_file: Path, input_schema: Path) -> list[ValidationError | Any]:
     """
     Validate input example against external rules; currently scopes dictated in schema.
 
     :param input_file:      JSON example to validate
     :param input_schema:    JSON schema to validate against
     """
-    postvalidate_references(input_file, input_schema)
+    validation_errors = postvalidate_references(input_file, input_schema)
+    return validation_errors

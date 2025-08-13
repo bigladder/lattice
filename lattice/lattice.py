@@ -5,7 +5,9 @@ import subprocess
 import warnings
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import List, Union
+from typing import Any, List, Union
+
+from jsonschema import ValidationError
 
 from jsonschema.exceptions import RefResolutionError
 
@@ -107,11 +109,13 @@ class Lattice:  # pylint:disable=R0902
         for schema in self.schemas:
             generate_meta_schema(Path(schema.meta_schema_path), Path(schema.file_path))
 
-    def validate_schemas(self):
+    def validate_schemas(self) -> list[ValidationError | Any]:
         """Validate source schema using metaschema file"""
 
+        validation_errors = []
         for schema in self.schemas:
-            meta_validate_file(Path(schema.file_path), Path(schema.meta_schema_path))
+            validation_errors += meta_validate_file(Path(schema.file_path), Path(schema.meta_schema_path))
+        return validation_errors
 
     def setup_json_schemas(self):
         """Set up json_schema subdirectory"""
@@ -127,7 +131,7 @@ class Lattice:  # pylint:disable=R0902
         for schema in self.schemas:
             generate_json_schema(schema.file_path, schema.json_schema_path)
 
-    def validate_file(self, input_path, schema_type=None):
+    def validate_file(self, input_path, schema_type=None) -> list[ValidationError | Any]:
         """
         Validate an input instance against JSON schema.
         :param input_path:  Path to data model instance
@@ -146,18 +150,19 @@ class Lattice:  # pylint:disable=R0902
                     f"Too many schema available for validation; cannot find a match to"
                     f' "schema_name" {schema_type} in "{input_path}." Unable to validate file.'
                 ) from None
-            validate_file(input_path, self.schemas[0].json_schema_path)
-            postvalidate_file(input_path, self.schemas[0].json_schema_path)
+            validation_errors = validate_file(input_path, self.schemas[0].json_schema_path)
+            validation_errors += postvalidate_file(input_path, self.schemas[0].json_schema_path)
+            return validation_errors
         else:
             # Find corresponding schema
             for schema in self.schemas:
                 if schema.schema_name == schema_type:
                     try:
-                        validate_file(input_path, schema.json_schema_path)
-                        postvalidate_file(input_path, schema.json_schema_path)
+                        validation_errors = validate_file(input_path, schema.json_schema_path)
+                        validation_errors += postvalidate_file(input_path, schema.json_schema_path)
                     except RefResolutionError as e:
                         raise Exception(f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}") from e
-                    return
+                    return validation_errors
             raise Exception(f'Unable to find matching schema, "{schema_type}", for file "{input_path}".')
 
     def collect_example_files(self) -> None:
@@ -177,11 +182,13 @@ class Lattice:  # pylint:disable=R0902
                 self.examples.extend(self.example_directory_path.glob(f"*.{ext}"))
         self.examples.sort()
 
-    def validate_example_files(self):
+    def validate_example_files(self) -> list[ValidationError | Any]:
         """Validate example instance(s) against JSON schema"""
 
+        validation_errors = []
         for example in self.examples:
-            self.validate_file(example)
+            validation_errors += self.validate_file(example)
+        return validation_errors
 
     def collect_doc_templates(self):
         """Collect documentation templates from docs subdirectory"""
