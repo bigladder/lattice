@@ -1,5 +1,6 @@
-from lattice.schema import Schema
 import pathlib
+
+from lattice.schema import Schema
 
 
 def test_schema():

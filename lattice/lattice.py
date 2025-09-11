@@ -221,7 +221,7 @@ class Lattice:  # pylint:disable=R0902
         if self.doc_templates_directory_path:
             MkDocsWeb(self).build()
         else:
-            warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
+            warnings.warn(f'Template directory "doc" does not exist under {self.root_directory}')
 
     def collect_cpp_schemas(self):
         """Collect source schemas into list of SchemaFiles"""

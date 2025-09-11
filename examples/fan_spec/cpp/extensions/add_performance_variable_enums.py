@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from lattice.cpp.header_entries import HeaderEntry, Struct, DataElement
+
+from lattice.cpp.header_entries import DataElement, HeaderEntry, Struct
 from lattice.cpp.header_translator import HeaderEntryExtensionInterface
+
 
 @dataclass
 class CounterEnum(HeaderEntry):
@@ -14,7 +16,7 @@ class CounterEnum(HeaderEntry):
 
         for element in self.elements:
             self._enumerants.append(f"{element}_index")
-        self._enumerants.append("index_count");
+        self._enumerants.append("index_count")
 
         self.trace()
 
@@ -25,24 +27,28 @@ class CounterEnum(HeaderEntry):
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
+    __hash__ = HeaderEntry.__hash__
+
 
 class GridVarCounterEnumPlugin(HeaderEntryExtensionInterface, base_class="ashrae205::GridVariablesTemplate"):
     """"""
+
     def process_data_group(self, parent_node: HeaderEntry):
         for entry in parent_node.child_entries:
             if isinstance(entry, Struct) and entry.superclass == "ashrae205::GridVariablesTemplate":
                 data_elements = [child.name for child in entry.child_entries if isinstance(child, DataElement)]
-                e = CounterEnum(entry.name, entry, data_elements)
+                CounterEnum(entry.name, entry, data_elements)
             else:
                 self.process_data_group(entry)
 
 
 class LookupVarCounterEnumPlugin(HeaderEntryExtensionInterface, base_class="ashrae205::LookupVariablesTemplate"):
     """"""
+
     def process_data_group(self, parent_node: HeaderEntry):
         for entry in parent_node.child_entries:
             if isinstance(entry, Struct) and entry.superclass == "ashrae205::LookupVariablesTemplate":
                 data_elements = [child.name for child in entry.child_entries if isinstance(child, DataElement)]
-                e = CounterEnum(entry.name, entry, data_elements)
+                CounterEnum(entry.name, entry, data_elements)
             else:
                 self.process_data_group(entry)

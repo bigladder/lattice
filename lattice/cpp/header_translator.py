@@ -31,24 +31,6 @@ class HeaderEntryExtensionInterface(ABC):
     def process_data_group(self, parent_node: HeaderEntry): ...
 
 
-def modified_insertion_sort(obj_list):
-    """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
-    swapped = False
-    # Start on the second element as we assume the first element is sorted
-    for i in range(1, len(obj_list)):
-        item_to_insert = obj_list[i]
-        # And keep a reference of the index of the previous element
-        j = i - 1
-        # Move all items of the sorted segment forward if they are larger than the item to insert
-        while j >= 0 and any(obj > item_to_insert for obj in obj_list[0 : j + 1]):
-            obj_list[j + 1] = obj_list[j]
-            swapped = True
-            j -= 1
-        # Insert the item
-        obj_list[j + 1] = item_to_insert
-    return swapped
-
-
 class HeaderTranslator:
     def __init__(
         self,
@@ -162,7 +144,7 @@ class HeaderTranslator:
                 self._extensions.pop(scoped_superclass)
 
         self._add_header_dependencies()
-        modified_insertion_sort(self._namespace.child_entries)
+        self._namespace.child_entries = DAG_sort(self._namespace.child_entries)
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in self._list_objects_of_type("Enumeration"):
@@ -173,7 +155,8 @@ class HeaderTranslator:
             # from_json/to_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
-            ObjectDeserializationDeclaration(base_level_tag, self._namespace)
+            # ObjectDeserializationDeclaration(base_level_tag, self._namespace)
+            pass
 
     def _reset_parsing(self):
         """Clear member containers for a new translation."""

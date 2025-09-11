@@ -17,6 +17,7 @@ dependencies = [
     "pygit2 >=1.15.1",
     "mkdocs-material",
     "markdown-grid-tables",
+    "networkx"
 ]
 
 [tool.uv]
@@ -25,7 +26,8 @@ dev-dependencies = [
     "doit",
     "pre-commit",
     "pylint",
-    "ruff"
+    "ruff",
+    "mypy"
 ]
 
 [tool.ruff]
@@ -48,3 +50,6 @@ disable_error_code = ["annotation-unchecked","import"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["lattice"]
