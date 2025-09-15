@@ -8,6 +8,7 @@ from typing import Optional
 
 from .file_io import dump, get_base_stem, load
 from .meta_schema import MetaSchema
+from .schema import ReferenceType
 
 # 'once': Suppress multiple warnings from the same location.
 # 'always': Show all warnings
@@ -24,19 +25,19 @@ class DataGroup:  # pylint: disable=R0903
     # just the first [] pair; using non-greedy '?'
     alternative_type = r"^\((?P<one_of>.*)\)"  # Parentheses encapsulate a list of options
     # Parse ellipsis range-notation e.g. '[1..]'
-    minmax_range_type = r"(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)"
+    minmax_range_type = r"\[(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)\]"
 
-    enum_or_def = r"(\{|\<|:)(.*)(\}|\>|:)"
+    enum_or_def_or_ref = r"(\{|\<|:)(.*)(\}|\>|:)"
     numeric_type = r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
     scope_constraint = r"^:(?P<scope>.*):"  # Lattice scope constraint for ID/Reference
-    ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
+    # ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
 
     def __init__(self, name, type_list, ref_list):
         self._name = name
         self._types = type_list
         self._refs = ref_list
         self._match_types = re.compile(
-            f"(?P<ranged_array>{DataGroup.ranged_array_type})|({DataGroup.alternative_type})"
+            f"(?P<array_or_alternative>{DataGroup.array_type})|({DataGroup.alternative_type})"
         )
 
     def add_data_group(self, group_name, group_subdict):
@@ -89,7 +90,7 @@ class DataGroup:  # pylint: disable=R0903
 
         matches = self._match_types.match(parent_dict["Data Type"])
         if matches:
-            if matches.group("ranged_array"):
+            if matches.group("array_or_alternative"):
                 self._populate_array_type(parent_dict, target_property_entry, matches)
             elif matches.group("one_of"):
                 self._populate_selector_types(parent_dict, target_property_entry, matches, entry_name)
@@ -123,13 +124,14 @@ class DataGroup:  # pylint: disable=R0903
         # 1. 'type' entry
         target_entry["type"] = "array"
         # 2. 'm[in/ax]Items' entry
-        if matches.group("min"):
-            # Parse ellipsis range-notation e.g. '[1..]'
-            target_entry["minItems"] = int(matches.group("min"))
-            if matches.group("ellipsis") and matches.group("max"):
-                target_entry["maxItems"] = int(matches.group("max"))
-            elif not matches.group("ellipsis"):
-                target_entry["maxItems"] = int(matches.group("min"))
+        DataGroup._get_length_constraints(parent_dict.get("Constraints"), target_entry)
+        # if matches.group("min"):
+        #     # Parse ellipsis range-notation e.g. '[1..]'
+        #     target_entry["minItems"] = int(matches.group("min"))
+        #     if matches.group("ellipsis") and matches.group("max"):
+        #         target_entry["maxItems"] = int(matches.group("max"))
+        #     elif not matches.group("ellipsis"):
+        #         target_entry["maxItems"] = int(matches.group("min"))
         # 3. 'items' entry
         target_entry["items"] = {}
         if matches.group("array_of"):
@@ -168,9 +170,13 @@ class DataGroup:  # pylint: disable=R0903
         :param target_dict_to_append:   The json "items" node
         """
         internal_type = None
-        m = re.match(DataGroup.enum_or_def, type_str)
+        m = re.match(DataGroup.enum_or_def_or_ref, type_str)
         if m:
             internal_type = m.group(2)
+            if ReferenceType.pattern.match(type_str):
+                target_dict_to_append["type"] = "string"
+                return
+
         else:
             internal_type = type_str
         # Look through the references to assign a source to the type
@@ -189,6 +195,27 @@ class DataGroup:  # pylint: disable=R0903
         return
 
     @staticmethod
+    def _get_length_constraints(constraints_str, target_entry):
+        """
+        Process array length Constraint into min/maxItems field.
+
+        :param constraints_str:     Raw numerical limits and/or multiple information
+        :param target_dict:         json property node
+        """
+        if constraints_str is not None:
+            constraints = constraints_str if isinstance(constraints_str, list) else [constraints_str]
+            for c in constraints:
+                matches = re.match(DataGroup.minmax_range_type, c)
+                if matches:
+                    if matches.group("min"):
+                        # Parse ellipsis range-notation e.g. '[1..]'
+                        target_entry["minItems"] = int(matches.group("min"))
+                        if matches.group("ellipsis") and matches.group("max"):
+                            target_entry["maxItems"] = int(matches.group("max"))
+                        elif not matches.group("ellipsis"):
+                            target_entry["maxItems"] = int(matches.group("min"))
+
+    @staticmethod
     def _get_pattern_constraints(constraints_str, target_dict):
         """
         Process alpha/pattern Constraint into pattern field.
@@ -196,9 +223,11 @@ class DataGroup:  # pylint: disable=R0903
         :param constraints_str:     Raw numerical limits and/or multiple information
         :param target_dict:         json property node
         """
-        if constraints_str is not None and "type" in target_dict and isinstance(constraints_str, str):
-            if "string" in target_dict["type"]:  # String pattern match
-                target_dict["pattern"] = constraints_str.replace('"', "")
+        # TODO: This needs a lot more specificity - use Constraints subclasses to rule out options
+        if constraints_str is not None and "type" in target_dict:
+            if isinstance(constraints_str, str) and not re.match(DataGroup.minmax_range_type, constraints_str):
+                if "string" in target_dict["type"]:  # String pattern match
+                    target_dict["pattern"] = constraints_str.replace('"', "")
 
     @staticmethod
     def _get_numeric_constraints(constraints_str, target_dict):

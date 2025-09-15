@@ -155,7 +155,7 @@ class HeaderTranslator:
             # from_json/to_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
-            # ObjectDeserializationDeclaration(base_level_tag, self._namespace)
+            ObjectDeserializationDeclaration(base_level_tag, self._namespace)
             pass
 
     def _reset_parsing(self):

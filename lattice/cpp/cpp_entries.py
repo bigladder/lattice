@@ -320,14 +320,13 @@ class CPPTranslator:
                     else:
                         c = OwnedElementSerialization(data_element_entry, cpp_entry)
 
-                # cpp_entry = StructDeserialization(h_entry, self._namespace)
+                cpp_entry = StructDeserialization(h_entry, self._namespace)
 
-                # for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
-                #     if "unique_ptr" in data_element_entry.type:
-                #         c = OwnedElementDownload(data_element_entry, cpp_entry)
-                #     else:
-                #         c = OwnedElementDeserialization(data_element_entry, cpp_entry)
-                pass
+                for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
+                    if "unique_ptr" in data_element_entry.type:
+                        c = OwnedElementDownload(data_element_entry, cpp_entry)
+                    else:
+                        c = OwnedElementDeserialization(data_element_entry, cpp_entry)
 
             elif isinstance(h_entry, InlineDependency):
                 cpp_entry = DependencyInitialization(h_entry, self._namespace)

@@ -192,6 +192,8 @@ definitions:
       Data Group Template:
         type: string
         enum: "**GENERATED**"
+      Unit System:
+        type: string
       Data Elements:
         type: object
         patternProperties:
