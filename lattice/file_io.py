@@ -1,9 +1,10 @@
 """Wrapper functions for commonly-used file manipulations"""
 
-import os
 import json
+import os
 import shutil
 from pathlib import Path
+
 import cbor2
 import yaml
 
@@ -85,9 +86,8 @@ def make_dir(dir_path):
     """Return a newly-created directory path"""
     if isinstance(dir_path, Path):
         Path.mkdir(dir_path, exist_ok=True)
-    else:
-        if not os.path.exists(dir_path):
-            os.mkdir(dir_path)
+    elif not os.path.exists(dir_path):
+        os.mkdir(dir_path)
     return dir_path
 
 

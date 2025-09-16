@@ -185,15 +185,50 @@ class DataElementValueConstraint(Constraint):
         assert isinstance(self.parent_data_element.data_type, DataGroupType)
         if self.data_element_name not in self.parent_data_element.data_type.data_group.data_elements:
             raise Exception(
-                f"Data Element Value Constraint '{self.data_element_name}' not found in Data Group '{self.parent_data_element.data_type.data_group_name}'"
+                f"Data Element Value Constraint '{self.data_element_name}' "
+                "not found in Data Group '{self.parent_data_element.data_type.data_group_name}'"
             )
 
         self.data_element = self.parent_data_element.data_type.data_group.data_elements[self.data_element_name]
         match = self.data_element.data_type.value_pattern.match(self.data_element_value)
         if match is None:
             raise Exception(
-                f"Data Element Value Constraint '{self.data_element_value}' does not match the value pattern of '{self.data_element.name}'"
+                f"Data Element Value Constraint '{self.data_element_value}' "
+                "does not match the value pattern of '{self.data_element.name}'"
             )
+
+
+class DataElementValueSubConstraint(Constraint):
+    pattern = RegularExpressionPattern(rf"({_data_element_names})\.Constraints=\"(({RangeConstraint.pattern},?\s?)*)\"")
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        self.pattern = (
+            parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_subconstraint
+        )
+        match = self.pattern.match(self.text)
+        assert match is not None
+        # parent data element must be a data group
+        if not isinstance(self.parent_data_element.data_type, DataGroupType):
+            raise Exception(
+                f"Data Element Value Constraint must be a Data Group Type, not {type(self.parent_data_element)}"
+            )
+
+        self.data_element_name = match.group(1)  # TODO: Named groups?
+        self.data_element_constraint = match.group(5)
+        self.data_element: DataElement
+
+    def resolve(self):
+        assert isinstance(self.parent_data_element.data_type, DataGroupType)
+        if self.data_element_name not in self.parent_data_element.data_type.data_group.data_elements:
+            raise Exception(
+                f"Data Element Value Constraint '{self.data_element_name}' not found in Data Group '"
+                f"{self.parent_data_element.data_type.data_group_name}'"
+            )
+
+        self.data_element = self.parent_data_element.data_type.data_group.data_elements[self.data_element_name]
+        # TODO: Process the constraints for the type's element:
+        self.data_element.set_constraints(self.data_element_constraint)
 
 
 class ArrayLengthLimitsConstraint(Constraint):
@@ -207,6 +242,7 @@ _constraint_list: List[Type[Constraint]] = [
     SelectorConstraint,
     StringPatternConstraint,
     DataElementValueConstraint,
+    DataElementValueSubConstraint,
     ArrayLengthLimitsConstraint,
 ]
 
@@ -231,25 +267,27 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 class DataElement:
     pattern = _data_element_names
 
-    def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):
+    def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):  # noqa: PLR0912 too-many-branches
         self.name = name
         self.dictionary = data_element_dictionary
         self.parent_data_group = parent_data_group
         self.constraints: List[Constraint] = []
         self.is_id = False
-        for attribute in self.dictionary:
+        # Data Type is required by subsequent attribute processing; e.g. some Constraints
+        if "Data Type" in self.dictionary:
+            data_type_str = self.dictionary["Data Type"]
+            if data_type_str == "Numeric":
+                if "Units" not in self.dictionary:
+                    raise ValueError(
+                        f"Units are required for Numeric data type in '"
+                        f"{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}.'"
+                    )
+            self.data_type = self.get_data_type(parent_data_group, data_type_str)
+        for attribute in {k: v for k, v in self.dictionary.items() if k not in {"Data Type"}}:
             if attribute == "Description":
                 self.description = self.dictionary[attribute]
             elif attribute == "Units":
                 self.units = self.dictionary[attribute]
-            elif attribute == "Data Type":
-                data_type_str = self.dictionary[attribute]
-                if data_type_str == "Numeric":
-                    if "Units" not in self.dictionary:
-                        raise ValueError(
-                            f"Units are required for Numeric data type in '{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}."
-                        )
-                self.data_type = self.get_data_type(parent_data_group, data_type_str)
             elif attribute == "Constraints":
                 self.set_constraints(self.dictionary[attribute])
             elif attribute == "Required":
@@ -269,9 +307,9 @@ class DataElement:
 
             else:
                 warnings.warn(
-                    f'Unrecognized attribute, "{attribute}".'
-                    f"Schema={self.parent_data_group.parent_schema.file_path},"
-                    f"Data Group={self.parent_data_group.name},"
+                    f'Unrecognized attribute, "{attribute}". '
+                    f"Schema={self.parent_data_group.parent_schema.file_path}, "
+                    f"Data Group={self.parent_data_group.name}, "
                     f"Data Element={self.name}"
                 )
 
@@ -428,6 +466,7 @@ class SchemaPatterns:
         self.range_constraint = RangeConstraint.pattern
         self.multiple_constraint = MultipleConstraint.pattern
         self.data_element_value_constraint = DataElementValueConstraint.pattern
+        self.data_element_value_subconstraint = DataElementValueSubConstraint.pattern
         sets = SetConstraint.pattern
         reference_scope = f":{_type_base_names}:"
         self.selector_constraint = SelectorConstraint.pattern
@@ -452,7 +491,7 @@ class SchemaPatterns:
 
 
 class Schema:
-    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):  # noqa: PLR0912
+    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):  # noqa: PLR0912 too-many-branches
         self.file_path = file_path.absolute()
         self.source_dictionary = load(self.file_path)
         self.name = get_file_basename(self.file_path, depth=2)
