@@ -200,7 +200,7 @@ class HeaderTranslator:
                          "string": "std::string",
                          "number": "double",
                          "boolean": "bool"}
-            for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "Data Type"]:
+            for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "Type"]:
                 self._fundamental_data_types[base_item] = cpp_types[ext_dict[base_item]["JSON Schema Type"]]
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
@@ -326,7 +326,7 @@ class HeaderTranslator:
     #         for listing in self._contents:
     #             if "Data Elements" in self._contents[listing]:
     #                 for element in self._contents[listing]["Data Elements"]:
-    #                     if element == data_element and "Data Type" in
+    #                     if element == data_element and "Type" in
     #                         self._contents[listing]["Data Elements"][element]:
-    #                         return self._contents[listing]["Data Elements"][element]["Data Type"]
+    #                         return self._contents[listing]["Data Elements"][element]["Type"]
     #     return "MissingType"  # Placeholder base class

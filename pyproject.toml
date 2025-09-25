@@ -39,7 +39,11 @@ ignore = [
     "F405", # undefined-local-with-import-star-usage
 ]
 
+[tool.ruff.lint.pylint]
+max-args = 6
+
 [tool.mypy]
+exclude = ["vendor/"]
 disallow_incomplete_defs = true
 no_implicit_optional = true
 check_untyped_defs = true

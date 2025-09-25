@@ -3,16 +3,17 @@ Functionality to render Jinja templates with an add_schema_table hook to generat
 schema tables in Markdown.
 """
 
-import re
 import os
+import re
 import traceback
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNotFound
-from lattice.file_io import load
 import yaml
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 
-from .schema_table import load_structure_from_object, write_data_model, create_table_from_list
+from lattice.file_io import load
+
 from .grid_table import write_table
+from .schema_table import create_table_from_list, load_structure_from_object, write_data_model
 
 
 def make_args_string(args_dict):
@@ -175,7 +176,7 @@ def write_schema_table(table_dict, table_name, description=None, level=1, style=
     if err is not None:
         return log_error(err, error_log)
     columns = {
-        "data_types": ["Data Type", "Description", "JSON Schema Type", "Examples"],
+        "data_types": ["Type", "Description", "JSON Schema Type", "Examples"],
         "string_types": [
             "String Type",
             "Description",
@@ -186,7 +187,7 @@ def write_schema_table(table_dict, table_name, description=None, level=1, style=
         "data_groups": [
             "Name",
             "Description",
-            "Data Type",
+            "Type",
             "Units",
             "Constraints",
             "Req",

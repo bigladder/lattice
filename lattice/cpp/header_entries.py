@@ -225,13 +225,13 @@ class DataElement(HeaderEntry):
         """Create type node."""
         try:
             # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
-            m = re.findall(r"\[(.*?)\]", element_attributes["Data Type"])
+            m = re.findall(r"\[(.*?)\]", element_attributes["Type"])
             if m:
                 self.type = f"std::vector<{self._get_scoped_inner_type(m[0])}>"
-            elif m := re.match(r"\((?P<comma_separated_selection_types>.*)\)", element_attributes["Data Type"]):
+            elif m := re.match(r"\((?P<comma_separated_selection_types>.*)\)", element_attributes["Type"]):
                 self._get_constrained_base_type(element_attributes, m.group("comma_separated_selection_types"))
             else:
-                self.type = self._get_scoped_inner_type(element_attributes["Data Type"])
+                self.type = self._get_scoped_inner_type(element_attributes["Type"])
         except KeyError:
             pass
 
@@ -296,7 +296,7 @@ class DataElement(HeaderEntry):
         form          ({Type_1},   {Type_2},   {Type_3}), all deriving from a base TypeBase
         """
         selection_key = element_attributes["Constraints"].split("(")[0]
-        selection_key_enum_class = self._get_scoped_inner_type(self._data_group_attributes[selection_key]["Data Type"])
+        selection_key_enum_class = self._get_scoped_inner_type(self._data_group_attributes[selection_key]["Type"])
         selection_types = [self._get_scoped_inner_type(t.strip()) for t in match_result.split(",")]
         m_opt = re.match(r".*\((?P<comma_separated_constraints>.*)\)", element_attributes["Constraints"])
         if not m_opt:

@@ -2,9 +2,9 @@
 Specifics for setting up schema tables.
 """
 
-from copy import deepcopy
 import io
 import re
+from copy import deepcopy
 
 from .grid_table import write_table
 
@@ -67,12 +67,12 @@ def data_elements_dict_from_data_groups(data_groups):
             if "Required" in new_obj:
                 if isinstance(new_obj["Required"], bool):
                     if new_obj["Required"]:
-                        new_obj["Required"] = f"True" if new_obj["Required"] else ""
+                        new_obj["Required"] = "True" if new_obj["Required"] else ""
                     else:
                         new_obj["Required"] = ""
                 else:
                     new_obj["Required"] = f"`{new_obj['Required']}`"
-            new_obj["Data Type"] = f"`{new_obj['Data Type']}`"
+            new_obj["Type"] = f"`{new_obj['Type']}`"
             if "Constraints" in new_obj:
                 gte = "\N{GREATER-THAN OR EQUAL TO}"
                 lte = "\N{LESS-THAN OR EQUAL TO}"
@@ -127,9 +127,9 @@ def load_structure_from_object(instance):
 
     for obj in instance:
         object_type = instance[obj]["Object Type"]
-        if object_type == "Data Type":
+        if object_type == "Type":
             new_obj = instance[obj]
-            new_obj["Data Type"] = f"`{obj}`"
+            new_obj["Type"] = f"`{obj}`"
             new_obj["Examples"] = ", ".join(new_obj["Examples"])
             data_types.append(new_obj)
         elif object_type == "String Type":
@@ -157,7 +157,7 @@ def load_structure_from_object(instance):
     }
 
 
-def create_table_from_list(columns, data_list, description=None, style="2 Columns", level=1):
+def create_table_from_list(columns, data_list, description=None, style="2 Columns", level=1):  # noqa: PLR0912 Too many branches
     """
     - columns: array of string, the column headers
     - data_list: array of dict with keys corresponding to columns array
@@ -217,7 +217,7 @@ def write_data_model(instance, base_level=1, style="2 Columns"):
             output_file.writelines(write_header("Data Types", base_level))
             output_file.writelines(
                 create_table_from_list(
-                    ["Data Type", "Description", "JSON Schema Type", "Examples"],
+                    ["Type", "Description", "JSON Schema Type", "Examples"],
                     struct["data_types"],
                     level=base_level + 1,
                     style=style,
@@ -258,7 +258,7 @@ def write_data_model(instance, base_level=1, style="2 Columns"):
             for dg, data_elements in struct[table_type].items():
                 output_file.writelines(
                     create_table_from_list(
-                        ["Name", "Description", "Data Type", "Units", "Constraints", "Required", "Scalable", "Notes"],
+                        ["Name", "Description", "Type", "Units", "Constraints", "Required", "Scalable", "Notes"],
                         data_elements,
                         description=dg,
                         level=base_level + 1,

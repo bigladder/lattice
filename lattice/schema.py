@@ -51,7 +51,7 @@ class DataType:
             f"{self.parent_data_element.parent_data_group.parent_schema.name}."
             f"{self.parent_data_element.parent_data_group.name}."
             f"{self.parent_data_element.name}."
-            f"Data Type"
+            f"Type"
         )
 
     def resolve(self):
@@ -220,6 +220,7 @@ class DataElementValueSubConstraint(Constraint):
 
     def resolve(self):
         assert isinstance(self.parent_data_element.data_type, DataGroupType)
+        assert self.parent_data_element.data_type.data_group is not None
         if self.data_element_name not in self.parent_data_element.data_type.data_group.data_elements:
             raise Exception(
                 f"Data Element Value Constraint '{self.data_element_name}' not found in Data Group '"
@@ -274,8 +275,8 @@ class DataElement:
         self.constraints: List[Constraint] = []
         self.is_id = False
         # Data Type is required by subsequent attribute processing; e.g. some Constraints
-        if "Data Type" in self.dictionary:
-            data_type_str = self.dictionary["Data Type"]
+        if "Type" in self.dictionary:
+            data_type_str = self.dictionary["Type"]
             if data_type_str == "Numeric":
                 if "Units" not in self.dictionary:
                     raise ValueError(
@@ -283,7 +284,7 @@ class DataElement:
                         f"{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}.'"
                     )
             self.data_type = self.get_data_type(parent_data_group, data_type_str)
-        for attribute in {k: v for k, v in self.dictionary.items() if k not in {"Data Type"}}:
+        for attribute in {k: v for k, v in self.dictionary.items() if k not in {"Type"}}:
             if attribute == "Description":
                 self.description = self.dictionary[attribute]
             elif attribute == "Units":
@@ -537,7 +538,7 @@ class Schema:
                 self.data_groups[object_name] = DataGroup(object_name, self.source_dictionary[object_name], self)
             elif object_type == "Enumeration":
                 self.enumerations[object_name] = Enumeration(object_name, self.source_dictionary[object_name], self)
-            elif object_type == "Data Type":
+            elif object_type == "Type":
                 self.data_types[object_name] = FundamentalDataType(
                     object_name, self.source_dictionary[object_name], self
                 )

@@ -4,7 +4,7 @@ import os
 import re
 import warnings
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from .file_io import dump, get_base_stem, load
 from .meta_schema import MetaSchema
@@ -47,14 +47,14 @@ class DataGroup:  # pylint: disable=R0903
         :param group_name:      Data Group name; this will become a schema definition key
         :param group_subdict:   Dictionary of Data Elements where each element is a key
         """
-        elements = {"type": "object", "properties": {}}
+        elements: dict[str, Any] = {"type": "object", "properties": {}}
         required = []
-        dependencies = {}
+        dependencies: dict[str, Any] = {}
         for e in group_subdict:
             element = group_subdict[e]
             if "Description" in element:
                 elements["properties"][e] = {"description": element["Description"]}
-            if "Data Type" in element:
+            if "Type" in element:
                 try:
                     self._create_type_entry(group_subdict[e], elements, e)
                 except RuntimeError as r:
@@ -88,25 +88,25 @@ class DataGroup:  # pylint: disable=R0903
             target_dict["properties"][entry_name] = {}
         target_property_entry = target_dict["properties"][entry_name]
 
-        matches = self._match_types.match(parent_dict["Data Type"])
+        matches = self._match_types.match(parent_dict["Type"])
         if matches:
             if matches.group("array_or_alternative"):
                 self._populate_array_type(parent_dict, target_property_entry, matches)
             elif matches.group("one_of"):
                 self._populate_selector_types(parent_dict, target_property_entry, matches, entry_name)
-        elif parent_dict["Data Type"] in ["ID", "Reference"]:
+        elif parent_dict["Type"] in ["ID", "Reference"]:
             try:
                 m = re.match(DataGroup.scope_constraint, parent_dict["Constraints"])
                 if m:
-                    target_property_entry["scopedType"] = parent_dict["Data Type"]
+                    target_property_entry["scopedType"] = parent_dict["Type"]
                     target_property_entry["scope"] = m.group("scope")
-                    self._get_simple_type(parent_dict["Data Type"], target_property_entry)
+                    self._get_simple_type(parent_dict["Type"], target_property_entry)
             except KeyError:
                 raise RuntimeError(f'"Constraints" key does not exist for Data Element "{entry_name}".') from None
         else:
             # 1. 'type' entry
             try:
-                self._get_simple_type(parent_dict["Data Type"], target_property_entry)
+                self._get_simple_type(parent_dict["Type"], target_property_entry)
             except KeyError as e:
                 raise RuntimeError from e
             # 2. string pattern or 'm[in/ax]imum' entry
@@ -287,7 +287,7 @@ class DataGroup:  # pylint: disable=R0903
         dependencies_list: dict,
         requirement_str: str,
         requirement: str,
-    ):
+    ) -> None:
         """
         Construct paired if-then json entries for conditional requirements.
 
@@ -343,7 +343,7 @@ class Enumeration:
     def __init__(self, name, description=None):
         self._name = name
         self._enumerants = []  # list of tuple:[value, description, display_text, notes]
-        self.entry = {}
+        self.entry: dict[str, Any] = {}
         self.entry[self._name] = {}
         if description:
             self.entry[self._name]["description"] = description
@@ -401,7 +401,7 @@ class ObjectTypeList:
         """Return a list of the object types available in the schema"""
         return self._object_structure.keys()
 
-    def object_list(self, object_type: str):
+    def object_list(self, object_type: str) -> list:
         """
         Return the list of objects under a given key
 
@@ -478,7 +478,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
         """Return the translated JSON schema dictionary"""
         return self._schema
 
-    def _load_meta_info(self, schema_section: dict):
+    def _load_meta_info(self, schema_section: dict) -> None:
         """Store the global/common types and the types defined by any named references."""
         self._schema["title"] = schema_section["Title"]
         self._schema["description"] = schema_section["Description"]
@@ -518,7 +518,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                 if ext_dict[base_item]["Object Type"] in self._schema_object_types | self._data_group_types
             ]
 
-    def _process_enumeration(self, name_key: str):
+    def _process_enumeration(self, name_key: str) -> dict[str, dict]:
         """Collect all Enumerators in an Enumeration block."""
         enums = self._contents[name_key]["Enumerators"]
         description = self._contents[name_key].get("Description")
@@ -535,7 +535,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
 
 
 # -------------------------------------------------------------------------------------------------
-def generate_core_json_schema(processing_path: Path):
+def generate_core_json_schema(processing_path: Path) -> dict:
     """
     Create JSON schema from core YAML schema. Any forward-declarations in core must be found in
     the schema in the processing path.
@@ -659,7 +659,7 @@ def get_reference_value(data_dict: dict, lineage: list) -> dict:
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_references(input_file: Path, input_schema: Path):
+def postvalidate_references(input_file: Path, input_schema: Path) -> None:
     """
     Make sure IDs and References match in scope.
 
@@ -684,7 +684,7 @@ def postvalidate_references(input_file: Path, input_schema: Path):
 
 
 # -------------------------------------------------------------------------------------------------
-def validate_file(input_file: Path, input_schema: Path):
+def validate_file(input_file: Path, input_schema: Path) -> None:
     """
     Validate example against schema.
 
@@ -696,7 +696,7 @@ def validate_file(input_file: Path, input_schema: Path):
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_file(input_file: Path, input_schema: Path):
+def postvalidate_file(input_file: Path, input_schema: Path) -> None:
     """
     Validate input example against external rules; currently scopes dictated in schema.
 

@@ -31,35 +31,35 @@ TimeIntervals:
   Data Elements:
     id:
       Description: Reference identification
-      Data Type: String
+      Type: String
       Required: true
       ID: true
     starting_time:
       Description: Timestamp indicating the beginning of the data
-      Data Type: Timestamp
+      Type: Timestamp
       Required: True
       Notes: Used to determine the "previous" timestamp for the first value in a time series where the time series type is not `INSTANTANEOUS`
     regular_interval:
       Description: Duration of regular interval
-      Data Type: Numeric
+      Type: Numeric
       Units: s
       Constraints: ">0"
       Required: "if !timestamps"
     timestamps:
       Description: Array of timestamps
-      Data Type: "[Timestamp]"
+      Type: "[Timestamp]"
       Constraints:
         - "[1..]"
       Required: "if !regular_interval"
     labels:
       Description: Informal labels describing each time interval
-      Data Type: "[String]"
+      Type: "[String]"
       Constraints:
         - "[1..]"
       Notes: "e.g., month names for monthly intervals"
     notes:
       Description: Notes about each time interval
-      Data Type: "[String]"
+      Type: "[String]"
       Constraints:
         - "[1..]"
 
@@ -68,23 +68,23 @@ TimeSeries:
   Data Elements:
     name:
       Description: Name of this time series
-      Data Type: String
+      Type: String
       Required: true
     units:
       Description: Units of measurement for this time series
-      Data Type: String
+      Type: String
       Required: true
     time_series_type:
       Description: Type of value
-      Data Type: <TimeSeriesType>
+      Type: <TimeSeriesType>
       Required: true
     value_time_intervals:
       Description: Reference to a `TimeInterval` data group associated with this time series
-      Data Type: ":TimeIntervals:"
+      Type: ":TimeIntervals:"
       Required: true
     values:
       Description: Time series data values
-      Data Type: "[Numeric]"
+      Type: "[Numeric]"
       Constraints:
         - "[1..]"
       Required: true

@@ -170,7 +170,7 @@ definitions:
     properties: # TODO: Need to allow custom attributes
       Description:
         type: string
-      Data Type:
+      Type:
         "$ref": meta.schema.json#/definitions/DataTypePattern
       Units:
         "anyOf":
