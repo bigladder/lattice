@@ -96,7 +96,7 @@ def enumerators_dict_from_enumerations(enumerations):
     - enumerations: dict, the enumeration objects
     RETURN: list of dict, the enumeration objects as a list
     """
-    output = {}
+    output: dict[str, list] = {}
     for enum in enumerations:
         output[enum] = []
         for enumerator in enumerations[enum]["Enumerators"]:
@@ -168,7 +168,7 @@ def create_table_from_list(columns, data_list, description=None, style="2 Column
     if len(data_list) == 0:
         return ""
     if style == "Table":
-        data = {col: [] for col in columns}
+        data: dict[str, list] = {col: [] for col in columns}
         for col in columns:
             data[col] = []
             for item in data_list:

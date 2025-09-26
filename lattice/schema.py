@@ -283,7 +283,7 @@ class DataElement:
                         f"Units are required for Numeric data type in '"
                         f"{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}.'"
                     )
-            self.data_type = self.get_data_type(parent_data_group, data_type_str)
+            self.data_type = self.get_data_type(data_type_str)
         for attribute in {k: v for k, v in self.dictionary.items() if k not in {"Type"}}:
             if attribute == "Description":
                 self.description = self.dictionary[attribute]
@@ -314,7 +314,7 @@ class DataElement:
                     f"Data Element={self.name}"
                 )
 
-    def get_data_type(self, parent_data_group: DataGroup, attribute_str: str) -> DataType:
+    def get_data_type(self, attribute_str: str) -> DataType:
         """
         Returns the data type from the attribute string.
         """
@@ -326,6 +326,7 @@ class DataElement:
                     return reference_schema.data_type_factory(attribute_str, self)
                 except RuntimeError:
                     continue
+        raise RuntimeError  # if you haven't returned a valid DataType by now
 
     def set_constraints(self, constraints_input: Union[str, List[str]]) -> None:
         if not isinstance(constraints_input, list):
