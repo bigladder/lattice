@@ -304,7 +304,7 @@ class CPPTranslator:
 
         self._get_items_to_serialize(header_tree.root)
 
-    def _get_items_to_serialize(self, header_tree: HeaderEntry):  # noqa: PLR0912 too-many-branches
+    def _get_items_to_serialize(self, header_tree: HeaderEntry) -> None:  # noqa: PLR0912 too-many-branches
         for h_entry in header_tree.child_entries:
             cpp_entry: Optional[ImplementationEntry] = None
             logger.debug(f"Header entry being processed: {h_entry.name} under {h_entry.parent.name}")

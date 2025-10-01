@@ -1,14 +1,15 @@
 """This module encapsulates JSON translation and validation functions for YAML source schema"""
 
 import os
-import re
 import warnings
 from pathlib import Path
 from typing import Any, Optional
 
+import regex
+
 from .file_io import dump, get_base_stem, load
 from .meta_schema import MetaSchema
-from .schema import ReferenceType
+from .schema import AlternativeType, ArrayType, DataGroupType, EnumerationType, NumericType, ReferenceType
 
 # 'once': Suppress multiple warnings from the same location.
 # 'always': Show all warnings
@@ -20,25 +21,15 @@ warnings.simplefilter("always", UserWarning)
 class DataGroup:  # pylint: disable=R0903
     """Class to convert source schema Data Group Objects into JSON"""
 
-    # The following regular expressions are explicity not Unicode
-    array_type = r"^\[(?P<array_of>.*?)\]"  # Array of type 'Type' e.g. '[Type]'
-    # just the first [] pair; using non-greedy '?'
-    alternative_type = r"^\((?P<one_of>.*)\)"  # Parentheses encapsulate a list of options
     # Parse ellipsis range-notation e.g. '[1..]'
     minmax_range_type = r"\[(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)\]"
-
-    enum_or_def_or_ref = r"(\{|\<|:)(.*)(\}|\>|:)"
-    numeric_type = r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
+    # numeric_type = r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
     scope_constraint = r"^:(?P<scope>.*):"  # Lattice scope constraint for ID/Reference
-    # ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
 
     def __init__(self, name, type_list, ref_list):
         self._name = name
         self._types = type_list
         self._refs = ref_list
-        self._match_types = re.compile(
-            f"(?P<array_or_alternative>{DataGroup.array_type})|({DataGroup.alternative_type})"
-        )
 
     def add_data_group(self, group_name, group_subdict):
         """
@@ -88,15 +79,13 @@ class DataGroup:  # pylint: disable=R0903
             target_dict["properties"][entry_name] = {}
         target_property_entry = target_dict["properties"][entry_name]
 
-        matches = self._match_types.match(parent_dict["Type"])
-        if matches:
-            if matches.group("array_or_alternative"):
-                self._populate_array_type(parent_dict, target_property_entry, matches)
-            elif matches.group("one_of"):
-                self._populate_selector_types(parent_dict, target_property_entry, matches, entry_name)
+        if matches := ArrayType.pattern.match(parent_dict["Type"]):
+            self._populate_array_type(parent_dict, target_property_entry, matches)
+        elif matches := AlternativeType.pattern.match(parent_dict["Type"]):
+            self._populate_selector_types(parent_dict, target_property_entry, matches, entry_name)
         elif parent_dict["Type"] in ["ID", "Reference"]:
             try:
-                m = re.match(DataGroup.scope_constraint, parent_dict["Constraints"])
+                m = regex.match(DataGroup.scope_constraint, parent_dict["Constraints"])
                 if m:
                     target_property_entry["scopedType"] = parent_dict["Type"]
                     target_property_entry["scope"] = m.group("scope")
@@ -125,17 +114,10 @@ class DataGroup:  # pylint: disable=R0903
         target_entry["type"] = "array"
         # 2. 'm[in/ax]Items' entry
         DataGroup._get_length_constraints(parent_dict.get("Constraints"), target_entry)
-        # if matches.group("min"):
-        #     # Parse ellipsis range-notation e.g. '[1..]'
-        #     target_entry["minItems"] = int(matches.group("min"))
-        #     if matches.group("ellipsis") and matches.group("max"):
-        #         target_entry["maxItems"] = int(matches.group("max"))
-        #     elif not matches.group("ellipsis"):
-        #         target_entry["maxItems"] = int(matches.group("min"))
         # 3. 'items' entry
         target_entry["items"] = {}
-        if matches.group("array_of"):
-            self._get_simple_type(matches.group("array_of"), target_entry["items"])
+        if m := matches.group("ArrayTypeName"):
+            self._get_simple_type(m, target_entry["items"])
             DataGroup._get_pattern_constraints(parent_dict.get("Constraints"), target_entry["items"])
             DataGroup._get_numeric_constraints(parent_dict.get("Constraints"), target_entry["items"])
 
@@ -148,7 +130,7 @@ class DataGroup:  # pylint: disable=R0903
         :param matches:      Match object for a one_of regex
         :param entry_name:   Data Element name
         """
-        types = [t.strip() for t in matches.group("one_of").split(",")]
+        types = matches.captures("AlternativeTypeName")
         selection_key, selections = parent_dict["Constraints"].split("(")
         if target_entry.get("allOf") is None:
             target_entry["allOf"] = []
@@ -170,13 +152,13 @@ class DataGroup:  # pylint: disable=R0903
         :param target_dict_to_append:   The json "items" node
         """
         internal_type = None
-        m = re.match(DataGroup.enum_or_def_or_ref, type_str)
-        if m:
-            internal_type = m.group(2)
-            if ReferenceType.pattern.match(type_str):
-                target_dict_to_append["type"] = "string"
-                return
-
+        if m := DataGroupType.pattern.match(type_str):
+            internal_type = m.group("DataGroupName")
+        elif m := EnumerationType.pattern.match(type_str):
+            internal_type = m.group("EnumerationTypeName")
+        elif ReferenceType.pattern.match(type_str):
+            target_dict_to_append["type"] = "string"
+            return
         else:
             internal_type = type_str
         # Look through the references to assign a source to the type
@@ -186,10 +168,10 @@ class DataGroup:  # pylint: disable=R0903
                 target_dict_to_append["$ref"] = internal_type
                 return
         try:
-            target_dict_to_append["type"] = self._types[type_str]
+            target_dict_to_append["type"] = self._types[internal_type]
         except KeyError:
             raise KeyError(
-                f"Unknown type: {type_str} does not appear in referenced schema "
+                f"Unknown type: {internal_type} does not appear in referenced schema "
                 f"{list(self._refs.keys())} or type map {self._types}"
             ) from None
         return
@@ -205,7 +187,7 @@ class DataGroup:  # pylint: disable=R0903
         if constraints_str is not None:
             constraints = constraints_str if isinstance(constraints_str, list) else [constraints_str]
             for c in constraints:
-                matches = re.match(DataGroup.minmax_range_type, c)
+                matches = regex.match(DataGroup.minmax_range_type, c)
                 if matches:
                     if matches.group("min"):
                         # Parse ellipsis range-notation e.g. '[1..]'
@@ -225,7 +207,7 @@ class DataGroup:  # pylint: disable=R0903
         """
         # TODO: This needs a lot more specificity - use Constraints subclasses to rule out options
         if constraints_str is not None and "type" in target_dict:
-            if isinstance(constraints_str, str) and not re.match(DataGroup.minmax_range_type, constraints_str):
+            if isinstance(constraints_str, str) and not regex.match(DataGroup.minmax_range_type, constraints_str):
                 if "string" in target_dict["type"]:  # String pattern match
                     target_dict["pattern"] = constraints_str.replace('"', "")
 
@@ -244,17 +226,22 @@ class DataGroup:  # pylint: disable=R0903
             for c in constraints:
                 try:
                     # Process numeric constraints
-                    numerical_value = re.findall(DataGroup.numeric_type, c)[0]
-                    if ">" in c:
-                        minimum = float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
-                        mn = "exclusiveMinimum" if "=" not in c else "minimum"
-                        target_dict[mn] = minimum
-                    elif "<" in c:
-                        maximum = float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
-                        mx = "exclusiveMaximum" if "=" not in c else "maximum"
-                        target_dict[mx] = maximum
-                    elif "%" in c:
-                        target_dict["multipleOf"] = int(numerical_value)
+                    numerical_value = NumericType.value_pattern.match(c)
+                    if numerical_value and numerical_value.group("NumericalTypeValue"):
+                        if ">" in c:
+                            minimum = (
+                                float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
+                            )
+                            mn = "exclusiveMinimum" if "=" not in c else "minimum"
+                            target_dict[mn] = minimum
+                        elif "<" in c:
+                            maximum = (
+                                float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
+                            )
+                            mx = "exclusiveMaximum" if "=" not in c else "maximum"
+                            target_dict[mx] = maximum
+                        elif "%" in c:
+                            target_dict["multipleOf"] = int(numerical_value)
                 except IndexError:
                     pass
                 except ValueError:
@@ -297,12 +284,12 @@ class DataGroup:  # pylint: disable=R0903
         separator = r"\sand\s"
         # collector = "allOf"
         selector_dict: dict = {"properties": {}}
-        requirement_list = re.split(separator, requirement_str)
+        requirement_list = regex.split(separator, requirement_str)
         # pylint: disable-next=line-too-long
         dependent_req = r"(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?"
 
         for req in requirement_list:
-            m = re.match(dependent_req, req)
+            m = regex.match(dependent_req, req)
             if m:
                 selector = m.group("selector")
                 if m.group("is_equal"):

@@ -3,9 +3,10 @@ from __future__ import (
 )  # Needed for type hinting classes that are not yet fully defined
 
 import pathlib
-import re
 import warnings
 from typing import Any, Dict, List, Type, Union
+
+import regex
 
 from .file_io import get_file_basename, load
 
@@ -14,13 +15,13 @@ core_schema_path = pathlib.Path(pathlib.Path(__file__).parent, "core.schema.yaml
 
 class RegularExpressionPattern:
     def __init__(self, pattern_string: str) -> None:
-        self.pattern = re.compile(pattern_string)
-        self.anchored_pattern = re.compile(self.anchor(pattern_string))
+        self.pattern = regex.compile(pattern_string)
+        self.anchored_pattern = regex.compile(self.anchor(pattern_string))
 
     def __str__(self):
         return self.pattern.pattern
 
-    def match(self, test_string: str, anchored: bool = False) -> Union[re.Match[str], None]:
+    def match(self, test_string: str, anchored: bool = False) -> Union[regex.Match, None]:
         return self.pattern.match(test_string) if not anchored else self.anchored_pattern.match(test_string)
 
     def anchored(self):
@@ -36,6 +37,11 @@ class RegularExpressionPattern:
 # Data Types
 _type_base_names = RegularExpressionPattern("[A-Z]([A-Z]|[a-z]|[0-9])*")
 _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
+
+
+# Module functions
+def unname_group(expression: RegularExpressionPattern) -> str:
+    return regex.sub(r"\?P<\w+>", "?:", str(expression))
 
 
 class DataType:
@@ -65,7 +71,7 @@ class IntegerType(DataType):
 
 class NumericType(DataType):
     pattern = RegularExpressionPattern("(Numeric)")
-    value_pattern = RegularExpressionPattern("([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
+    value_pattern = RegularExpressionPattern("(?P<NumericTypeValue>[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
 
 
 class BooleanType(DataType):
@@ -84,13 +90,15 @@ class PatternType(DataType):
 
 
 class DataGroupType(DataType):
-    pattern = RegularExpressionPattern(rf"\{{({_type_base_names})\}}")
+    pattern = RegularExpressionPattern(
+        rf"{{(?P<DataGroupName>{_type_base_names})}}|Group\((?P<DataGroupName>{_type_base_names})\)"
+    )  # noqa: E501
 
     def __init__(self, text, parent_data_element):
         super().__init__(text, parent_data_element)
         match = self.pattern.match(text)
         assert match is not None
-        self.data_group_name = match.group(1)
+        self.data_group_name = match.group("DataGroupName")
         self.data_group = None  # only valid once resolve() is called
 
     def resolve(self):
@@ -98,20 +106,32 @@ class DataGroupType(DataType):
 
 
 class EnumerationType(DataType):
-    pattern = RegularExpressionPattern(rf"<{_type_base_names}>")
+    pattern = RegularExpressionPattern(
+        rf"<(?P<EnumerationTypeName>{_type_base_names})>|"
+        rf"Enumeration\((?P<EnumerationTypeName>{_type_base_names})\)"
+    )
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
 
 
 class AlternativeType(DataType):
-    pattern = RegularExpressionPattern(r"\(([^\s,]+)((, ?([^\s,]+))+)\)")
+    pattern = RegularExpressionPattern(
+        r"\((?P<AlternativeTypeName>[^\s,]+)((, ?(?P<AlternativeTypeName>[^\s,]+))+)\)|"
+        r"Alternative\((?P<AlternativeTypeName>[^\s,]+)((, ?(?P<AlternativeTypeName>[^\s,]+))+)\)"
+    )  # noqa: E501
 
 
 class ReferenceType(DataType):
-    pattern = RegularExpressionPattern(rf":{_type_base_names}:")
+    pattern = RegularExpressionPattern(
+        rf":(?P<ReferenceTypeName>{_type_base_names}):|"
+        rf"Reference\(Group\((?P<ReferenceTypeName>{_type_base_names})\)\)"
+    )
 
 
 class ArrayType(DataType):
-    pattern = RegularExpressionPattern(rf"\[({_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]")
+    pattern = RegularExpressionPattern(
+        rf"\[(?P<ArrayTypeName>{_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]|"  # noqa: E501
+        rf"Array\((?P<ArrayTypeName>{_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\)"
+    )
 
 
 _value_pattern = RegularExpressionPattern(
@@ -148,7 +168,7 @@ class SetConstraint(Constraint):
 
 class SelectorConstraint(Constraint):
     pattern = RegularExpressionPattern(
-        rf"{_data_element_names}\({EnumerationType.value_pattern}(, ?{EnumerationType.value_pattern})*\)"
+        rf"{_data_element_names}\((?P<SelectorValue>{EnumerationType.value_pattern})(, ?(?P<SelectorValue>{EnumerationType.value_pattern}))*\)"  # noqa: E501
     )
 
 
@@ -158,13 +178,15 @@ class StringPatternConstraint(Constraint):
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
         try:
-            re.compile(text)
-        except re.error:
+            regex.compile(text)
+        except regex.error:
             raise Exception(f"Invalid regular expression: {text}")  # pylint:disable=W0707
 
 
 class DataElementValueConstraint(Constraint):
-    pattern = RegularExpressionPattern(f"({_data_element_names})=({_value_pattern})")
+    pattern = RegularExpressionPattern(
+        f"(?P<DataElementName>{_data_element_names})=(?P<ConstrainedValue>{_value_pattern})"
+    )  # noqa: E501
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
@@ -177,12 +199,13 @@ class DataElementValueConstraint(Constraint):
                 f"Data Element Value Constraint must be a Data Group Type, not {type(self.parent_data_element)}"
             )
 
-        self.data_element_name = match.group(1)  # TODO: Named groups?
-        self.data_element_value = match.group(5)
+        self.data_element_name = match.group("DataElementName")
+        self.data_element_value = match.group("ConstrainedValue")
         self.data_element: DataElement
 
     def resolve(self):
         assert isinstance(self.parent_data_element.data_type, DataGroupType)
+        assert self.parent_data_element.data_type.data_group is not None
         if self.data_element_name not in self.parent_data_element.data_type.data_group.data_elements:
             raise Exception(
                 f"Data Element Value Constraint '{self.data_element_name}' "
@@ -451,12 +474,12 @@ class SchemaPatterns:
         re_string_types_string = "|".join(string_types)
         re_string_types = RegularExpressionPattern(f"({re_string_types_string})")
 
-        self.data_group_types = DataGroupType.pattern
-        self.enumeration_types = EnumerationType.pattern
-        references = ReferenceType.pattern
+        self.data_group_types = unname_group(DataGroupType.pattern)
+        self.enumeration_types = unname_group(EnumerationType.pattern)
+        references = unname_group(ReferenceType.pattern)
         single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types}|{references})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
-        arrays = ArrayType.pattern
+        arrays = unname_group(ArrayType.pattern)
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
@@ -465,13 +488,13 @@ class SchemaPatterns:
         )
 
         # Constraints
-        self.range_constraint = RangeConstraint.pattern
-        self.multiple_constraint = MultipleConstraint.pattern
+        self.range_constraint = unname_group(RangeConstraint.pattern)
+        self.multiple_constraint = unname_group(MultipleConstraint.pattern)
         self.data_element_value_constraint = DataElementValueConstraint.pattern
         self.data_element_value_subconstraint = DataElementValueSubConstraint.pattern
-        sets = SetConstraint.pattern
+        sets = unname_group(SetConstraint.pattern)
         reference_scope = f":{_type_base_names}:"
-        self.selector_constraint = SelectorConstraint.pattern
+        self.selector_constraint = unname_group(SelectorConstraint.pattern)
         array_limits = ArrayLengthLimitsConstraint.pattern
         string_patterns = StringPatternConstraint.pattern
 

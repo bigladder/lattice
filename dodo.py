@@ -40,7 +40,12 @@ def task_generate_meta_schemas():
         yield {
             "name": name,
             "file_dep": [schema.file_path for schema in example.schemas]
-            + [BASE_META_SCHEMA_PATH, CORE_SCHEMA_PATH, Path(SOURCE_PATH, "meta_schema.py")],
+            + [
+                BASE_META_SCHEMA_PATH,
+                CORE_SCHEMA_PATH,
+                Path(SOURCE_PATH, "meta_schema.py"),
+                Path(SOURCE_PATH, "schema.py"),
+            ],
             "targets": [schema.meta_schema_path for schema in example.schemas],
             "actions": [(example.generate_meta_schemas, [])],
             "clean": True,

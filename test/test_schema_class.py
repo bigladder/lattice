@@ -14,5 +14,3 @@ def test_schema():
         print(f"\nEnumeration: {enumeration.name}")
         for enumerator in enumeration.enumerators.values():
             print(f"  {enumerator.name}")
-
-    print(schema.root_data_group.name)
