@@ -3,7 +3,6 @@ from __future__ import (
 )  # Needed for type hinting classes that are not yet fully defined
 
 import pathlib
-import warnings
 from typing import Any, Dict, List, Type, Union
 
 import regex
@@ -27,6 +26,9 @@ class RegularExpressionPattern:
     def anchored(self):
         return self.anchored_pattern.pattern
 
+    def cleaned(self) -> str:
+        return regex.sub(r"\?P<\w+>", "?:", self.pattern.pattern)
+
     @staticmethod
     def anchor(pattern_text: str) -> str:
         return f"^{pattern_text}$"
@@ -40,8 +42,6 @@ _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)
 
 
 # Module functions
-def unname_group(expression: RegularExpressionPattern) -> str:
-    return regex.sub(r"\?P<\w+>", "?:", str(expression))
 
 
 class DataType:
@@ -291,7 +291,12 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 class DataElement:
     pattern = _data_element_names
 
-    def __init__(self, name: str, data_element_dictionary: dict, parent_data_group: DataGroup):  # noqa: PLR0912 too-many-branches
+    def __init__(  # noqa: PLR0912 too-many-branches
+        self,
+        name: str,
+        data_element_dictionary: dict,
+        parent_data_group: DataGroup,
+    ):
         self.name = name
         self.dictionary = data_element_dictionary
         self.parent_data_group = parent_data_group
@@ -307,6 +312,7 @@ class DataElement:
                         f"{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}.'"
                     )
             self.data_type = self.get_data_type(data_type_str)
+            self._assign_custom_attributes_to_type(data_type_str)
         for attribute in {k: v for k, v in self.dictionary.items() if k not in {"Type"}}:
             if attribute == "Description":
                 self.description = self.dictionary[attribute]
@@ -328,13 +334,15 @@ class DataElement:
                             f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}':"
                             f" '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
                         )
-
+            elif attribute in self.parent_data_group.custom_element_attributes:
+                continue
             else:
-                warnings.warn(
+                raise UnrecognizedAttributeError(
                     f'Unrecognized attribute, "{attribute}". '
                     f"Schema={self.parent_data_group.parent_schema.file_path}, "
                     f"Data Group={self.parent_data_group.name}, "
-                    f"Data Element={self.name}"
+                    f"Data Element={self.name}",
+                    f"{attribute}",
                 )
 
     def get_data_type(self, attribute_str: str) -> DataType:
@@ -362,6 +370,18 @@ class DataElement:
         self.data_type.resolve()
         for constraint in self.constraints:
             constraint.resolve()
+
+    def _assign_custom_attributes_to_type(self, data_type_str: str) -> None:
+        if m := self.data_type.pattern.match(data_type_str):
+            try:
+                internal_type = m.group("DataGroupName")
+                assert self.parent_data_group.parent_schema
+                if internal_type in self.parent_data_group.parent_schema.data_groups:
+                    self.parent_data_group.parent_schema.data_groups[internal_type].custom_element_attributes.update(
+                        self.parent_data_group.custom_element_attributes
+                    )
+            except IndexError:
+                pass
 
 
 class FundamentalDataType:
@@ -400,12 +420,24 @@ class DataGroup:
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
+        self.parent_template: DataGroupTemplate | None = self._assign_template(
+            self.dictionary.get("Data Group Template", "")
+        )
         self.data_elements: dict[str, DataElement] = {}
+        self.custom_element_attributes: set[str] = (
+            self.parent_template.custom_element_attributes if self.parent_template else set()
+        )
         self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
-        for data_element in self.dictionary["Data Elements"]:
-            self.data_elements[data_element] = DataElement(
-                data_element, self.dictionary["Data Elements"][data_element], self
-            )
+        # for data_element in self.dictionary["Data Elements"]:
+        #     self.data_elements[data_element] = DataElement(
+        #         data_element, self.dictionary["Data Elements"][data_element], self
+        #     )
+
+    def _assign_template(self, template_name: str) -> DataGroupTemplate | None:
+        for reference_schema in self.parent_schema.reference_schemas.values():
+            if template_name in reference_schema.data_group_templates:
+                return reference_schema.data_group_templates[template_name]
+        return None
 
     def resolve(self):
         for data_element in self.data_elements.values():
@@ -436,6 +468,8 @@ class DataGroupTemplate:
         self.name = name
         self.dictionary = data_group_template_dictionary
         self.parent_schema = parent_schema
+        # Custom Attributes should eventually be a dictionary
+        self.custom_element_attributes: set[str] = set(self.dictionary.get("Custom Attributes", {}).keys())
 
 
 class SchemaPatterns:
@@ -474,12 +508,12 @@ class SchemaPatterns:
         re_string_types_string = "|".join(string_types)
         re_string_types = RegularExpressionPattern(f"({re_string_types_string})")
 
-        self.data_group_types = unname_group(DataGroupType.pattern)
-        self.enumeration_types = unname_group(EnumerationType.pattern)
-        references = unname_group(ReferenceType.pattern)
+        self.data_group_types = DataGroupType.pattern.cleaned()
+        self.enumeration_types = EnumerationType.pattern.cleaned()
+        references = ReferenceType.pattern.cleaned()
         single_type = rf"({base_types}|{re_string_types}|{self.data_group_types}|{self.enumeration_types}|{references})"
         alternatives = rf"\(({single_type})(,\s*{single_type})+\)"
-        arrays = unname_group(ArrayType.pattern)
+        arrays = ArrayType.pattern.cleaned()
         self.data_types = RegularExpressionPattern(f"({single_type})|({alternatives})|({arrays})")
 
         # Values
@@ -488,13 +522,13 @@ class SchemaPatterns:
         )
 
         # Constraints
-        self.range_constraint = unname_group(RangeConstraint.pattern)
-        self.multiple_constraint = unname_group(MultipleConstraint.pattern)
+        self.range_constraint = RangeConstraint.pattern.cleaned()
+        self.multiple_constraint = MultipleConstraint.pattern.cleaned()
         self.data_element_value_constraint = DataElementValueConstraint.pattern
         self.data_element_value_subconstraint = DataElementValueSubConstraint.pattern
-        sets = unname_group(SetConstraint.pattern)
+        sets = SetConstraint.pattern.cleaned()
         reference_scope = f":{_type_base_names}:"
-        self.selector_constraint = unname_group(SelectorConstraint.pattern)
+        self.selector_constraint = SelectorConstraint.pattern.cleaned()
         array_limits = ArrayLengthLimitsConstraint.pattern
         string_patterns = StringPatternConstraint.pattern
 
@@ -515,8 +549,22 @@ class SchemaPatterns:
         )
 
 
+class UnrecognizedAttributeError(Exception):
+    def __init__(self, message, attribute_name):
+        self.message = message
+        self.attribute_name: str = attribute_name
+        super().__init__(message)
+
+    def __str__(self):
+        return f"{self.message}"
+
+
 class Schema:
-    def __init__(self, file_path: pathlib.Path, parent_schema: Schema | None = None):  # noqa: PLR0912 too-many-branches
+    def __init__(  # noqa: PLR0912 too-many-branches
+        self,
+        file_path: pathlib.Path,
+        parent_schema: Schema | None = None,
+    ):
         self.file_path = file_path.absolute()
         self.source_dictionary = load(self.file_path)
         self.name = get_file_basename(self.file_path, depth=2)
@@ -576,6 +624,11 @@ class Schema:
                 )
         #    else:
         #        raise Exception(f"Unrecognized Object Type, \"{object_type}\" in {self.file_path}")
+        for group in self.data_groups.values():
+            for data_element in group.dictionary["Data Elements"]:
+                group.data_elements[data_element] = DataElement(
+                    data_element, group.dictionary["Data Elements"][data_element], group
+                )
 
         # Get top level info
         self.root_data_group = None
@@ -603,7 +656,7 @@ class Schema:
             data_group.resolve()
 
     def set_reference_schemas(self):
-        self.reference_schemas = {}
+        self.reference_schemas: dict[str, Schema] = {}
         if self.file_path != core_schema_path:
             self.set_reference_schema("core", core_schema_path)
         if "References" in self.source_dictionary["Schema"]:

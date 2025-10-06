@@ -53,6 +53,12 @@ RepresentationSpecificationTemplate:
       Required: True
     description:
       Required: False
+  Custom Attributes:
+    Scalable:
+      Type: Boolean
+      Applies To: ["Numeric"]
+      Description: "Indicates whether the value can be scaled"
+      Applies to Children: True
 
 RatingTemplate:
   Object Type: "Data Group Template"

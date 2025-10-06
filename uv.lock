@@ -402,6 +402,7 @@ dependencies = [
     { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pygit2" },
     { name = "pyyaml" },
+    { name = "regex" },
     { name = "stringcase" },
 ]
 
@@ -412,7 +413,6 @@ dev = [
     { name = "pre-commit" },
     { name = "pylint" },
     { name = "pytest" },
-    { name = "regex" },
     { name = "ruff" },
 ]
 
@@ -426,6 +426,7 @@ requires-dist = [
     { name = "networkx" },
     { name = "pygit2", specifier = ">=1.15.1" },
     { name = "pyyaml" },
+    { name = "regex" },
     { name = "stringcase", specifier = ">=1.2.0" },
 ]
 
@@ -436,7 +437,6 @@ dev = [
     { name = "pre-commit" },
     { name = "pylint" },
     { name = "pytest", specifier = ">=7.1.3" },
-    { name = "regex" },
     { name = "ruff" },
 ]
 

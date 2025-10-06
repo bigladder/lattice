@@ -228,6 +228,9 @@ definitions:
         minItems: 1
       Data Elements Required:
         type: boolean
+      Custom Attributes:
+        type: object
+        # TODO: patternProperties:
     required:
       - Object Type
     additionalProperties: false
