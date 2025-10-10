@@ -70,6 +70,7 @@ ProductInformation:
 
 Performance:
   Object Type: "Data Group"
+  Data Group Template: PerformanceTemplate
   Data Elements:
     maximum_power:
       Description: "Maximum power draw of the drive"
@@ -154,5 +155,4 @@ LookupVariables:
     operation_state:
       Description: "The operation state at the operating conditions"
       Type: "[<OperationState>]"
-      Units: "-"
       Required: True

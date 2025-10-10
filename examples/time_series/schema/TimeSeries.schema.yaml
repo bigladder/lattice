@@ -85,6 +85,7 @@ TimeSeries:
     values:
       Description: Time series data values
       Type: "[Numeric]"
+      Units: "-" # TODO: Figure out a better way to indicate that units are specified by referencing data group
       Constraints:
         - "[1..]"
       Required: true

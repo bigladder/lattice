@@ -5,12 +5,12 @@ definitions:
   ObjectType:
     type: string
     enum:
-    - Meta
-    - Data Type
-    - String Type
-    - Enumeration
-    - Data Group
-    - Data Group Template
+      - Meta
+      - Data Type
+      - String Type
+      - Enumeration
+      - Data Group
+      - Data Group Template
   Meta:
     type: object
     properties:
@@ -38,7 +38,7 @@ definitions:
               type: string
             minItems: 1
     required:
-    - Object Type
+      - Object Type
     additionalProperties: false
   DataType:
     type: object
@@ -51,18 +51,18 @@ definitions:
       JSON Schema Type:
         type: string
         enum:
-        - string
-        - number
-        - integer
-        - boolean
-        - "null"
+          - string
+          - number
+          - integer
+          - boolean
+          - "null"
       Examples:
         type: array
     required:
-    - Object Type
-    - Description
-    - JSON Schema Type
-    - Examples
+      - Object Type
+      - Description
+      - JSON Schema Type
+      - Examples
     additionalProperties: false
   StringType:
     type: object
@@ -79,37 +79,37 @@ definitions:
       Is Regex:
         type: boolean
     required:
-    - Object Type
-    - Description
-    - Examples
+      - Object Type
+      - Description
+      - Examples
     additionalProperties: false
   ConstraintsPattern:
     type: string
     pattern: "**GENERATED**"
   Constraints:
     oneOf:
-    - "$ref": meta.schema.json#/definitions/ConstraintsPattern
-    - type: array
-      items:
-        "$ref": meta.schema.json#/definitions/ConstraintsPattern
+      - "$ref": meta.schema.json#/definitions/ConstraintsPattern
+      - type: array
+        items:
+          "$ref": meta.schema.json#/definitions/ConstraintsPattern
   Required:
     oneOf:
-    - type: boolean
-    - type: string
-      pattern: "**GENERATED**"
+      - type: boolean
+      - type: string
+        pattern: "**GENERATED**"
   Notes:
     oneOf:
-    - type: string
-    - type: array
-      items:
-        type: string
+      - type: string
+      - type: array
+        items:
+          type: string
   Enumerator:
     type: object
     patternProperties:
       "**GENERATED**":
         type:
-        - object
-        - 'null'
+          - object
+          - "null"
         properties:
           Description:
             type: string
@@ -117,10 +117,10 @@ definitions:
             type: string
           Notes:
             oneOf:
-            - type: string
-            - type: array
-              items:
-                type: string
+              - type: string
+              - type: array
+                items:
+                  type: string
         required: []
         additionalProperties: false
     additionalProperties: false
@@ -133,35 +133,35 @@ definitions:
       Enumerators:
         "$ref": meta.schema.json#/definitions/Enumerator
     required:
-    - Object Type
-    - Enumerators
+      - Object Type
+      - Enumerators
     additionalProperties: false
   StandardUnits:
     type: string
     enum:
-    - "-"
-    - m
-    - m2
-    - m3
-    - s
-    - m/s
-    - m2/s
-    - m3/s
-    - kg
-    - kg/s
-    - N
-    - J
-    - W
-    - Pa
-    - K
-    - J/K
-    - W/K
-    - m2-K/W
-    - V
-    - A
-    - C
-    - Hz
-    - rev/s
+      - "-"
+      - m
+      - m2
+      - m3
+      - s
+      - m/s
+      - m2/s
+      - m3/s
+      - kg
+      - kg/s
+      - N
+      - J
+      - W
+      - Pa
+      - K
+      - J/K
+      - W/K
+      - m2-K/W
+      - V
+      - A
+      - C
+      - Hz
+      - rev/s
   DataTypePattern:
     type: string
     pattern: "**GENERATED**"
@@ -194,19 +194,23 @@ definitions:
         enum: "**GENERATED**"
       Unit System:
         type: string
+      Custom Attributes:
+        type: array
+        items:
+          type: string
       Data Elements:
         type: object
         patternProperties:
           "**GENERATED**":
             "$ref": meta.schema.json#/definitions/DataElementAttributes
             required:
-            - Description
-            - Data Type
+              - Description
+              - Data Type
             additionalProperties: false
         additionalProperties: false
     required:
-    - Object Type
-    - Data Elements
+      - Object Type
+      - Data Elements
     additionalProperties: false
   DataGroupTemplate:
     type: object
@@ -229,7 +233,9 @@ definitions:
       Data Elements Required:
         type: boolean
       Custom Attributes:
-        type: object
+        type: array
+        items:
+          type: string
         # TODO: patternProperties:
     required:
       - Object Type
@@ -239,43 +245,52 @@ patternProperties:
   "**GENERATED**":
     properties:
       Object Type:
-        enum: ["Meta", "Data Type", "String Type", "Enumeration", "Data Group", "Data Group Template"]
+        enum:
+          [
+            "Meta",
+            "Data Type",
+            "String Type",
+            "Enumeration",
+            "Data Group",
+            "Data Group Template",
+            "Custom Attribute",
+          ]
     allOf:
-    - if:
-        properties:
-          Object Type:
-            const: Meta
-      then:
-        "$ref": meta.schema.json#/definitions/Meta
-    - if:
-        properties:
-          Object Type:
-            const: Data Type
-      then:
-        "$ref": meta.schema.json#/definitions/DataType
-    - if:
-        properties:
-          Object Type:
-            const: String Type
-      then:
-        "$ref": meta.schema.json#/definitions/StringType
-    - if:
-        properties:
-          Object Type:
-            const: Enumeration
-      then:
-        "$ref": meta.schema.json#/definitions/Enumeration
-    - if:
-        properties:
-          Object Type:
-            const: Data Group
-          Data Group Template: false
-      then:
-        "$ref": meta.schema.json#/definitions/DataGroup
-    - if:
-        properties:
-          Object Type:
-            const: Data Group Template
-      then:
-        "$ref": meta.schema.json#/definitions/DataGroupTemplate
+      - if:
+          properties:
+            Object Type:
+              const: Meta
+        then:
+          "$ref": meta.schema.json#/definitions/Meta
+      - if:
+          properties:
+            Object Type:
+              const: Data Type
+        then:
+          "$ref": meta.schema.json#/definitions/DataType
+      - if:
+          properties:
+            Object Type:
+              const: String Type
+        then:
+          "$ref": meta.schema.json#/definitions/StringType
+      - if:
+          properties:
+            Object Type:
+              const: Enumeration
+        then:
+          "$ref": meta.schema.json#/definitions/Enumeration
+      - if:
+          properties:
+            Object Type:
+              const: Data Group
+            Data Group Template: false
+        then:
+          "$ref": meta.schema.json#/definitions/DataGroup
+      - if:
+          properties:
+            Object Type:
+              const: Data Group Template
+        then:
+          "$ref": meta.schema.json#/definitions/DataGroupTemplate
 additionalProperties: false
