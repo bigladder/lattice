@@ -110,7 +110,7 @@ ProductInformation:
 
 Performance:
   Object Type: "Data Group"
-  Custom Attributes: ["Scalable"]
+  Data Group Template: "PerformanceTemplate"
   Data Elements:
     nominal_standard_air_volumetric_flow_rate:
       Description: "Nominal or rated air flow rate at standard air conditions"
