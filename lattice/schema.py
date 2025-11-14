@@ -168,7 +168,7 @@ class SetConstraint(Constraint):
 
 class SelectorConstraint(Constraint):
     pattern = RegularExpressionPattern(
-        rf"{_data_element_names}\((?P<SelectorValue>{EnumerationType.value_pattern})(, ?(?P<SelectorValue>{EnumerationType.value_pattern}))*\)"  # noqa: E501
+        rf"(?P<SelectorElementName>{_data_element_names})\((?P<SelectorValue>{EnumerationType.value_pattern})(, ?(?P<SelectorValue>{EnumerationType.value_pattern}))*\)"  # noqa: E501
     )
 
 

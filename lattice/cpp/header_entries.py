@@ -210,7 +210,7 @@ class Struct(HeaderEntry):
 class DataElement(HeaderEntry):
     _data_group_attributes: dict
     _pod_datatypes_map: dict[str, str]
-    _referenced_datatypes: list[ReferencedDataType]
+    _referenced_datatypes: list[ReferencedDataType] = field(default_factory=list)
     selector: dict[str, dict[str, str]] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
@@ -238,6 +238,13 @@ class DataElement(HeaderEntry):
         except KeyError:
             pass
 
+    @staticmethod
+    def make_scoped(segments: tuple[str, str]) -> str:
+        if segments[0]:
+            return "::".join(segments)
+        else:
+            return segments[1]
+
     def _get_scoped_inner_type(self, type_str: str) -> str:
         """Return the scoped cpp type described by type_str.
 
@@ -259,7 +266,7 @@ class DataElement(HeaderEntry):
             if inner_type == custom_type.name:
                 self.scoped_innertype = (f"{custom_type.namespace}", inner_type)
                 # namespace naming convention is snake_style, regardless of the schema file name
-                return "::".join(self.scoped_innertype)
+                return DataElement.make_scoped(self.scoped_innertype)
         try:
             # e.g. "Numeric/Null" or "Numeric" both ok
             self.scoped_innertype = ("", self._pod_datatypes_map[type_str.split("/")[0]])
@@ -281,9 +288,11 @@ class DataElement(HeaderEntry):
         m_opt = SelectorConstraint.pattern.match(element_attributes["Constraints"])
         if not m_opt:
             raise TypeError
-        selection_key = m_opt.group("SelectorValue")  # This is the last valid match
+        selection_key = m_opt.group("SelectorElementName")  # This is the last valid match
         selection_key_enum_class = self._get_scoped_inner_type(self._data_group_attributes[selection_key]["Type"])
-        constraints = ["::".join([selection_key_enum_class, s.strip()]) for s in m_opt.captures("SelectorValue")]
+        constraints = [
+            DataElement.make_scoped((selection_key_enum_class, s.strip())) for s in m_opt.captures("SelectorValue")
+        ]
         # the self.selector dictionary will have a form like:
         # { operation_speed_control_type : { OperationSpeedControlType::CONTINUOUS : PerformanceMapContinuous, OperationSpeedControlType::DISCRETE : PerformanceMapDiscrete} } # noqa: E501
         selection_types = [self._get_scoped_inner_type(t.strip()) for t in match_result.captures("AlternativeTypeName")]
@@ -295,8 +304,11 @@ class DataElement(HeaderEntry):
         for custom_type in self._referenced_datatypes:
             if custom_type.name == self.scoped_innertype[1]:  # uses last of the selection types list to be processed
                 for base_type in self._referenced_datatypes:
+                    assert custom_type.superclass_name is not None
                     if base_type.name == custom_type.superclass_name:
-                        self.type = f"std::unique_ptr<{base_type.namespace}::{custom_type.superclass_name}>"
+                        self.type = f"std::unique_ptr<{
+                            DataElement.make_scoped((base_type.namespace, custom_type.superclass_name))
+                        }>"
                         break
 
     __hash__ = HeaderEntry.__hash__

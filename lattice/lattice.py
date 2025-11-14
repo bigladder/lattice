@@ -8,7 +8,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Union
 
-from jsonschema.exceptions import RefResolutionError
+from referencing.exceptions import Unresolvable
 
 import lattice.cpp.support_files as support
 
@@ -166,7 +166,7 @@ class Lattice:  # pylint:disable=R0902
                     try:
                         validate_file(input_path, schema.json_schema_path)
                         postvalidate_file(input_path, schema.json_schema_path)
-                    except RefResolutionError as e:
+                    except Unresolvable as e:
                         raise Exception(f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}") from e
                     return
             raise Exception(f'Unable to find matching schema, "{schema_type}", for file "{input_path}".')
