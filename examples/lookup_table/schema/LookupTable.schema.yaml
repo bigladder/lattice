@@ -41,11 +41,11 @@ LookupTable:
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariables}"
+      Type: "{GridVariables}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
-      Data Type: "{LookupVariables}"
+      Type: "{LookupVariables}"
       Required: True
 
 GridVariables:
@@ -54,7 +54,7 @@ GridVariables:
   Data Elements:
     output_power:
       Description: "Output shaft power"
-      Data Type: "[Numeric]"
+      Type: "[Numeric]"
       Constraints:
         - ">=0.0"
         - "[1..]"
@@ -67,7 +67,7 @@ LookupVariables:
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"
-      Data Type: "[Numeric]"
+      Type: "[Numeric]"
       Constraints:
         - ">=0.0"
         - "<=1.0"

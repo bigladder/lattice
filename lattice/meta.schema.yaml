@@ -170,7 +170,7 @@ definitions:
     properties: # TODO: Need to allow custom attributes
       Description:
         type: string
-      Data Type:
+      Type:
         "$ref": meta.schema.json#/definitions/DataTypePattern
       Units:
         "anyOf":
@@ -192,6 +192,8 @@ definitions:
       Data Group Template:
         type: string
         enum: "**GENERATED**"
+      Unit System:
+        type: string
       Data Elements:
         type: object
         patternProperties:
@@ -226,6 +228,9 @@ definitions:
         minItems: 1
       Data Elements Required:
         type: boolean
+      Custom Attributes:
+        type: object
+        # TODO: patternProperties:
     required:
       - Object Type
     additionalProperties: false

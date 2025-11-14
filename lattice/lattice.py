@@ -8,7 +8,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Optional, Union
 
-from jsonschema.exceptions import RefResolutionError
+from referencing.exceptions import Unresolvable
 
 import lattice.cpp.support_files as support
 
@@ -20,6 +20,15 @@ from .file_io import check_dir, get_file_basename, load, make_dir, string_to_fil
 from .meta_schema import generate_meta_schema, meta_validate_file
 from .schema import Schema
 from .schema_to_json import generate_json_schema, postvalidate_file, validate_file
+
+
+@dataclass
+class SchemaSupport:
+    schema: Schema
+    meta_schema_path: Path = field(init=False)
+    json_schema_path: Path = field(init=False)
+    cpp_header_file_path: Path = field(init=False)
+    cpp_source_file_path: Path = field(init=False)
 
 
 class Lattice:  # pylint:disable=R0902
@@ -57,7 +66,7 @@ class Lattice:  # pylint:disable=R0902
         if build_output_directory_name is None:
             self.build_directory: Path = Path(build_directory)
         else:
-            self.build_directory: Path = Path(build_directory) / build_output_directory_name
+            self.build_directory = Path(build_directory) / build_output_directory_name
         make_dir(self.build_directory)
 
         self.collect_schemas()
@@ -94,10 +103,11 @@ class Lattice:  # pylint:disable=R0902
             self.schema_directory_path = self.root_directory
 
         # Collect list of schema files
-        self.schemas: List[Lattice.SchemaOutputs] = []
+        self.schemas: List[SchemaSupport] = []
+
         for file_name in sorted(list(self.schema_directory_path.iterdir())):
             if fnmatch(str(file_name), "*.schema.yaml") or fnmatch(str(file_name), "*.schema.yml"):
-                self.schemas.append(Lattice.SchemaOutputs(Schema(file_name)))
+                self.schemas.append(SchemaSupport(Schema(file_name)))
 
         if len(self.schemas) == 0:
             raise Exception(f'No schemas found in "{self.schema_directory_path}".')
@@ -153,8 +163,8 @@ class Lattice:  # pylint:disable=R0902
         if schema_type is None:
             if len(self.schemas) > 1:
                 raise Exception(
-                    "Too many schema available for validation; cannot find a match to"
-                    ' "schema_name" in "{input_path}." Unable to validate file.'
+                    f"Too many schema available for validation; cannot find a match to"
+                    f' "schema_name" {schema_type} in "{input_path}." Unable to validate file.'
                 ) from None
             validate_file(input_path, self.schemas[0].json_schema_path)
             postvalidate_file(input_path, self.schemas[0].json_schema_path)
@@ -165,22 +175,22 @@ class Lattice:  # pylint:disable=R0902
                     try:
                         validate_file(input_path, schema.json_schema_path)
                         postvalidate_file(input_path, schema.json_schema_path)
-                    except RefResolutionError as e:
+                    except Unresolvable as e:
                         raise Exception(f"Reference in schema {schema.json_schema_path} cannot be resolved: {e}") from e
                     return
-            raise Exception(f'Unable to find matching schema, "{schema_type}", for file, "{input_path}".')
+            raise Exception(f'Unable to find matching schema, "{schema_type}", for file "{input_path}".')
 
     def collect_example_files(self) -> None:
         """Collect data model instances from examples subdirectory"""
 
         example_directory_path = self.root_directory / "examples"
         if example_directory_path.exists():
-            self.example_directory_path = example_directory_path
+            self.example_directory_path: Path | None = example_directory_path
         else:
             self.example_directory_path = None
 
         # Collect list of example files
-        self.examples = []
+        self.examples: List[Path] = []
         if self.example_directory_path is not None:
             extensions = ["json", "yaml", "cbor"]
             for ext in extensions:
@@ -198,7 +208,7 @@ class Lattice:  # pylint:disable=R0902
 
         doc_templates_directory_path = self.root_directory / "docs"
         if doc_templates_directory_path.exists():
-            self.doc_templates_directory_path = doc_templates_directory_path
+            self.doc_templates_directory_path: Path | None = doc_templates_directory_path
         else:
             self.doc_templates_directory_path = None
 
@@ -231,11 +241,11 @@ class Lattice:  # pylint:disable=R0902
         if self.doc_templates_directory_path:
             MkDocsWeb(self).build()
         else:
-            warnings.warn('Template directory "doc" does not exist under {self.root_directory}')
+            warnings.warn(f'Template directory "doc" does not exist under {self.root_directory}')
 
     def collect_cpp_schemas(self):
         """Collect source schemas into list of SchemaFiles"""
-        self.cpp_schemas = self.schemas + [Lattice.SchemaOutputs(Schema(Path(__file__).with_name("core.schema.yaml")))]
+        self.cpp_schemas = self.schemas + [SchemaSupport(Schema(Path(__file__).with_name("core.schema.yaml")))]
 
     def setup_cpp_source_files(self, output_directory: Optional[Path] = None):
         """Create directories for generated CPP source"""
@@ -248,7 +258,7 @@ class Lattice:  # pylint:disable=R0902
             schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.schema.name}.h"
             schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.schema.name}.cpp"
 
-    def setup_cpp_repository(self, submodules: list[str]):
+    def setup_cpp_repository(self, submodules: list[str]) -> None:
         """Initialize the CPP output directory as a Git repo."""
         cwd = os.getcwd()
         os.chdir(self.cpp_output_dir)
@@ -270,12 +280,7 @@ class Lattice:  # pylint:disable=R0902
     def generate_cpp_project(self):
         """Generate CPP header files, source files, and build support files."""
         for schema in self.cpp_schemas:
-            h = HeaderTranslator(
-                schema.schema.file_path,
-                self.schema_directory_path,
-                self._cpp_output_include_dir,
-                self.root_directory.name,
-            )
+            h = HeaderTranslator(schema.schema.file_path, None, self._cpp_output_include_dir, self.root_directory.name)
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
@@ -283,11 +288,11 @@ class Lattice:  # pylint:disable=R0902
         submodule_names: list[str] = []
         submodule_urls: list[str] = []
 
-        config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
+        config_file = Path(self.root_directory / "cpp" / "0config.yaml").resolve()
         if config_file.is_file():
             config = load(config_file)
-            submodule_names: list[str] = [tuple["name"] for tuple in config["dependencies"]]
-            submodule_urls: list[str] = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
+            submodule_names = [tuple["name"] for tuple in config["dependencies"]]
+            submodule_urls = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
 
         support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
         support.render_build_files(self.root_directory.name, submodule_names, self.cpp_output_dir)

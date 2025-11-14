@@ -14,6 +14,7 @@ from .header_entries import (
     FunctionalHeaderEntry,
     HeaderEntry,
     InlineDependency,
+    ObjectDeserializationDeclaration,
     ObjectSerializationDeclaration,
     Struct,
     VirtualDestructor,
@@ -137,6 +138,17 @@ class StructSerialization(FunctionDefinition):
 
 
 @dataclass
+class StructDeserialization(FunctionDefinition):
+    _header_entry: Struct
+
+    def __post_init__(self):
+        super(FunctionDefinition, self).__post_init__()
+        self._func = f"void to_json(nlohmann::json& j, const {self._name}& x)"
+
+        self.trace()
+
+
+@dataclass
 class MemberFunctionDefinition(FunctionDefinition):
     _header_entry: FunctionalHeaderEntry
 
@@ -188,6 +200,30 @@ class OwnedElementCreation(ElementSerialization):
                 f"\tif (x.{self._name}) {{",
                 f'\t\tfrom_json(j.at("{self._name}"), *dynamic_cast<{self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()));',  # noqa: E501
                 "\t}",
+                "}",
+            ]
+        self.trace()
+
+
+@dataclass
+class OwnedElementDeserialization(ElementSerialization):
+    def __post_init__(self):
+        super().__post_init__()
+        self._funclines = [f'json_set<{self._type}>(j, "{self._name}", x.{self._name}, x.{self._name}_is_set);']
+        self.trace()
+
+
+@dataclass
+class OwnedElementDownload(ElementSerialization):
+    def __post_init__(self):
+        super().__post_init__()
+        self._funclines = []
+        assert len(self._header_entry.selector) == 1  # only one switchable data element per entry
+        data_element = next(iter(self._header_entry.selector))
+        for enum in self._header_entry.selector[data_element]:
+            self._funclines += [
+                f"if (x.{data_element} == {enum}) {{",
+                f'\tjson_set<{self._header_entry.selector[data_element][enum]}>(j, "{self._name}", *dynamic_cast<const {self._header_entry.selector[data_element][enum]}*>(x.{self._name}.get()), x.{self._name}_is_set);',  # noqa: E501
                 "}",
             ]
         self.trace()
@@ -268,14 +304,14 @@ class CPPTranslator:
 
         self._get_items_to_serialize(header_tree.root)
 
-    def _get_items_to_serialize(self, header_tree: HeaderEntry):
+    def _get_items_to_serialize(self, header_tree: HeaderEntry) -> None:  # noqa: PLR0912 too-many-branches
         for h_entry in header_tree.child_entries:
             cpp_entry: Optional[ImplementationEntry] = None
             logger.debug(f"Header entry being processed: {h_entry.name} under {h_entry.parent.name}")
             if isinstance(h_entry, Struct) and len([c for c in h_entry.child_entries if isinstance(c, DataElement)]):
                 cpp_entry = StructSerialization(
                     h_entry, self._namespace
-                )  # Create the "from_json" function definition (header), only if it won't be empty
+                )  # Create the "from_json/"to_json"" function definition, only if they won't be empty
 
                 for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
                     # In function body, create each "get_to" for individual data elements
@@ -284,17 +320,25 @@ class CPPTranslator:
                     else:
                         c = OwnedElementSerialization(data_element_entry, cpp_entry)
 
-            elif isinstance(h_entry, DataElementStaticMetainfo):
-                logger.debug(f"{h_entry.name} under {type(h_entry.parent)} under {self._namespace._name}")
-                cpp_entry = DataElementStaticInitialization(h_entry, self._namespace)
+                cpp_entry = StructDeserialization(h_entry, self._namespace)
+
+                for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
+                    if "unique_ptr" in data_element_entry.type:
+                        c = OwnedElementDownload(data_element_entry, cpp_entry)
+                    else:
+                        c = OwnedElementDeserialization(data_element_entry, cpp_entry)
 
             elif isinstance(h_entry, InlineDependency):
                 cpp_entry = DependencyInitialization(h_entry, self._namespace)
+
+            elif isinstance(h_entry, DataElementStaticMetainfo):
+                cpp_entry = DataElementStaticInitialization(h_entry, self._namespace)
 
             # Initialize and Populate overrides (Currently the only Member_function_override is the Initialize override)
             elif (
                 isinstance(h_entry, FunctionalHeaderEntry)
                 and not isinstance(h_entry, ObjectSerializationDeclaration)
+                and not isinstance(h_entry, ObjectDeserializationDeclaration)
                 and not isinstance(h_entry, VirtualDestructor)
             ):
                 cpp_entry = MemberFunctionDefinition(

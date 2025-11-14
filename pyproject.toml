@@ -1,8 +1,8 @@
 [project]
 name = "lattice"
-version = "0.0.0" # Generated from git on CI
+version = "0.0.0"                                                                                       # Generated from git on CI
 description = "A framework for developing data models, including schema development and documentation."
-authors = [{name="Big Ladder Software"}]
+authors = [{ name = "Big Ladder Software" }]
 #license = "BSD-3"
 readme = "README.md"
 keywords = ["data-modeling", "schema", "lattice"]
@@ -16,7 +16,9 @@ dependencies = [
     "stringcase >=1.2.0",
     "pygit2 >=1.15.1",
     "mkdocs-material",
-    "markdown-grid-tables",
+    "markdown-grid-tables == 0.4.0", # Note: issue with later versions (https://gitlab.com/WillDaSilva/markdown_grid_tables/-/issues/4)
+    "regex",
+    "networkx",
 ]
 
 [tool.uv]
@@ -25,7 +27,8 @@ dev-dependencies = [
     "doit",
     "pre-commit",
     "pylint",
-    "ruff"
+    "ruff",
+    "mypy",
 ]
 
 [tool.ruff]
@@ -33,18 +36,26 @@ line-length = 120
 
 [tool.ruff.lint]
 select = ["E", "F", "PL", "I001"]
-ignore = ["F405", # undefined-local-with-import-star-usage
+ignore = [
+    "F405", # undefined-local-with-import-star-usage
 ]
 
+[tool.ruff.lint.pylint]
+max-args = 6
+
 [tool.mypy]
+exclude = ["vendor/"]
 disallow_incomplete_defs = true
 no_implicit_optional = true
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = "lattice.*"
-disable_error_code = ["annotation-unchecked","import"]
+disable_error_code = ["annotation-unchecked", "import"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["lattice"]

@@ -1,5 +1,6 @@
-from lattice.schema import Schema
 import pathlib
+
+from lattice.schema import Schema
 
 
 def test_schema():
@@ -13,5 +14,3 @@ def test_schema():
         print(f"\nEnumeration: {enumeration.name}")
         for enumerator in enumeration.enumerators.values():
             print(f"  {enumerator.name}")
-
-    print(schema.root_data_group.name)

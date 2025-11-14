@@ -1,11 +1,27 @@
 from __future__ import annotations
 
 import logging
-import re
 from dataclasses import dataclass, field
 from typing import Optional, Union
 
+import networkx
+import regex
+
+from ..schema import AlternativeType, ArrayType, DataGroupType, EnumerationType, ReferenceType, SelectorConstraint
+
 logger = logging.getLogger()
+
+
+def DAG_sort(obj_list: list[HeaderEntry]) -> list[HeaderEntry]:
+    dependency_graph = networkx.DiGraph()
+    for this in obj_list:
+        dependency_graph.add_node(this)
+    for this in obj_list:
+        for other in [obj for obj in obj_list if obj != this]:
+            if this < other:
+                dependency_graph.add_edge(this, other)
+    # dependency_graph.remove_nodes_from(list(networkx.isolates(dependency_graph)))
+    return list(networkx.topological_sort(dependency_graph))
 
 
 def remove_prefix(text, prefix):
@@ -53,6 +69,13 @@ class HeaderEntry(EntryFormat):
         else:
             return level
 
+    def __hash__(self):
+        """Explicitly define hashability for networkx graph"""
+        return hash(f"{self.type}{self.name}")  # Use a unique and immutable attribute for hashing
+
+    def __eq__(self, other):
+        return self.name == other.name and self.type == other.type
+
     def __lt__(self, other):
         """
         A Header_entry must be "less than" any another Header_entry that references it, i.e.
@@ -61,17 +84,21 @@ class HeaderEntry(EntryFormat):
         return self._less_than(self, other)
 
     @staticmethod
-    def _less_than(this: HeaderEntry | FunctionalHeaderEntry, other: HeaderEntry | FunctionalHeaderEntry):
+    def _less_than(
+        this: HeaderEntry | FunctionalHeaderEntry,
+        other: HeaderEntry | FunctionalHeaderEntry,
+        root: Optional[HeaderEntry] = None,
+    ) -> bool:
         """ """
         lt = False
         t = f"{other._f_ret} {other.args}" if isinstance(other, FunctionalHeaderEntry) else f"{other.type} {other.name}"
         # \b is a "boundary" character, or specifier for a whole word
-        if re.search(r"\b" + this.name + r"\b", t):
+        if regex.search(r"\b" + this.name + r"\b", t):
             return True
         for c in other.child_entries:
             t = f"{c._f_ret} {c.args}" if isinstance(c, FunctionalHeaderEntry) else f"{c.type} {c.name}"
-            if re.search(r"\b" + this.name + r"\b", t):
-                # Shortcut around checking siblings; if one child matches, then self < other
+            if regex.search(r"\b" + this.name + r"\b", t):  # if 'this' is in 'other.child', this < other
+                # Shortcut around checking siblings; if one child matches, then this < other
                 return True
             else:
                 # Check grandchildren
@@ -97,6 +124,8 @@ class Typedef(HeaderEntry):
     def __str__(self):
         return f"{self._indent}{self.type} {self._typedef} {self.name};"
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class Enumeration(HeaderEntry):
@@ -112,7 +141,9 @@ class Enumeration(HeaderEntry):
         entry = f"{self._indent}{self.type} {self.name} {self._opener}\n"
         for e in self._enumerants:
             entry += f"{self._indent}\t{e},\n"
-        entry += f"{self._indent}\tUNKNOWN\n{self._indent}{self._closure}"
+        if "UNKNOWN" not in self._enumerants:
+            entry += f"{self._indent}\tUNKNOWN\n"
+        entry += f"{self._indent}{self._closure}"
 
         # Incorporate an enum_info map into this object
         map_type = f"const static std::unordered_map<{self.name}, enum_info>"
@@ -121,10 +152,13 @@ class Enumeration(HeaderEntry):
             display_text = self._enumerants[e].get("Display Text", e)
             description = self._enumerants[e].get("Description")
             entry += f'{self._indent}\t{{{self.name}::{e}, {{"{e}", "{display_text}", "{description}"}}}},\n'
-        entry += f'{self._indent}\t{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
+        if "UNKNOWN" not in self._enumerants:
+            entry += f'{self._indent}\t{{{self.name}::UNKNOWN, {{"UNKNOWN", "None", "None"}}}}\n'
         entry += f"{self._indent}{self._closure}"
 
         return entry
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -147,6 +181,8 @@ class EnumSerializationDeclaration(HeaderEntry):
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class Struct(HeaderEntry):
@@ -167,19 +203,21 @@ class Struct(HeaderEntry):
         entry += f"\n{self._indent}{self._closure}"
         return entry
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class DataElement(HeaderEntry):
     _data_group_attributes: dict
     _pod_datatypes_map: dict[str, str]
-    _referenced_datatypes: list[ReferencedDataType]
+    _referenced_datatypes: list[ReferencedDataType] = field(default_factory=list)
     selector: dict[str, dict[str, str]] = field(init=False, default_factory=dict)
 
     def __post_init__(self):
         super().__post_init__()
         self._closure = ";"
         self._element_attributes = self._data_group_attributes[self.name]
-        self.is_required: bool = self._element_attributes.get("Required", False)  # used externally
+        self.is_required: bool = True if self._element_attributes.get("Required") == True else False  # noqa E712
         self.scoped_innertype: tuple[str, str] = ("", "")
 
         self._create_type_entry(self._element_attributes)
@@ -191,16 +229,21 @@ class DataElement(HeaderEntry):
     def _create_type_entry(self, element_attributes: dict) -> None:
         """Create type node."""
         try:
-            # If the type is an array, extract the surrounding [] first (using non-greedy qualifier "?")
-            m = re.findall(r"\[(.*?)\]", element_attributes["Data Type"])
-            if m:
-                self.type = f"std::vector<{self._get_scoped_inner_type(m[0])}>"
-            elif m := re.match(r"\((?P<comma_separated_selection_types>.*)\)", element_attributes["Data Type"]):
-                self._get_constrained_base_type(element_attributes, m.group("comma_separated_selection_types"))
+            if m := ArrayType.pattern.match(element_attributes["Type"]):
+                self.type = f"std::vector<{self._get_scoped_inner_type(m.group('ArrayTypeName'))}>"
+            elif m := AlternativeType.pattern.match(element_attributes["Type"]):
+                self._get_constrained_base_type(element_attributes, m)
             else:
-                self.type = self._get_scoped_inner_type(element_attributes["Data Type"])
+                self.type = self._get_scoped_inner_type(element_attributes["Type"])
         except KeyError:
             pass
+
+    @staticmethod
+    def make_scoped(segments: tuple[str, str]) -> str:
+        if segments[0]:
+            return "::".join(segments)
+        else:
+            return segments[1]
 
     def _get_scoped_inner_type(self, type_str: str) -> str:
         """Return the scoped cpp type described by type_str.
@@ -208,21 +251,22 @@ class DataElement(HeaderEntry):
         First, attempt to capture enum, definition, or special string type as references;
         then default to fundamental types with simple key "type".
         """
-        enum_or_def = r"(\{|\<)(?P<inner_type>.*)(\}|\>)"
         inner_type: str = ""
-        m = re.match(enum_or_def, type_str)
-        if m:
-            inner_type = m.group("inner_type")
+        if m := DataGroupType.pattern.match(type_str):
+            inner_type = m.group("DataGroupName")
+        elif m := EnumerationType.pattern.match(type_str):
+            inner_type = m.group("EnumerationTypeName")
+        elif m := ReferenceType.pattern.match(type_str):
+            inner_type = m.group("ReferenceTypeName")
         else:
             inner_type = type_str
 
         # Look through the references to assign a scope to the type
         for custom_type in self._referenced_datatypes:
             if inner_type == custom_type.name:
-                print(f"{custom_type.namespace}", inner_type)
                 self.scoped_innertype = (f"{custom_type.namespace}", inner_type)
                 # namespace naming convention is snake_style, regardless of the schema file name
-                return "::".join(self.scoped_innertype)
+                return DataElement.make_scoped(self.scoped_innertype)
         try:
             # e.g. "Numeric/Null" or "Numeric" both ok
             self.scoped_innertype = ("", self._pod_datatypes_map[type_str.split("/")[0]])
@@ -231,29 +275,7 @@ class DataElement(HeaderEntry):
             print("Type not processed:", type_str)
         return f"Type not processed: {type_str}"
 
-    def _get_simple_minmax(self, range_str, target_dict) -> None:
-        """Process Range into min and max fields."""
-        if range_str is not None:
-            ranges = range_str.split(",")
-            minimum = None
-            maximum = None
-            if "type" not in target_dict:
-                target_dict["type"] = None
-            for r in ranges:
-                try:
-                    numerical_value = re.findall(r"[+-]?\d*\.?\d+|\d+", r)[0]
-                    if ">" in r:
-                        minimum = float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
-                        mn = "exclusiveMinimum" if "=" not in r else "minimum"
-                        target_dict[mn] = minimum
-                    elif "<" in r:
-                        maximum = float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
-                        mx = "exclusiveMaximum" if "=" not in r else "maximum"
-                        target_dict[mx] = maximum
-                except ValueError:
-                    pass
-
-    def _get_constrained_base_type(self, element_attributes: dict, match_result: str) -> None:
+    def _get_constrained_base_type(self, element_attributes: dict, match_result: regex.Match) -> None:
         """
         Choices can only be mapped to enums; the enum selection key will be stored
         in this object for later code generation, since it constitutes a constraint on this
@@ -263,21 +285,17 @@ class DataElement(HeaderEntry):
         'selection_key(ENUM_VAL_1, ENUM_VAL_2, ENUM_VAL_3)' They connect pairwise with a Data Type list of the
         form          ({Type_1},   {Type_2},   {Type_3}), all deriving from a base TypeBase
         """
-        selection_key = element_attributes["Constraints"].split("(")[0]
-        selection_key_enum_class = self._get_scoped_inner_type(self._data_group_attributes[selection_key]["Data Type"])
-        selection_types = [self._get_scoped_inner_type(t.strip()) for t in match_result.split(",")]
-        m_opt = re.match(r".*\((?P<comma_separated_constraints>.*)\)", element_attributes["Constraints"])
+        m_opt = SelectorConstraint.pattern.match(element_attributes["Constraints"])
         if not m_opt:
             raise TypeError
+        selection_key = m_opt.group("SelectorElementName")  # This is the last valid match
+        selection_key_enum_class = self._get_scoped_inner_type(self._data_group_attributes[selection_key]["Type"])
         constraints = [
-            "::".join([selection_key_enum_class, s.strip()])
-            for s in m_opt.group("comma_separated_constraints").split(",")
+            DataElement.make_scoped((selection_key_enum_class, s.strip())) for s in m_opt.captures("SelectorValue")
         ]
-
         # the self.selector dictionary will have a form like:
         # { operation_speed_control_type : { OperationSpeedControlType::CONTINUOUS : PerformanceMapContinuous, OperationSpeedControlType::DISCRETE : PerformanceMapDiscrete} } # noqa: E501
-
-        # save this mapping to generate the source file contents
+        selection_types = [self._get_scoped_inner_type(t.strip()) for t in match_result.captures("AlternativeTypeName")]
         self.selector[selection_key] = dict(zip(constraints, selection_types))
 
         # The elements of 'selection_types' are Data Groups that derive from a Data Group Template.
@@ -286,15 +304,22 @@ class DataElement(HeaderEntry):
         for custom_type in self._referenced_datatypes:
             if custom_type.name == self.scoped_innertype[1]:  # uses last of the selection types list to be processed
                 for base_type in self._referenced_datatypes:
+                    assert custom_type.superclass_name is not None
                     if base_type.name == custom_type.superclass_name:
-                        self.type = f"std::unique_ptr<{base_type.namespace}::{custom_type.superclass_name}>"
+                        self.type = f"std::unique_ptr<{
+                            DataElement.make_scoped((base_type.namespace, custom_type.superclass_name))
+                        }>"
                         break
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
 class DataElementIsSetFlag(HeaderEntry):
     def __str__(self):
-        return f"{self._indent}bool {self.name}_is_set;"
+        return f"{self._indent}bool {self.name}_is_set = false;"
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -304,6 +329,7 @@ class DataElementStaticMetainfo(HeaderEntry):
 
     def __post_init__(self):
         super().__post_init__()
+        # self._type_specifier = "static constexpr"
         self._type_specifier = "const static"
         self.type = "std::string_view"
         self.init_val = self.element.get(self.metainfo_key, "") if self.metainfo_key != "Name" else self.name
@@ -314,6 +340,8 @@ class DataElementStaticMetainfo(HeaderEntry):
 
     def __str__(self):
         return f"{self._indent}{self._type_specifier} {self.type} {self.name}{self._closure}"
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -333,6 +361,8 @@ class InlineDependency(HeaderEntry):
             f"{self._indent}void set_{self.name}({self.type} value);"
         )
 
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class FunctionalHeaderEntry(HeaderEntry):
@@ -349,6 +379,9 @@ class FunctionalHeaderEntry(HeaderEntry):
     def __str__(self):
         return f"{self._indent}{' '.join([self._f_ret, self._f_name])}{self.args}{self._closure}"
 
+    def __hash__(self):
+        return hash(f"{self._f_ret}{self._f_name}")
+
 
 @dataclass
 class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
@@ -356,6 +389,8 @@ class MemberFunctionOverrideDeclaration(FunctionalHeaderEntry):
         super().__post_init__()
         self._closure = " override;"
         self.trace()
+
+    __hash__ = HeaderEntry.__hash__
 
 
 @dataclass
@@ -371,6 +406,24 @@ class ObjectSerializationDeclaration(FunctionalHeaderEntry):
         super().__post_init__()
         self.trace()
 
+    __hash__ = HeaderEntry.__hash__
+
+
+@dataclass
+class ObjectDeserializationDeclaration(FunctionalHeaderEntry):
+    _f_ret: str = field(init=False)
+    _f_name: str = field(init=False)
+    _f_args: list[str] = field(init=False)
+
+    def __post_init__(self):
+        self._f_ret = "void"
+        self._f_name = "to_json"
+        self._f_args = ["nlohmann::json& j", f"const {self.name}& x"]
+        super().__post_init__()
+        self.trace()
+
+    __hash__ = HeaderEntry.__hash__
+
 
 @dataclass
 class VirtualDestructor(FunctionalHeaderEntry):
@@ -383,3 +436,5 @@ class VirtualDestructor(FunctionalHeaderEntry):
         super().__post_init__()
         self._closure = f" = {self._explicit_definition};" if self._explicit_definition else ";"
         self.trace()
+
+    __hash__ = HeaderEntry.__hash__

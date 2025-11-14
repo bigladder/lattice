@@ -28,32 +28,14 @@ class HeaderEntryExtensionInterface(ABC):
                 cls.extensions[kwargs["base_class"]] = [cls]
 
     @abstractmethod
-    def process_data_group(self, parent_node: HeaderEntry): ...
-
-
-def modified_insertion_sort(obj_list):
-    """From https://stackabuse.com/sorting-algorithms-in-python/#insertionsort"""
-    swapped = False
-    # Start on the second element as we assume the first element is sorted
-    for i in range(1, len(obj_list)):
-        item_to_insert = obj_list[i]
-        # And keep a reference of the index of the previous element
-        j = i - 1
-        # Move all items of the sorted segment forward if they are larger than the item to insert
-        while j >= 0 and any(obj > item_to_insert for obj in obj_list[0 : j + 1]):
-            obj_list[j + 1] = obj_list[j]
-            swapped = True
-            j -= 1
-        # Insert the item
-        obj_list[j + 1] = item_to_insert
-    return swapped
+    def process_data_group(self, parent_node: HeaderEntry) -> None: ...
 
 
 class HeaderTranslator:
     def __init__(
         self,
         input_file_path: Path,
-        forward_declarations_path: Path,
+        forward_declarations_path: Optional[Path],
         output_path: Path,
         top_namespace: str,
     ):
@@ -88,7 +70,7 @@ class HeaderTranslator:
                   input_file_path: Path,
                   forward_declarations_path: Path,
                   output_path: Path,
-                  top_namespace: str):
+                  top_namespace: str) -> None:
         """Translate schema into C++ header file, but store locally as a data structure."""
         self._source_dir = input_file_path.parent.resolve()
         self._forward_declaration_dir = forward_declarations_path
@@ -129,7 +111,7 @@ class HeaderTranslator:
                                           "Description")
 
         for base_level_tag in self._list_objects_of_type("Data Group Template"):
-            predefined_code_dir: Path = self._forward_declaration_dir.parent / "cpp" / "base_classes"
+            predefined_code_dir: Path = self._source_dir.parent / "cpp" / "base_classes"
             base_class_file = Path(predefined_code_dir / f"{hyphen_separated_lowercase_style(base_level_tag)}.h")
             # TODO: Check naming assumptions and rules for pre-defined base class files
             if not base_class_file.exists():
@@ -162,7 +144,7 @@ class HeaderTranslator:
                 self._extensions.pop(scoped_superclass)
 
         self._add_header_dependencies()
-        modified_insertion_sort(self._namespace.child_entries)
+        self._namespace.child_entries = DAG_sort(self._namespace.child_entries)
 
         # Final passes through dictionary in order to add elements related to serialization
         for base_level_tag in self._list_objects_of_type("Enumeration"):
@@ -170,9 +152,11 @@ class HeaderTranslator:
                                          self._namespace,
                                          self._contents[base_level_tag]["Enumerators"])
         for base_level_tag in self._list_objects_of_type(self._data_group_types):
-            # from_json declarations are necessary in top container, as the header-declared
+            # from_json/to_json declarations are necessary in top container, as the header-declared
             # objects might be included and used from elsewhere.
             ObjectSerializationDeclaration(base_level_tag, self._namespace)
+            ObjectDeserializationDeclaration(base_level_tag, self._namespace)
+            pass
 
     def _reset_parsing(self):
         """Clear member containers for a new translation."""
@@ -220,6 +204,8 @@ class HeaderTranslator:
                 self._fundamental_data_types[base_item] = cpp_types[ext_dict[base_item]["JSON Schema Type"]]
             for base_item in [name for name in ext_dict if ext_dict[name]["Object Type"] == "String Type"]:
                 self._fundamental_data_types[base_item] = "std::string"
+            if reference_name not in [self._schema_name, "core"]:
+                self._load_meta_info(ext_dict["Schema"]) # Recursively collect references, as C++ does
     # fmt: on
 
     def _add_include_guard(self, header_name):
@@ -256,7 +242,7 @@ class HeaderTranslator:
             else:
                 self._add_header_dependencies(entry)
 
-    def _add_member_includes(self, dependency: str):
+    def _add_member_includes(self, dependency: str) -> None:
         """
         Add the dependency (verbatim) to the list of included headers.
         """
@@ -264,7 +250,9 @@ class HeaderTranslator:
         if header_include not in self._preamble:
             self._preamble.append(header_include)
 
-    def _process_data_elements(self, data_group_entry: HeaderEntry, base_level_tag: str, data_group_template: str):
+    def _process_data_elements(
+        self, data_group_entry: HeaderEntry, base_level_tag: str, data_group_template: str
+    ) -> None:
         """Iterate over child Data Elements and assign them to a parent struct."""
 
         # Per-element processing
@@ -340,7 +328,7 @@ class HeaderTranslator:
     #         for listing in self._contents:
     #             if "Data Elements" in self._contents[listing]:
     #                 for element in self._contents[listing]["Data Elements"]:
-    #                     if element == data_element and "Data Type" in
+    #                     if element == data_element and "Type" in
     #                         self._contents[listing]["Data Elements"][element]:
-    #                         return self._contents[listing]["Data Elements"][element]["Data Type"]
+    #                         return self._contents[listing]["Data Elements"][element]["Type"]
     #     return "MissingType"  # Placeholder base class

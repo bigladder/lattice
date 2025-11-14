@@ -1,12 +1,15 @@
 """This module encapsulates JSON translation and validation functions for YAML source schema"""
 
 import os
-import re
 import warnings
 from pathlib import Path
-from typing import Optional
-from .file_io import load, dump, get_base_stem
+from typing import Any, Optional
+
+import regex
+
+from .file_io import dump, get_base_stem, load
 from .meta_schema import MetaSchema
+from .schema import AlternativeType, ArrayType, DataGroupType, EnumerationType, NumericType, ReferenceType
 
 # 'once': Suppress multiple warnings from the same location.
 # 'always': Show all warnings
@@ -18,25 +21,15 @@ warnings.simplefilter("always", UserWarning)
 class DataGroup:  # pylint: disable=R0903
     """Class to convert source schema Data Group Objects into JSON"""
 
-    # The following regular expressions are explicity not Unicode
-    array_type = r"^\[(?P<array_of>.*?)\]"  # Array of type 'Type' e.g. '[Type]'
-    # just the first [] pair; using non-greedy '?'
-    alternative_type = r"^\((?P<one_of>.*)\)"  # Parentheses encapsulate a list of options
     # Parse ellipsis range-notation e.g. '[1..]'
-    minmax_range_type = r"(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)"
-
-    enum_or_def = r"(\{|\<|:)(.*)(\}|\>|:)"
-    numeric_type = r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
+    minmax_range_type = r"\[(?P<min>[0-9]*)(?P<ellipsis>\.*)(?P<max>[0-9]*)\]"
+    # numeric_type = r"[+-]?[0-9]*\.?[0-9]+|[0-9]+"  # Any optionally signed, floating point number
     scope_constraint = r"^:(?P<scope>.*):"  # Lattice scope constraint for ID/Reference
-    ranged_array_type = rf"{array_type}(\[{minmax_range_type}\])?"
 
     def __init__(self, name, type_list, ref_list):
         self._name = name
         self._types = type_list
         self._refs = ref_list
-        self._match_types = re.compile(
-            f"(?P<ranged_array>{DataGroup.ranged_array_type})|({DataGroup.alternative_type})"
-        )
 
     def add_data_group(self, group_name, group_subdict):
         """
@@ -45,14 +38,14 @@ class DataGroup:  # pylint: disable=R0903
         :param group_name:      Data Group name; this will become a schema definition key
         :param group_subdict:   Dictionary of Data Elements where each element is a key
         """
-        elements = {"type": "object", "properties": {}}
+        elements: dict[str, Any] = {"type": "object", "properties": {}}
         required = []
-        dependencies = {}
+        dependencies: dict[str, Any] = {}
         for e in group_subdict:
             element = group_subdict[e]
             if "Description" in element:
                 elements["properties"][e] = {"description": element["Description"]}
-            if "Data Type" in element:
+            if "Type" in element:
                 try:
                     self._create_type_entry(group_subdict[e], elements, e)
                 except RuntimeError as r:
@@ -86,25 +79,23 @@ class DataGroup:  # pylint: disable=R0903
             target_dict["properties"][entry_name] = {}
         target_property_entry = target_dict["properties"][entry_name]
 
-        matches = self._match_types.match(parent_dict["Data Type"])
-        if matches:
-            if matches.group("ranged_array"):
-                self._populate_array_type(parent_dict, target_property_entry, matches)
-            elif matches.group("one_of"):
-                self._populate_selector_types(parent_dict, target_property_entry, matches, entry_name)
-        elif parent_dict["Data Type"] in ["ID", "Reference"]:
+        if matches := ArrayType.pattern.match(parent_dict["Type"]):
+            self._populate_array_type(parent_dict, target_property_entry, matches)
+        elif matches := AlternativeType.pattern.match(parent_dict["Type"]):
+            self._populate_selector_types(parent_dict, target_property_entry, matches, entry_name)
+        elif parent_dict["Type"] in ["ID", "Reference"]:
             try:
-                m = re.match(DataGroup.scope_constraint, parent_dict["Constraints"])
+                m = regex.match(DataGroup.scope_constraint, parent_dict["Constraints"])
                 if m:
-                    target_property_entry["scopedType"] = parent_dict["Data Type"]
+                    target_property_entry["scopedType"] = parent_dict["Type"]
                     target_property_entry["scope"] = m.group("scope")
-                    self._get_simple_type(parent_dict["Data Type"], target_property_entry)
+                    self._get_simple_type(parent_dict["Type"], target_property_entry)
             except KeyError:
                 raise RuntimeError(f'"Constraints" key does not exist for Data Element "{entry_name}".') from None
         else:
             # 1. 'type' entry
             try:
-                self._get_simple_type(parent_dict["Data Type"], target_property_entry)
+                self._get_simple_type(parent_dict["Type"], target_property_entry)
             except KeyError as e:
                 raise RuntimeError from e
             # 2. string pattern or 'm[in/ax]imum' entry
@@ -122,17 +113,11 @@ class DataGroup:  # pylint: disable=R0903
         # 1. 'type' entry
         target_entry["type"] = "array"
         # 2. 'm[in/ax]Items' entry
-        if matches.group("min"):
-            # Parse ellipsis range-notation e.g. '[1..]'
-            target_entry["minItems"] = int(matches.group("min"))
-            if matches.group("ellipsis") and matches.group("max"):
-                target_entry["maxItems"] = int(matches.group("max"))
-            elif not matches.group("ellipsis"):
-                target_entry["maxItems"] = int(matches.group("min"))
+        DataGroup._get_length_constraints(parent_dict.get("Constraints"), target_entry)
         # 3. 'items' entry
         target_entry["items"] = {}
-        if matches.group("array_of"):
-            self._get_simple_type(matches.group("array_of"), target_entry["items"])
+        if m := matches.group("ArrayTypeName"):
+            self._get_simple_type(m, target_entry["items"])
             DataGroup._get_pattern_constraints(parent_dict.get("Constraints"), target_entry["items"])
             DataGroup._get_numeric_constraints(parent_dict.get("Constraints"), target_entry["items"])
 
@@ -145,7 +130,7 @@ class DataGroup:  # pylint: disable=R0903
         :param matches:      Match object for a one_of regex
         :param entry_name:   Data Element name
         """
-        types = [t.strip() for t in matches.group("one_of").split(",")]
+        types = matches.captures("AlternativeTypeName")
         selection_key, selections = parent_dict["Constraints"].split("(")
         if target_entry.get("allOf") is None:
             target_entry["allOf"] = []
@@ -167,9 +152,13 @@ class DataGroup:  # pylint: disable=R0903
         :param target_dict_to_append:   The json "items" node
         """
         internal_type = None
-        m = re.match(DataGroup.enum_or_def, type_str)
-        if m:
-            internal_type = m.group(2)
+        if m := DataGroupType.pattern.match(type_str):
+            internal_type = m.group("DataGroupName")
+        elif m := EnumerationType.pattern.match(type_str):
+            internal_type = m.group("EnumerationTypeName")
+        elif ReferenceType.pattern.match(type_str):
+            target_dict_to_append["type"] = "string"
+            return
         else:
             internal_type = type_str
         # Look through the references to assign a source to the type
@@ -179,13 +168,34 @@ class DataGroup:  # pylint: disable=R0903
                 target_dict_to_append["$ref"] = internal_type
                 return
         try:
-            target_dict_to_append["type"] = self._types[type_str]
+            target_dict_to_append["type"] = self._types[internal_type]
         except KeyError:
             raise KeyError(
-                f"Unknown type: {type_str} does not appear in referenced schema "
+                f"Unknown type: {internal_type} does not appear in referenced schema "
                 f"{list(self._refs.keys())} or type map {self._types}"
             ) from None
         return
+
+    @staticmethod
+    def _get_length_constraints(constraints_str, target_entry):
+        """
+        Process array length Constraint into min/maxItems field.
+
+        :param constraints_str:     Raw numerical limits and/or multiple information
+        :param target_dict:         json property node
+        """
+        if constraints_str is not None:
+            constraints = constraints_str if isinstance(constraints_str, list) else [constraints_str]
+            for c in constraints:
+                matches = regex.match(DataGroup.minmax_range_type, c)
+                if matches:
+                    if matches.group("min"):
+                        # Parse ellipsis range-notation e.g. '[1..]'
+                        target_entry["minItems"] = int(matches.group("min"))
+                        if matches.group("ellipsis") and matches.group("max"):
+                            target_entry["maxItems"] = int(matches.group("max"))
+                        elif not matches.group("ellipsis"):
+                            target_entry["maxItems"] = int(matches.group("min"))
 
     @staticmethod
     def _get_pattern_constraints(constraints_str, target_dict):
@@ -195,9 +205,11 @@ class DataGroup:  # pylint: disable=R0903
         :param constraints_str:     Raw numerical limits and/or multiple information
         :param target_dict:         json property node
         """
-        if constraints_str is not None and "type" in target_dict and isinstance(constraints_str, str):
-            if "string" in target_dict["type"]:  # String pattern match
-                target_dict["pattern"] = constraints_str.replace('"', "")
+        # TODO: This needs a lot more specificity - use Constraints subclasses to rule out options
+        if constraints_str is not None and "type" in target_dict:
+            if isinstance(constraints_str, str) and not regex.match(DataGroup.minmax_range_type, constraints_str):
+                if "string" in target_dict["type"]:  # String pattern match
+                    target_dict["pattern"] = constraints_str.replace('"', "")
 
     @staticmethod
     def _get_numeric_constraints(constraints_str, target_dict):
@@ -214,17 +226,22 @@ class DataGroup:  # pylint: disable=R0903
             for c in constraints:
                 try:
                     # Process numeric constraints
-                    numerical_value = re.findall(DataGroup.numeric_type, c)[0]
-                    if ">" in c:
-                        minimum = float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
-                        mn = "exclusiveMinimum" if "=" not in c else "minimum"
-                        target_dict[mn] = minimum
-                    elif "<" in c:
-                        maximum = float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
-                        mx = "exclusiveMaximum" if "=" not in c else "maximum"
-                        target_dict[mx] = maximum
-                    elif "%" in c:
-                        target_dict["multipleOf"] = int(numerical_value)
+                    numerical_value = NumericType.value_pattern.match(c)
+                    if numerical_value and numerical_value.group("NumericalTypeValue"):
+                        if ">" in c:
+                            minimum = (
+                                float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
+                            )
+                            mn = "exclusiveMinimum" if "=" not in c else "minimum"
+                            target_dict[mn] = minimum
+                        elif "<" in c:
+                            maximum = (
+                                float(numerical_value) if "number" in target_dict["type"] else int(numerical_value)
+                            )
+                            mx = "exclusiveMaximum" if "=" not in c else "maximum"
+                            target_dict[mx] = maximum
+                        elif "%" in c:
+                            target_dict["multipleOf"] = int(numerical_value)
                 except IndexError:
                     pass
                 except ValueError:
@@ -257,7 +274,7 @@ class DataGroup:  # pylint: disable=R0903
         dependencies_list: dict,
         requirement_str: str,
         requirement: str,
-    ):
+    ) -> None:
         """
         Construct paired if-then json entries for conditional requirements.
 
@@ -265,14 +282,14 @@ class DataGroup:  # pylint: disable=R0903
         :param requirement:             This item's presence is dependent on the above condition
         """
         separator = r"\sand\s"
-        collector = "allOf"
-        selector_dict: dict = {"properties": {collector: {}}}
-        requirement_list = re.split(separator, requirement_str)
+        # collector = "allOf"
+        selector_dict: dict = {"properties": {}}
+        requirement_list = regex.split(separator, requirement_str)
         # pylint: disable-next=line-too-long
         dependent_req = r"(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?"
 
         for req in requirement_list:
-            m = re.match(dependent_req, req)
+            m = regex.match(dependent_req, req)
             if m:
                 selector = m.group("selector")
                 if m.group("is_equal"):
@@ -282,19 +299,17 @@ class DataGroup:  # pylint: disable=R0903
                         selector_state = True
                     elif "false" in selector_state.lower():
                         selector_state = False
-                    selector_dict["properties"][collector][selector] = (
+                    selector_dict["properties"][selector] = (
                         {"const": selector_state} if is_equal else {"not": {"const": selector_state}}
                     )
-                else:  # prerequisite type
-                    if dependencies_list.get(selector):
-                        dependencies_list[selector].append(requirement)
-                    else:
-                        if "!" in selector:
-                            dependencies_list[selector.lstrip("!")] = {"not": {"required": [requirement]}}
-                        else:
-                            dependencies_list[selector] = [requirement]
+                elif dependencies_list.get(selector):
+                    dependencies_list[selector].append(requirement)
+                elif "!" in selector:
+                    dependencies_list[selector.lstrip("!")] = {"not": {"required": [requirement]}}
+                else:
+                    dependencies_list[selector] = [requirement]
 
-        if selector_dict["properties"][collector].keys():
+        if selector_dict["properties"].keys():
             # Conditional requirements are each a member of a list
             if conditionals_list.get("allOf") is None:
                 conditionals_list["allOf"] = []
@@ -315,7 +330,7 @@ class Enumeration:
     def __init__(self, name, description=None):
         self._name = name
         self._enumerants = []  # list of tuple:[value, description, display_text, notes]
-        self.entry = {}
+        self.entry: dict[str, Any] = {}
         self.entry[self._name] = {}
         if description:
             self.entry[self._name]["description"] = description
@@ -373,7 +388,7 @@ class ObjectTypeList:
         """Return a list of the object types available in the schema"""
         return self._object_structure.keys()
 
-    def object_list(self, object_type: str):
+    def object_list(self, object_type: str) -> list:
         """
         Return the list of objects under a given key
 
@@ -450,7 +465,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
         """Return the translated JSON schema dictionary"""
         return self._schema
 
-    def _load_meta_info(self, schema_section: dict):
+    def _load_meta_info(self, schema_section: dict) -> None:
         """Store the global/common types and the types defined by any named references."""
         self._schema["title"] = schema_section["Title"]
         self._schema["description"] = schema_section["Description"]
@@ -464,7 +479,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
             f"{self._schema_name}": load(self._source_dir / f"{self._schema_name}.schema.yaml"),
         }
         if self._schema_name == "core" and self._forward_declaration_dir and self._forward_declaration_dir.is_dir():
-            for file in self._forward_declaration_dir.iterdir():
+            for file in (iter for iter in self._forward_declaration_dir.iterdir() if iter.suffix in [".yaml", ".yml"]):
                 refs.update({f"{get_base_stem(file)}": load(file)})
         elif "References" in schema_section:
             for ref in schema_section["References"]:
@@ -490,7 +505,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
                 if ext_dict[base_item]["Object Type"] in self._schema_object_types | self._data_group_types
             ]
 
-    def _process_enumeration(self, name_key: str):
+    def _process_enumeration(self, name_key: str) -> dict[str, dict]:
         """Collect all Enumerators in an Enumeration block."""
         enums = self._contents[name_key]["Enumerators"]
         description = self._contents[name_key].get("Description")
@@ -507,7 +522,7 @@ class JsonTranslator:  # pylint:disable=R0902,R0903,R0914
 
 
 # -------------------------------------------------------------------------------------------------
-def generate_core_json_schema(processing_path: Path):
+def generate_core_json_schema(processing_path: Path) -> dict:
     """
     Create JSON schema from core YAML schema. Any forward-declarations in core must be found in
     the schema in the processing path.
@@ -549,11 +564,11 @@ def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
         except KeyError:
             subbed = False  # leave schema subdictionary as-is
     else:
-        for key in subdict:
-            if isinstance(subdict[key], dict):
-                subbed = replace_reference(referenced_schemas, subdict[key])
-            if isinstance(subdict[key], list):
-                for entry in [item for item in subdict[key] if isinstance(item, dict)]:
+        for key, value in subdict.items():
+            if isinstance(value, dict):
+                subbed = replace_reference(referenced_schemas, value)
+            if isinstance(value, list):
+                for entry in [item for item in value if isinstance(item, dict)]:
                     subbed = replace_reference(referenced_schemas, entry)
     return subbed
 
@@ -599,13 +614,13 @@ def get_scope_locations(
     """
     if not lineage:
         lineage = []
-    for key in schema:
-        if key == "scopedType" and schema[key] == scope_key:
+    for key, value in schema.items():
+        if key == "scopedType" and value == scope_key:
             scopes_dict[".".join(lineage)] = schema["scope"]  # key is a dot-separated path
-        elif isinstance(schema[key], dict):
-            get_scope_locations(schema[key], scopes_dict, scope_key, lineage + [key])
-        elif isinstance(schema[key], list):
-            for entry in [item for item in schema[key] if isinstance(item, dict)]:
+        elif isinstance(value, dict):
+            get_scope_locations(value, scopes_dict, scope_key, lineage + [key])
+        elif isinstance(value, list):
+            for entry in [item for item in value if isinstance(item, dict)]:
                 get_scope_locations(entry, scopes_dict, scope_key, lineage + [key])
 
 
@@ -631,7 +646,7 @@ def get_reference_value(data_dict: dict, lineage: list) -> dict:
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_references(input_file: Path, input_schema: Path):
+def postvalidate_references(input_file: Path, input_schema: Path) -> None:
     """
     Make sure IDs and References match in scope.
 
@@ -656,7 +671,7 @@ def postvalidate_references(input_file: Path, input_schema: Path):
 
 
 # -------------------------------------------------------------------------------------------------
-def validate_file(input_file: Path, input_schema: Path):
+def validate_file(input_file: Path, input_schema: Path) -> None:
     """
     Validate example against schema.
 
@@ -668,7 +683,7 @@ def validate_file(input_file: Path, input_schema: Path):
 
 
 # -------------------------------------------------------------------------------------------------
-def postvalidate_file(input_file: Path, input_schema: Path):
+def postvalidate_file(input_file: Path, input_schema: Path) -> None:
     """
     Validate input example against external rules; currently scopes dictated in schema.
 

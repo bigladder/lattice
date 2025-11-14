@@ -1,13 +1,19 @@
-import re
-import logging
 from dataclasses import dataclass, field
-from lattice.cpp.header_entries import DataElement, Struct, HeaderEntry, FunctionalHeaderEntry, MemberFunctionOverrideDeclaration
+
+from lattice.cpp.cpp_entries import CPPExtensionInterface, ElementSerialization, ImplementationEntry
+from lattice.cpp.header_entries import (
+    DataElement,
+    FunctionalHeaderEntry,
+    HeaderEntry,
+    MemberFunctionOverrideDeclaration,
+    Struct,
+)
 from lattice.cpp.header_translator import HeaderEntryExtensionInterface
-from lattice.cpp.cpp_entries import ImplementationEntry, ElementSerialization, CPPExtensionInterface
 
 
 def remove_prefix(text, prefix):
     return text[len(prefix) :] if text.startswith(prefix) else text
+
 
 # Performance map implementation plugin needs to know about the class(es) used for the custom header
 # entry plugin, so both are defined in this file
@@ -15,9 +21,11 @@ def remove_prefix(text, prefix):
 
 # HeaderEntry extension class and plugin
 
+
 @dataclass
 class PerformanceMapOverload(FunctionalHeaderEntry):
     """ """
+
     name: str = field(init=False, default="")
     _f_name: str = field(init=False)
     n_lookup_values: int
@@ -32,15 +40,20 @@ class PerformanceMapOverload(FunctionalHeaderEntry):
         complete_decl += self._indent + " ".join([self._f_ret, self._f_name, self.args]) + self._closure
         return complete_decl
 
+    __hash__ = HeaderEntry.__hash__
+
+
 class PerformanceOverloadPlugin(HeaderEntryExtensionInterface, base_class="ashrae205::PerformanceMapTemplate"):
     """"""
+
     def process_data_group(self, parent_node: HeaderEntry):
         for entry in parent_node.child_entries:
             if isinstance(entry, Struct) and entry.superclass == "ashrae205::PerformanceMapTemplate" and entry.parent:
                 for lvstruct in [
                     lv
                     for lv in entry.parent.child_entries
-                    if isinstance(lv, Struct) and lv.superclass == "ashrae205::LookupVariablesTemplate"
+                    if isinstance(lv, Struct)
+                    and lv.superclass == "ashrae205::LookupVariablesTemplate"
                     and remove_prefix(lv.name, "LookupVariables") == remove_prefix(entry.name, "PerformanceMap")
                 ]:
                     f_ret = f"{lvstruct.name}Struct"
@@ -49,18 +62,23 @@ class PerformanceOverloadPlugin(HeaderEntryExtensionInterface, base_class="ashra
                     for gridstruct in [
                         gridv
                         for gridv in entry.parent.child_entries
-                        if isinstance(gridv, Struct) and gridv.superclass == "ashrae205::GridVariablesTemplate"
+                        if isinstance(gridv, Struct)
+                        and gridv.superclass == "ashrae205::GridVariablesTemplate"
                         and remove_prefix(gridv.name, "GridVariables") == remove_prefix(entry.name, "PerformanceMap")
                     ]:
                         f_args = list()
                         for ce in [c for c in gridstruct.child_entries if isinstance(c, DataElement)]:
                             f_args.append(" ".join(["double", ce.name]))
-                        f_args.append("Btwxt::InterpolationMethod performance_interpolation_method = Btwxt::InterpolationMethod::linear")
+                        f_args.append(
+                            "Btwxt::InterpolationMethod performance_interpolation_method = Btwxt::InterpolationMethod::linear"  # noqa E501
+                        )
                         PerformanceMapOverload(entry, f_ret, f_args, n_ret)
             else:
                 self.process_data_group(entry)
 
+
 # ImpementationEntry extension classes and plugin
+
 
 @dataclass
 class DataTableImplementation(ImplementationEntry):
@@ -70,6 +88,7 @@ class DataTableImplementation(ImplementationEntry):
 
     def __str__(self):
         return self._indent + self._func + "\n"
+
 
 @dataclass
 class GridAxisImplementation(ImplementationEntry):
@@ -100,7 +119,7 @@ class PerformanceMapImplementation(ImplementationEntry):
 class GridAxisFinalize(ImplementationEntry):
     def __post_init__(self):
         super().__post_init__()
-        self._func = f"performance_map->finalize_grid(logger);"
+        self._func = "performance_map->finalize_grid(logger);"
 
     def __str__(self):
         return self._indent + self._func + "\n"
@@ -115,9 +134,7 @@ class PerformanceOverloadImplementation(ImplementationEntry):
         self._funclines = []
         args = ", ".join([f"{a[1]}" for a in [arg.split(" ") for arg in self._header_entry._f_args[:-1]]])
         self._funclines.append(f"std::vector<double> target {{{args}}};")
-        self._funclines.append(
-            "auto v = calculate_performance(target, performance_interpolation_method);"
-        )
+        self._funclines.append("auto v = calculate_performance(target, performance_interpolation_method);")
         init_str = f"{self._header_entry._f_ret} s {{"
         for i in range(self._header_entry.n_lookup_values):
             init_str += f"v[{i}], "
@@ -133,8 +150,8 @@ class PerformanceOverloadImplementation(ImplementationEntry):
 
 class PerformanceImplPlugin(CPPExtensionInterface):
     """"""
-    def process_data_group(self, h_entry: HeaderEntry, parent_node: ImplementationEntry):
 
+    def process_data_group(self, h_entry: HeaderEntry, parent_node: ImplementationEntry):
         if isinstance(h_entry, Struct) and len([c for c in h_entry.child_entries if isinstance(c, DataElement)]):
             for data_element_entry in [c for c in h_entry.child_entries if isinstance(c, DataElement)]:
                 # In the special case of a performance_map subclass, add calls to its
