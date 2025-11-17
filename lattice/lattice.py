@@ -36,14 +36,6 @@ class Lattice:  # pylint:disable=R0902
     Main class that provides schema transformations for the schema-based data model framework.
     """
 
-    @dataclass
-    class SchemaOutputs:
-        schema: Schema
-        meta_schema_path: Path = field(init=False)
-        json_schema_path: Path = field(init=False)
-        cpp_header_file_path: Path = field(init=False)
-        cpp_source_file_path: Path = field(init=False)
-
     def __init__(
         self,
         root_directory: Path = Path.cwd(),
@@ -247,9 +239,9 @@ class Lattice:  # pylint:disable=R0902
         """Collect source schemas into list of SchemaFiles"""
         self.cpp_schemas = self.schemas + [SchemaSupport(Schema(Path(__file__).with_name("core.schema.yaml")))]
 
-    def setup_cpp_source_files(self, output_directory: Optional[Path] = None):
+    def setup_cpp_source_files(self, output_directory: Optional[Path] = None) -> None:
         """Create directories for generated CPP source"""
-        self.cpp_output_dir = output_directory if output_directory else Path(self.build_directory) / "cpp"
+        self.cpp_output_dir = output_directory if output_directory else (self.build_directory / "cpp")
         make_dir(self.cpp_output_dir)
         include_dir = make_dir(self.cpp_output_dir / "include")
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
@@ -288,7 +280,7 @@ class Lattice:  # pylint:disable=R0902
         submodule_names: list[str] = []
         submodule_urls: list[str] = []
 
-        config_file = Path(self.root_directory / "cpp" / "0config.yaml").resolve()
+        config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
         if config_file.is_file():
             config = load(config_file)
             submodule_names = [tuple["name"] for tuple in config["dependencies"]]
