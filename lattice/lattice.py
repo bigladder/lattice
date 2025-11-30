@@ -1,13 +1,12 @@
 """Classes that encapsulate the basic data model architecture for lattice"""
 
-import os
-import subprocess
 import warnings
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Optional, Union
 
+from atheneum_forge import forge, project_factory
 from referencing.exceptions import Unresolvable
 
 import lattice.cpp.support_files as support
@@ -82,6 +81,8 @@ class Lattice:  # pylint:disable=R0902
         self.collect_cpp_schemas()
 
         self.setup_cpp_source_files(cpp_output_directory)
+
+        self.forge = forge.AtheneumForge()
 
     def collect_schemas(self):
         """Collect source schemas into list of SchemaFiles"""
@@ -242,7 +243,6 @@ class Lattice:  # pylint:disable=R0902
     def setup_cpp_source_files(self, output_directory: Optional[Path] = None) -> None:
         """Create directories for generated CPP source"""
         self.cpp_output_dir = output_directory if output_directory else (self.build_directory / "cpp")
-        make_dir(self.cpp_output_dir)
         include_dir = make_dir(self.cpp_output_dir / "include")
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
         self._cpp_output_src_dir = make_dir(self.cpp_output_dir / "src")
@@ -250,19 +250,19 @@ class Lattice:  # pylint:disable=R0902
             schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.schema.name}.h"
             schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.schema.name}.cpp"
 
-    def setup_cpp_repository(self, submodules: list[str]) -> None:
-        """Initialize the CPP output directory as a Git repo."""
-        cwd = os.getcwd()
-        os.chdir(self.cpp_output_dir)
-        subprocess.run(["git", "init"], check=True)
-        vendor_dir = make_dir("vendor")
-        os.chdir(vendor_dir)
-        try:
-            for submodule in submodules:
-                subprocess.run(["git", "submodule", "add", submodule], check=False)
-        finally:
-            os.chdir(cwd)
-        os.chdir(cwd)
+    # def setup_cpp_repository(self, submodules: list[str]) -> None:
+    #     """Initialize the CPP output directory as a Git repo."""
+    #     cwd = os.getcwd()
+    #     os.chdir(self.cpp_output_dir)
+    #     subprocess.run(["git", "init"], check=True)
+    #     vendor_dir = make_dir("vendor")
+    #     os.chdir(vendor_dir)
+    #     try:
+    #         for submodule in submodules:
+    #             subprocess.run(["git", "submodule", "add", submodule], check=False)
+    #     finally:
+    #         os.chdir(cwd)
+    #     os.chdir(cwd)
 
     @property
     def cpp_support_headers(self) -> list[Path]:
@@ -271,21 +271,39 @@ class Lattice:  # pylint:disable=R0902
 
     def generate_cpp_project(self):
         """Generate CPP header files, source files, and build support files."""
+        self.forge.initialize_configuration(
+            self.cpp_output_dir, self.root_directory.name, project_factory.ProjectType.cpp, False, False, False, True
+        )  # force = True
+        # Copy the local project's cpp submodule information into the atheneum-forge config
+        if (self.root_directory / "cpp" / "config.toml").exists():
+            with open(self.root_directory / "cpp" / "config.toml", "r", encoding="utf-8") as local_submodules:
+                subs_list = local_submodules.read()
+                if (self.cpp_output_dir / "forge.toml").exists():
+                    with open(self.cpp_output_dir / "forge.toml", "a", encoding="utf-8") as config:
+                        print(subs_list)
+                        config.write(subs_list)
+
+        # TODO: Fix config entries for Copyright!!
+        # SPDX-FileCopyrightText: © 2025 Big Ladder Software <info@bigladdersoftware.com>
+        # SPDX-License-Identifier: BSD-3-Clause
+
+        self.forge.generate_project_files(self.cpp_output_dir)
+
         for schema in self.cpp_schemas:
             h = HeaderTranslator(schema.schema.file_path, None, self._cpp_output_include_dir, self.root_directory.name)
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
 
-        submodule_names: list[str] = []
-        submodule_urls: list[str] = []
+        # submodule_names: list[str] = []
+        # submodule_urls: list[str] = []
 
-        config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
-        if config_file.is_file():
-            config = load(config_file)
-            submodule_names = [tuple["name"] for tuple in config["dependencies"]]
-            submodule_urls = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
+        # config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
+        # if config_file.is_file():
+        #     config = load(config_file)
+        #     submodule_names = [tuple["name"] for tuple in config["dependencies"]]
+        #     submodule_urls = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
 
-        support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
-        support.render_build_files(self.root_directory.name, submodule_names, self.cpp_output_dir)
-        self.setup_cpp_repository(submodule_urls)
+        # support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
+        # support.render_build_files(self.root_directory.name, submodule_names, self.cpp_output_dir)
+        # self.setup_cpp_repository(submodule_urls)
