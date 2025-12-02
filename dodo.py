@@ -151,7 +151,7 @@ def task_generate_cpp_code(level):
             "actions": [
                 (set_log_level, [level]),
                 (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
-                (example.generate_cpp_project),
+                (example.generate_cpp_project, [False, False, "Lattice", "name@org.com", "2025", "BSD-3-Clause"]),
             ],
             "clean": True,
         }

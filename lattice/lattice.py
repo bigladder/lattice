@@ -269,31 +269,55 @@ class Lattice:  # pylint:disable=R0902
         """Wrap list of template-generated headers."""
         return support.support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_project(self):
-        """Generate CPP header files, source files, and build support files."""
+    def generate_cpp_project(
+        self,
+        git_init=False,
+        submodule_init=False,
+        copyright_holder="",
+        contact_email="",
+        start_year="",
+        spdx_license_id="",
+    ):
+        """Generate CPP header files, source files, and build support files.
+
+        Args:
+            git_init (bool, optional): _description_. Defaults to False.
+            submodule_init (bool, optional): _description_. Defaults to False.
+            spdx_copyright_text (str, optional): SPDX-compatible copyright string. Defaults to blank.
+            spdx_license_id (str, optional): SPDX-compatible license string. Defaults to blank.
+        """
         self.forge.initialize_configuration(
             self.cpp_output_dir, self.root_directory.name, project_factory.ProjectType.cpp, False, False, False, True
         )  # force = True
-        # Copy the local project's cpp submodule information into the atheneum-forge config
-        if (self.root_directory / "cpp" / "config.toml").exists():
-            with open(self.root_directory / "cpp" / "config.toml", "r", encoding="utf-8") as local_submodules:
-                subs_list = local_submodules.read()
-                if (self.cpp_output_dir / "forge.toml").exists():
-                    with open(self.cpp_output_dir / "forge.toml", "a", encoding="utf-8") as config:
-                        print(subs_list)
-                        config.write(subs_list)
+        self._add_project_submodules()
 
-        # TODO: Fix config entries for Copyright!!
-        # SPDX-FileCopyrightText: © 2025 Big Ladder Software <info@bigladdersoftware.com>
-        # SPDX-License-Identifier: BSD-3-Clause
+        self.forge.edit_config(
+            {
+                "name_of_copyright_holder": copyright_holder,
+                "contact_email": contact_email,
+                "start_year": start_year,
+                "SPDX_license_name": spdx_license_id,
+            }
+        )
 
-        self.forge.generate_project_files(self.cpp_output_dir)
+        self.forge.generate_project_files(self.cpp_output_dir, git_init, submodule_init)
 
         for schema in self.cpp_schemas:
             h = HeaderTranslator(schema.schema.file_path, None, self._cpp_output_include_dir, self.root_directory.name)
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
+        self.forge.add_copyright(self._cpp_output_include_dir)
+        self.forge.add_copyright(self._cpp_output_src_dir)
+
+    def _add_project_submodules(self):
+        """Copy the local project's cpp submodule information into the atheneum-forge config"""
+        if (self.root_directory / "cpp" / "config.toml").exists():
+            with open(self.root_directory / "cpp" / "config.toml", "r", encoding="utf-8") as local_submodules:
+                subs_list = local_submodules.read()
+                if (self.cpp_output_dir / "forge.toml").exists():
+                    with open(self.cpp_output_dir / "forge.toml", "a", encoding="utf-8") as config:
+                        config.write(subs_list)
 
         # submodule_names: list[str] = []
         # submodule_urls: list[str] = []
