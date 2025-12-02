@@ -34,14 +34,9 @@ class RegularExpressionPattern:
         return f"^{pattern_text}$"
 
 
-# Attributes
-
 # Data Types
 _type_base_names = RegularExpressionPattern("[A-Z]([A-Z]|[a-z]|[0-9])*")
 _data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
-
-
-# Module functions
 
 
 class DataType:

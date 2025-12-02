@@ -279,7 +279,7 @@ class Lattice:  # pylint:disable=R0902
         submodule_names: list[str] = []
         submodule_urls: list[str] = []
 
-        config_file = Path(self.root_directory / "cpp" / "0config.yaml").resolve()
+        config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
         if config_file.is_file():
             config = load(config_file)
             submodule_names = [tuple["name"] for tuple in config["dependencies"]]
