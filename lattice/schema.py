@@ -415,9 +415,7 @@ class DataGroup:
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
-        self.parent_template: DataGroupTemplate | None = self._assign_template(
-            self.dictionary.get("Data Group Template", "")
-        )
+        self.parent_template: DataGroupTemplate = self._assign_template(self.dictionary.get("Data Group Template", ""))
         self.data_elements: dict[str, DataElement] = {}
         self.custom_element_attributes: set[str] = (
             self.parent_template.custom_element_attributes if self.parent_template else set()
@@ -428,11 +426,11 @@ class DataGroup:
         #         data_element, self.dictionary["Data Elements"][data_element], self
         #     )
 
-    def _assign_template(self, template_name: str) -> DataGroupTemplate | None:
+    def _assign_template(self, template_name: str) -> DataGroupTemplate:
         for reference_schema in self.parent_schema.reference_schemas.values():
             if template_name in reference_schema.data_group_templates:
                 return reference_schema.data_group_templates[template_name]
-        return None
+        raise KeyError(f"Template named {template_name} not found in referenced schema.")
 
     def resolve(self):
         for data_element in self.data_elements.values():
