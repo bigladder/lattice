@@ -415,7 +415,9 @@ class DataGroup:
         self.name = name
         self.dictionary = data_group_dictionary
         self.parent_schema = parent_schema
-        self.parent_template: DataGroupTemplate = self._assign_template(self.dictionary.get("Data Group Template", ""))
+        self.parent_template: DataGroupTemplate | None = self._assign_template(
+            self.dictionary.get("Data Group Template")
+        )
         self.data_elements: dict[str, DataElement] = {}
         self.custom_element_attributes: set[str] = (
             self.parent_template.custom_element_attributes if self.parent_template else set()
@@ -426,11 +428,21 @@ class DataGroup:
         #         data_element, self.dictionary["Data Elements"][data_element], self
         #     )
 
-    def _assign_template(self, template_name: str) -> DataGroupTemplate:
-        for reference_schema in self.parent_schema.reference_schemas.values():
-            if template_name in reference_schema.data_group_templates:
-                return reference_schema.data_group_templates[template_name]
-        raise KeyError(f"Template named {template_name} not found in referenced schema.")
+    def _assign_template(self, template_name: str | None) -> DataGroupTemplate | None:
+        if template_name is None:
+            return None
+        reference_schemas = {self.parent_schema.name: self.parent_schema}
+        reference_schemas.update(self.parent_schema.reference_schemas)
+        for reference_schema in reference_schemas.values():
+            template_assigned = None
+            if template_name in reference_schema.data_group_templates.keys():
+                template_assigned = reference_schema.data_group_templates[template_name]
+                return template_assigned
+        if isinstance(template_name, str) and template_assigned is None:
+            raise KeyError(
+                f"Template named {template_name} not found in {self.parent_schema.name} or referenced schema."
+            )
+        return template_assigned
 
     def resolve(self):
         for data_element in self.data_elements.values():
