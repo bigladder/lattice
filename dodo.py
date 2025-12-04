@@ -151,7 +151,11 @@ def task_generate_cpp_code(level):
             "actions": [
                 (set_log_level, [level]),
                 (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
-                (example.generate_cpp_project, [False, False, "Lattice", "name@org.com", "2025", "BSD-3-Clause"]),
+                # init_repo and init_submodules set to False, because all of this is inside a .gitignore'd directory
+                (
+                    example.generate_cpp_project,
+                    [False, False, "Lattice", "info@bigladdersoftware.com", "2025", "BSD-3-Clause"],
+                ),
             ],
             "clean": True,
         }

@@ -26,7 +26,6 @@ source = { editable = "../../../../../src/atheneum-forge" }
 dependencies = [
     { name = "click" },
     { name = "jinja2" },
-    { name = "pygit2" },
     { name = "pyyaml" },
     { name = "textual" },
     { name = "tomli-w" },
@@ -38,7 +37,6 @@ dependencies = [
 requires-dist = [
     { name = "click", specifier = "<8.2.0" },
     { name = "jinja2", specifier = ">=3.1.4,<4" },
-    { name = "pygit2" },
     { name = "pyyaml", specifier = ">=6.0.0" },
     { name = "textual" },
     { name = "tomli-w", specifier = ">=1.1.0,<2" },
