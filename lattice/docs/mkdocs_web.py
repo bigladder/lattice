@@ -253,7 +253,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         references = {}
         reference_counter = 1
         reference_string = "\n"
-        for schema in self.lattice.schemas:
+        for schema in self.lattice.schema_info:
             content = load(schema.json_schema_path)
             output_path = Path(schema_assets_directory, get_file_basename(schema.json_schema_path))
             shutil.copy(schema.json_schema_path, output_path)
