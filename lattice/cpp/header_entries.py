@@ -306,9 +306,11 @@ class DataElement(HeaderEntry):
                 for base_type in self._referenced_datatypes:
                     assert custom_type.superclass_name is not None
                     if base_type.name == custom_type.superclass_name:
-                        self.type = f"std::unique_ptr<{
-                            DataElement.make_scoped((base_type.namespace, custom_type.superclass_name))
-                        }>"
+                        self.type = (  # There are some vagaries in f-string multiline formatting in py3.12+
+                            # Use parens plus begin & end quotes for maximum 7compatibility.
+                            "std::unique_ptr<"
+                            f"{DataElement.make_scoped((base_type.namespace, custom_type.superclass_name))}>"
+                        )
                         break
 
     __hash__ = HeaderEntry.__hash__
