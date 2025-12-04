@@ -62,4 +62,4 @@ build-backend = "hatchling.build"
 packages = ["lattice"]
 
 [tool.uv.sources]
-atheneum-forge = { path = "/src/atheneum-forge", editable = true } #{ git = "https://github.com/bigladder/atheneum-forge", branch = "make-textual-app" }
+atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge", branch = "make-textual-app" }
