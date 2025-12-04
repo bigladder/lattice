@@ -96,13 +96,13 @@ class Lattice:  # pylint:disable=R0902
             self.schema_directory_path = self.root_directory
 
         # Collect list of schema files
-        self.schemas: List[SchemaSupport] = []
+        self.schema_info: List[SchemaSupport] = []
 
         for file_name in sorted(list(self.schema_directory_path.iterdir())):
             if fnmatch(str(file_name), "*.schema.yaml") or fnmatch(str(file_name), "*.schema.yml"):
-                self.schemas.append(SchemaSupport(Schema(file_name)))
+                self.schema_info.append(SchemaSupport(Schema(file_name)))
 
-        if len(self.schemas) == 0:
+        if len(self.schema_info) == 0:
             raise Exception(f'No schemas found in "{self.schema_directory_path}".')
 
     def setup_meta_schemas(self):
@@ -110,34 +110,34 @@ class Lattice:  # pylint:disable=R0902
 
         self.meta_schema_directory = Path(self.build_directory) / "meta_schema"
         make_dir(self.meta_schema_directory)
-        for schema in self.schemas:
+        for schema in self.schema_info:
             meta_schema_path = self.meta_schema_directory / f"{schema.schema.name}.meta.schema.json"
             schema.meta_schema_path = meta_schema_path
 
     def generate_meta_schemas(self):
         """Generate metaschemas"""
 
-        for schema in self.schemas:
+        for schema in self.schema_info:
             generate_meta_schema(Path(schema.meta_schema_path), Path(schema.schema.file_path))
 
     def validate_schemas(self):
         """Validate source schema using metaschema file"""
 
-        for schema in self.schemas:
+        for schema in self.schema_info:
             meta_validate_file(Path(schema.schema.file_path), Path(schema.meta_schema_path))
 
     def setup_json_schemas(self):
         """Set up json_schema subdirectory"""
         self.json_schema_directory = Path(self.build_directory) / "json_schema"
         make_dir(self.json_schema_directory)
-        for schema in self.schemas:
+        for schema in self.schema_info:
             json_schema_path = self.json_schema_directory / f"{schema.schema.name}.schema.json"
             schema.json_schema_path = json_schema_path
 
     def generate_json_schemas(self):
         """Generate JSON schemas"""
 
-        for schema in self.schemas:
+        for schema in self.schema_info:
             generate_json_schema(schema.schema.file_path, schema.json_schema_path)
 
     def validate_file(self, input_path, schema_type=None):
@@ -154,16 +154,16 @@ class Lattice:  # pylint:disable=R0902
                     schema_type = instance["metadata"]["schema_name"]
 
         if schema_type is None:
-            if len(self.schemas) > 1:
+            if len(self.schema_info) > 1:
                 raise Exception(
                     f"Too many schema available for validation; cannot find a match to"
                     f' "schema_name" {schema_type} in "{input_path}." Unable to validate file.'
                 ) from None
-            validate_file(input_path, self.schemas[0].json_schema_path)
-            postvalidate_file(input_path, self.schemas[0].json_schema_path)
+            validate_file(input_path, self.schema_info[0].json_schema_path)
+            postvalidate_file(input_path, self.schema_info[0].json_schema_path)
         else:
             # Find corresponding schema
-            for schema in self.schemas:
+            for schema in self.schema_info:
                 if schema.schema.schema_name == schema_type:
                     try:
                         validate_file(input_path, schema.json_schema_path)
@@ -238,7 +238,7 @@ class Lattice:  # pylint:disable=R0902
 
     def collect_cpp_schemas(self):
         """Collect source schemas into list of SchemaFiles"""
-        self.cpp_schemas = self.schemas + [SchemaSupport(Schema(Path(__file__).with_name("core.schema.yaml")))]
+        self.cpp_schemas = self.schema_info + [SchemaSupport(Schema(Path(__file__).with_name("core.schema.yaml")))]
 
     def setup_cpp_source_files(self, output_directory: Optional[Path] = None) -> None:
         """Create directories for generated CPP source"""
