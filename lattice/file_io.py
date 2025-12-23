@@ -85,7 +85,7 @@ def translate(input_file, output_file):
 def make_dir(dir_path):
     """Return a newly-created directory path"""
     if isinstance(dir_path, Path):
-        Path.mkdir(dir_path, exist_ok=True)
+        Path.mkdir(dir_path, exist_ok=True, parents=True)
     elif not os.path.exists(dir_path):
         os.mkdir(dir_path)
     return dir_path

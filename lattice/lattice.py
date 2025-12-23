@@ -6,7 +6,7 @@ import warnings
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 
 from referencing.exceptions import Unresolvable
 
@@ -39,9 +39,10 @@ class Lattice:  # pylint:disable=R0902
     def __init__(
         self,
         root_directory: Path = Path.cwd(),
-        build_directory: Union[Path, None] = None,
+        build_directory: Optional[Path] = None,
         build_output_directory_name: Union[Path, None] = Path(".lattice"),
         build_validation: bool = True,
+        cpp_output_directory: Optional[Path] = None,
     ) -> None:
         """Set up file structure"""
 
@@ -80,7 +81,7 @@ class Lattice:  # pylint:disable=R0902
 
         self.collect_cpp_schemas()
 
-        self.setup_cpp_source_files()
+        self.setup_cpp_source_files(cpp_output_directory)
 
     def collect_schemas(self):
         """Collect source schemas into list of SchemaFiles"""
@@ -238,9 +239,9 @@ class Lattice:  # pylint:disable=R0902
         """Collect source schemas into list of SchemaFiles"""
         self.cpp_schemas = self.schema_info + [SchemaSupport(Schema(Path(__file__).with_name("core.schema.yaml")))]
 
-    def setup_cpp_source_files(self):
+    def setup_cpp_source_files(self, output_directory: Optional[Path] = None) -> None:
         """Create directories for generated CPP source"""
-        self.cpp_output_dir = Path(self.build_directory) / "cpp"
+        self.cpp_output_dir = output_directory if output_directory else (self.build_directory / "cpp")
         make_dir(self.cpp_output_dir)
         include_dir = make_dir(self.cpp_output_dir / "include")
         self._cpp_output_include_dir = make_dir(include_dir / f"{self.root_directory.name}")
