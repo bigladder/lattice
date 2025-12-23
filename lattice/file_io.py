@@ -61,7 +61,7 @@ def dump(content: dict, output_file_path: Path | str) -> None:
         raise ValueError(f'Unsupported output "{ext}".')
 
 
-def dump_to_string(content: dict, output_type="json"):
+def dump_to_string(content: dict, output_type="json") -> None:
     """Write a dictionary as a string"""
     if output_type == "json":
         return json.dumps(content, indent=4)
@@ -70,7 +70,7 @@ def dump_to_string(content: dict, output_type="json"):
     raise ValueError(f'Unsupported output "{output_type}".')
 
 
-def string_to_file(contents: str, output_file_path: Path):
+def string_to_file(contents: str, output_file_path: Path) -> None:
     """Write a string to file"""
     with open(output_file_path, "w", encoding="utf-8") as dest:
         dest.write(contents)
@@ -85,7 +85,7 @@ def translate(input_file, output_file):
 def make_dir(dir_path):
     """Return a newly-created directory path"""
     if isinstance(dir_path, Path):
-        Path.mkdir(dir_path, exist_ok=True)
+        Path.mkdir(dir_path, exist_ok=True, parents=True)
     elif not os.path.exists(dir_path):
         os.mkdir(dir_path)
     return dir_path

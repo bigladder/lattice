@@ -7,7 +7,7 @@ from lattice.file_io import make_dir, string_to_file
 from lattice.util import hyphen_separated_lowercase_style, namespace_style, snake_style
 
 
-def support_header_pathnames(output_directory: Path):
+def support_header_pathnames(output_directory: Path) -> list:
     """Return a list of the template-generated header file names."""
     return [
         output_directory / "-".join(snake_style(template.stem).split("_"))
@@ -16,7 +16,7 @@ def support_header_pathnames(output_directory: Path):
     ]
 
 
-def render_support_headers(namespace_name: str, output_directory: Path):
+def render_support_headers(namespace_name: str, output_directory: Path) -> None:
     """Generate the project-specific helper headers."""
     for template in Path(__file__).with_name("templates").iterdir():
         if ".h" in template.suffixes:
@@ -29,7 +29,7 @@ def render_support_headers(namespace_name: str, output_directory: Path):
             )
 
 
-def render_build_files(project_name: str, submodule_names: list, output_directory: Path):
+def render_build_files(project_name: str, submodule_names: list, output_directory: Path) -> None:
     """Generate the project-specific CMakeLists files."""
     generated_file_name = "CMakeLists.txt"
 
@@ -59,7 +59,7 @@ def render_build_files(project_name: str, submodule_names: list, output_director
         )
 
 
-def generate_superclass_header(superclass: str, output_directory: Path):
+def generate_superclass_header(superclass: str, output_directory: Path) -> None:
     s1 = f"#ifndef {superclass.upper()}_H_"
     s2 = f"#define {superclass.upper()}_H_"
     s3 = f"#endif"  # noqa: F541
