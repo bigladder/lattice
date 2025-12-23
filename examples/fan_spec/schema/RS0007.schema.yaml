@@ -128,5 +128,4 @@ LookupVariables:
     operation_state:
       Description: "The operation state at the operating conditions"
       Type: "[<OperationState>]"
-      Units: "-"
       Required: True

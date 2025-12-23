@@ -21,6 +21,20 @@ Schema:
 
 #Data Group Templates
 
+RepresentationSpecificationTemplate:
+  Object Type: "Data Group Template"
+  Required Data Elements:
+    metadata:
+      Required: True
+    performance:
+      Required: True
+    description:
+      Required: False
+
+PerformanceTemplate:
+  Object Type: "Data Group Template"
+  Custom Attributes: ["Scalable"]
+
 PerformanceMapTemplate:
   Object Type: "Data Group Template"
   Required Data Elements:
@@ -35,6 +49,7 @@ GridVariablesTemplate:
     - "[Numeric]"
     - "[Integer]"
   Data Elements Required: True
+  Custom Attributes: ["Scalable"]
 
 LookupVariablesTemplate:
   Object Type: "Data Group Template"
@@ -43,22 +58,13 @@ LookupVariablesTemplate:
     - "[Integer]"
     - "[<OperationState>]"
   Data Elements Required: True
+  Custom Attributes: ["Scalable"]
 
-RepresentationSpecificationTemplate:
-  Object Type: "Data Group Template"
-  Required Data Elements:
-    metadata:
-      Required: True
-    performance:
-      Required: True
-    description:
-      Required: False
-  Custom Attributes:
-    Scalable:
-      Type: Boolean
-      Applies To: ["Numeric"]
-      Description: "Indicates whether the value can be scaled"
-      Applies to Children: True
+Scalable:
+  Object Type: "Custom Attribute"
+  Type: Boolean
+  Description: "Indicates whether the value can be scaled"
+  Applies To: ["Numeric"]
 
 RatingTemplate:
   Object Type: "Data Group Template"

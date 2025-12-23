@@ -110,6 +110,7 @@ ProductInformation:
 
 Performance:
   Object Type: "Data Group"
+  Data Group Template: "PerformanceTemplate"
   Data Elements:
     nominal_standard_air_volumetric_flow_rate:
       Description: "Nominal or rated air flow rate at standard air conditions"
@@ -193,6 +194,7 @@ Performance:
 
 AssemblyComponent:
   Object Type: "Data Group"
+  Custom Attributes: ["Scalable"]
   Data Elements:
     component_type:
       Description: "Type of component"
@@ -220,6 +222,7 @@ AssemblyComponent:
 
 SystemCurve:
   Object Type: "Data Group"
+  Custom Attributes: ["Scalable"]
   Data Elements:
     standard_air_volumetric_flow_rate:
       Description: "Volumetric air flow rate through an air distribution system at standard air conditions"
@@ -301,7 +304,6 @@ LookupVariablesContinuous:
     operation_state:
       Description: "The operation state at the operating conditions"
       Type: "[<OperationState>]"
-      Units: "-"
       Required: True
 
 PerformanceMapDiscrete:
@@ -327,7 +329,6 @@ GridVariablesDiscrete:
       Constraints:
         - ">=0"
         - "[1..]"
-      Units: "-"
       Notes: "Data shall be provided for all allowable discrete speeds or settings"
       Required: True
     static_pressure_difference:
@@ -374,5 +375,4 @@ LookupVariablesDiscrete:
     operation_state:
       Description: "The operation state at the operating conditions"
       Type: "[<OperationState>]"
-      Units: "-"
       Required: True

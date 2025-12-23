@@ -46,6 +46,15 @@ class DataType:
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
         self.parent_data_element = parent_data_element
+        self.required_attributes = [
+            "Description",
+            "Type",
+        ]
+        self.optional_attributes = [
+            "Constraints",
+            "Required",
+            "Notes",
+        ]
 
     def get_path(self) -> str:
         return (
@@ -68,6 +77,10 @@ class NumericType(DataType):
     pattern = RegularExpressionPattern("(Numeric)")
     value_pattern = RegularExpressionPattern("(?P<NumericTypeValue>[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)")
 
+    def __init__(self, text, parent_data_element):
+        super().__init__(text, parent_data_element)
+        self.required_attributes += ["Units"]
+
 
 class BooleanType(DataType):
     pattern = RegularExpressionPattern("(Boolean)")
@@ -77,6 +90,10 @@ class BooleanType(DataType):
 class StringType(DataType):
     pattern = RegularExpressionPattern("(String)")
     value_pattern = RegularExpressionPattern('".*"')
+
+    def __init__(self, text, parent_data_element):
+        super().__init__(text, parent_data_element)
+        self.optional_attributes += ["ID"]
 
 
 class PatternType(DataType):
@@ -94,10 +111,12 @@ class DataGroupType(DataType):
         match = self.pattern.match(text)
         assert match is not None
         self.data_group_name = match.group("DataGroupName")
-        self.data_group = None  # only valid once resolve() is called
+        self.data_group: DataGroup | None = None  # only valid once resolve() is called
 
     def resolve(self):
         self.data_group = self.parent_data_element.parent_data_group.parent_schema.get_data_group(self.data_group_name)
+        assert self.data_group is not None
+        self.optional_attributes += self.data_group.custom_element_attributes
 
 
 class EnumerationType(DataType):
@@ -127,6 +146,15 @@ class ArrayType(DataType):
         rf"\[(?P<ArrayTypeName>{_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\]|"  # noqa: E501
         rf"Array\((?P<ArrayTypeName>{_type_base_names}|{DataGroupType.pattern}|{EnumerationType.pattern})\)"
     )
+
+    def __init__(self, text, parent_data_element):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.array_type_name = match.group("ArrayTypeName")
+        self.array_data_type: DataType = self.parent_data_element.get_data_type(self.array_type_name)
+        self.optional_attributes = self.array_data_type.optional_attributes
+        self.required_attributes = self.array_data_type.required_attributes
 
 
 _value_pattern = RegularExpressionPattern(
@@ -300,45 +328,12 @@ class DataElement:
         # Data Type is required by subsequent attribute processing; e.g. some Constraints
         if "Type" in self.dictionary:
             data_type_str = self.dictionary["Type"]
-            if data_type_str == "Numeric":
-                if "Units" not in self.dictionary:
-                    raise ValueError(
-                        f"Units are required for Numeric data type in '"
-                        f"{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}.'"
-                    )
             self.data_type = self.get_data_type(data_type_str)
-            self._assign_custom_attributes_to_type(data_type_str)
-        for attribute in {k: v for k, v in self.dictionary.items() if k not in {"Type"}}:
-            if attribute == "Description":
-                self.description = self.dictionary[attribute]
-            elif attribute == "Units":
-                self.units = self.dictionary[attribute]
-            elif attribute == "Constraints":
-                self.set_constraints(self.dictionary[attribute])
-            elif attribute == "Required":
-                self.required = self.dictionary[attribute]
-            elif attribute == "Notes":
-                self.notes = self.dictionary[attribute]
-            elif attribute == "ID":
-                self.is_id = self.dictionary[attribute]
-                if self.is_id:
-                    if self.parent_data_group.id_data_element is None:
-                        self.parent_data_group.id_data_element = self
-                    else:
-                        raise RuntimeError(
-                            f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}':"
-                            f" '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
-                        )
-            elif attribute in self.parent_data_group.custom_element_attributes:
-                continue
-            else:
-                raise UnrecognizedAttributeError(
-                    f'Unrecognized attribute, "{attribute}". '
-                    f"Schema={self.parent_data_group.parent_schema.file_path}, "
-                    f"Data Group={self.parent_data_group.name}, "
-                    f"Data Element={self.name}",
-                    f"{attribute}",
-                )
+        else:
+            raise ValueError(
+                f"Type is a required attribute for Data Element '"
+                f"{self.parent_data_group.parent_schema.name}.{self.parent_data_group.name}.{self.name}.'"
+            )
 
     def get_data_type(self, attribute_str: str) -> DataType:
         """
@@ -362,21 +357,51 @@ class DataElement:
             self.constraints.append(_constraint_factory(constraint, self))
 
     def resolve(self):
+        # Resolve attributes
+        for attribute in self.data_type.required_attributes:
+            if attribute not in self.dictionary:
+                raise ValueError(
+                    f'Missing required attribute, "{attribute}", for Data Type: "{self.data_type.text}". '
+                    f"Schema={self.parent_data_group.parent_schema.file_path}, "
+                    f"Data Group={self.parent_data_group.name}, "
+                    f"Data Element={self.name}"
+                )
+
+        allowed_attributes = self.data_type.required_attributes + self.data_type.optional_attributes
+
+        allowed_attributes += self.parent_data_group.custom_element_attributes
+
+        for attribute in self.dictionary:
+            if attribute not in allowed_attributes:
+                raise UnrecognizedAttributeError(
+                    f'Unrecognized attribute, "{attribute}", for Data Type: "{self.data_type.text}". '
+                    f"Schema={self.parent_data_group.parent_schema.file_path}, "
+                    f"Data Group={self.parent_data_group.name}, "
+                    f"Data Element={self.name}",
+                    f"{attribute}",
+                )
+
+        self.description = self.dictionary["Description"]
+        self.notes = self.dictionary.get("Notes", None)
+        self.units = self.dictionary.get("Units", None)
+        self.required = self.dictionary.get("Required", False)
+
+        self.is_id = self.dictionary.get("ID", False)
+        if self.is_id:
+            if self.parent_data_group.id_data_element is None:
+                self.parent_data_group.id_data_element = self
+            else:
+                raise RuntimeError(
+                    f"Multiple ID data elements found for Data Group '{self.parent_data_group.name}':"
+                    f" '{self.parent_data_group.id_data_element.name}' and '{self.name}'"
+                )
+
+        if "Constraints" in self.dictionary:
+            self.set_constraints(self.dictionary["Constraints"])
+
         self.data_type.resolve()
         for constraint in self.constraints:
             constraint.resolve()
-
-    def _assign_custom_attributes_to_type(self, data_type_str: str) -> None:
-        if m := self.data_type.pattern.match(data_type_str):
-            try:
-                internal_type = m.group("DataGroupName")
-                assert self.parent_data_group.parent_schema
-                if internal_type in self.parent_data_group.parent_schema.data_groups:
-                    self.parent_data_group.parent_schema.data_groups[internal_type].custom_element_attributes.update(
-                        self.parent_data_group.custom_element_attributes
-                    )
-            except IndexError:
-                pass
 
 
 class FundamentalDataType:
@@ -418,15 +443,20 @@ class DataGroup:
         self.parent_template: DataGroupTemplate | None = self._assign_template(
             self.dictionary.get("Data Group Template")
         )
-        self.data_elements: dict[str, DataElement] = {}
-        self.custom_element_attributes: set[str] = (
-            self.parent_template.custom_element_attributes if self.parent_template else set()
-        )
+        self.custom_element_attributes: list[str] = []
+        if "Custom Attributes" in self.dictionary:
+            for attribute in self.dictionary["Custom Attributes"]:
+                self.custom_element_attributes.append(attribute)
+        if self.parent_template is not None:
+            for attribute in self.parent_template.custom_element_attributes:
+                if attribute not in self.custom_element_attributes:
+                    self.custom_element_attributes.append(attribute)
         self.id_data_element: Union[DataElement, None] = None  # data element containing unique id for this data group
-        # for data_element in self.dictionary["Data Elements"]:
-        #     self.data_elements[data_element] = DataElement(
-        #         data_element, self.dictionary["Data Elements"][data_element], self
-        #     )
+        self.data_elements: dict[str, DataElement] = {}
+        for data_element in self.dictionary["Data Elements"]:
+            self.data_elements[data_element] = DataElement(
+                data_element, self.dictionary["Data Elements"][data_element], self
+            )
 
     def _assign_template(self, template_name: str | None) -> DataGroupTemplate | None:
         if template_name is None:
@@ -473,8 +503,20 @@ class DataGroupTemplate:
         self.name = name
         self.dictionary = data_group_template_dictionary
         self.parent_schema = parent_schema
-        # Custom Attributes should eventually be a dictionary
-        self.custom_element_attributes: set[str] = set(self.dictionary.get("Custom Attributes", {}).keys())
+        self.custom_element_attributes: list[str] = self.dictionary.get(
+            "Custom Attributes", []
+        )  # TODO: make a list of CustomAttribute objects
+
+
+class CustomAttribute:
+    def __init__(self, name: str, custom_attribute_dictionary: dict, parent_schema: Schema):
+        self.name = name
+        self.dictionary = custom_attribute_dictionary
+        self.parent_schema = parent_schema
+        self.type = self.dictionary["Type"]
+        self.description = self.dictionary.get("Description", "")
+        self.applies_to = self.dictionary.get("Applies To", [])
+        self.required = self.dictionary.get("Required", False)
 
 
 class SchemaPatterns:
@@ -582,6 +624,7 @@ class Schema:
         self.enumerations = {}
         self.data_groups = {}
         self.data_group_templates = {}
+        self.custom_attributes = {}
 
         self._data_type_list: List[Type[DataType]] = [
             IntegerType,
@@ -627,13 +670,14 @@ class Schema:
                 self.data_group_templates[object_name] = DataGroupTemplate(
                     object_name, self.source_dictionary[object_name], self
                 )
-        #    else:
-        #        raise Exception(f"Unrecognized Object Type, \"{object_type}\" in {self.file_path}")
-        for group in self.data_groups.values():
-            for data_element in group.dictionary["Data Elements"]:
-                group.data_elements[data_element] = DataElement(
-                    data_element, group.dictionary["Data Elements"][data_element], group
+            elif object_type == "Custom Attribute":
+                self.custom_attributes[object_name] = CustomAttribute(
+                    object_name, self.source_dictionary[object_name], self
                 )
+            elif object_type in ["Meta", "Data Type"]:
+                pass
+            else:
+                raise Exception(f'Unrecognized Object Type, "{object_type}" in {self.file_path}')
 
         # Get top level info
         self.root_data_group = None
