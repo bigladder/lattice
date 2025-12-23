@@ -402,6 +402,7 @@ dependencies = [
     { name = "networkx", version = "3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pygit2" },
     { name = "pyyaml" },
+    { name = "regex" },
     { name = "stringcase" },
 ]
 
@@ -425,6 +426,7 @@ requires-dist = [
     { name = "networkx" },
     { name = "pygit2", specifier = ">=1.15.1" },
     { name = "pyyaml" },
+    { name = "regex" },
     { name = "stringcase", specifier = ">=1.2.0" },
 ]
 

@@ -1,11 +1,11 @@
 """Build web documentation"""
 
+import shutil
+from datetime import datetime
 from pathlib import Path
 from shutil import copytree
-import shutil
-from urllib.parse import urlparse
 from typing import List
-from datetime import datetime
+from urllib.parse import urlparse
 
 import pygit2
 from jinja2 import Environment, FileSystemLoader
@@ -13,15 +13,15 @@ from mkdocs.__main__ import cli as mkdocs_cli
 
 from ..file_io import (
     dump,
-    load,
     dump_to_string,
-    get_file_basename,
-    make_dir,
     get_extension,
+    get_file_basename,
+    load,
+    make_dir,
     translate,
 )
-from .process_template import process_template
 from .grid_table import write_table
+from .process_template import process_template
 
 
 class DocumentFile:
@@ -90,7 +90,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
 
     def get_git_info(self):  # pylint: disable=missing-function-docstring
         self.git_repo = pygit2.Repository(
-            pygit2.discover_repository(self.docs_source_directory)  # pylint: disable=no-member
+            pygit2.discover_repository(str(self.docs_source_directory))  # pylint: disable=no-member
         )
         git_url = self.git_repo.remotes[0].url
         git_url_parts = urlparse(git_url)
@@ -136,7 +136,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             ],
         }
 
-    def make_pages(self):
+    def make_pages(self):  # noqa: PLR0912 Too many branches
         # Check config directory
         about_page_content = None
         background_image_path = None
@@ -201,7 +201,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         # Examples
         self.make_examples_page()
 
-    def make_specification_pages(self):  # pylint: disable=missing-function-docstring
+    def make_specification_pages(self):  # noqa: PLR0912
         # Collect list of doc template files
         if self.specification_order is not None:
             for specification_name in self.specification_order:
@@ -253,7 +253,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         references = {}
         reference_counter = 1
         reference_string = "\n"
-        for schema in self.lattice.schemas:
+        for schema in self.lattice.schema_info:
             content = load(schema.json_schema_path)
             output_path = Path(schema_assets_directory, get_file_basename(schema.json_schema_path))
             shutil.copy(schema.json_schema_path, output_path)
@@ -307,7 +307,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             file.writelines(f"{make_front_matter(front_matter)}{content}")
 
     # pylint: disable-next=missing-function-docstring, too-many-arguments
-    def make_main_menu_page(
+    def make_main_menu_page(  # noqa: PLR0913
         self,
         page_dir_path,
         title,

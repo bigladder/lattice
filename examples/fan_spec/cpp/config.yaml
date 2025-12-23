@@ -6,3 +6,5 @@ dependencies:
     url: "https://github.com/bigladder/courier.git"
   - name: "fmt"
     url: "https://github.com/fmtlib/fmt.git"
+  - name: "btwxt"
+    url: "https://github.com/bigladder/btwxt.git"

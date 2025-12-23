@@ -39,9 +39,14 @@ def task_generate_meta_schemas():
         name = Path(example.root_directory).name
         yield {
             "name": name,
-            "file_dep": [schema.file_path for schema in example.schemas]
-            + [BASE_META_SCHEMA_PATH, CORE_SCHEMA_PATH, Path(SOURCE_PATH, "meta_schema.py")],
-            "targets": [schema.meta_schema_path for schema in example.schemas],
+            "file_dep": [schema.schema.file_path for schema in example.schema_info]
+            + [
+                BASE_META_SCHEMA_PATH,
+                CORE_SCHEMA_PATH,
+                Path(SOURCE_PATH, "meta_schema.py"),
+                Path(SOURCE_PATH, "schema.py"),
+            ],
+            "targets": [schema.meta_schema_path for schema in example.schema_info],
             "actions": [(example.generate_meta_schemas, [])],
             "clean": True,
         }
@@ -54,8 +59,8 @@ def task_validate_schemas():
         yield {
             "name": name,
             "task_dep": [f"generate_meta_schemas:{name}"],
-            "file_dep": [schema.file_path for schema in example.schemas]
-            + [schema.meta_schema_path for schema in example.schemas]
+            "file_dep": [schema.schema.file_path for schema in example.schema_info]
+            + [schema.meta_schema_path for schema in example.schema_info]
             + [BASE_META_SCHEMA_PATH, CORE_SCHEMA_PATH, Path(SOURCE_PATH, "meta_schema.py")],
             "actions": [(example.validate_schemas, [])],
         }
@@ -68,10 +73,10 @@ def task_generate_json_schemas():
         yield {
             "name": name,
             "task_dep": [f"validate_schemas:{name}"],
-            "file_dep": [schema.file_path for schema in example.schemas]
-            + [schema.meta_schema_path for schema in example.schemas]
+            "file_dep": [schema.schema.file_path for schema in example.schema_info]
+            + [schema.meta_schema_path for schema in example.schema_info]
             + [CORE_SCHEMA_PATH, BASE_META_SCHEMA_PATH, Path(SOURCE_PATH, "schema_to_json.py")],
-            "targets": [schema.json_schema_path for schema in example.schemas],
+            "targets": [schema.json_schema_path for schema in example.schema_info],
             "actions": [(example.generate_json_schemas, [])],
             "clean": True,
         }
@@ -83,7 +88,7 @@ def task_validate_example_files():
         name = Path(example.root_directory).name
         yield {
             "name": name,
-            "file_dep": [schema.json_schema_path for schema in example.schemas]
+            "file_dep": [schema.json_schema_path for schema in example.schema_info]
             + example.examples
             + [Path(SOURCE_PATH, "schema_to_json.py")],
             "task_dep": [f"generate_json_schemas:{name}"],
@@ -98,7 +103,7 @@ def task_generate_markdown():
         yield {
             "name": name,
             "targets": [template.markdown_output_path for template in example.doc_templates],
-            "file_dep": [schema.file_path for schema in example.schemas]
+            "file_dep": [schema.schema.file_path for schema in example.schema_info]
             + [template.path for template in example.doc_templates]
             + [Path(SOURCE_PATH, "docs", "grid_table.py")],
             "task_dep": [f"validate_schemas:{name}"],
@@ -131,8 +136,8 @@ def task_generate_cpp_code(level):
         yield {
             "name": name,
             "task_dep": [f"validate_schemas:{name}"],
-            "file_dep": [schema.file_path for schema in example.cpp_schemas]
-            + [schema.meta_schema_path for schema in example.schemas]
+            "file_dep": [schema.schema.file_path for schema in example.cpp_schemas]
+            + [schema.meta_schema_path for schema in example.schema_info]
             + [
                 CORE_SCHEMA_PATH,
                 BASE_META_SCHEMA_PATH,
@@ -159,7 +164,7 @@ def task_generate_web_docs():
         yield {
             "name": name,
             "task_dep": [f"validate_schemas:{name}", f"generate_json_schemas:{name}", f"validate_example_files:{name}"],
-            "file_dep": [schema.file_path for schema in example.schemas]
+            "file_dep": [schema.schema.file_path for schema in example.schema_info]
             + [template.path for template in example.doc_templates]
             + [Path(SOURCE_PATH, "docs", "mkdocs_web.py")],
             "targets": [Path(example.web_docs_directory_path, "public")],

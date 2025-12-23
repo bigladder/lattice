@@ -12,11 +12,11 @@ Root:
   Data Elements:
     metadata:
       Description: "Metadata"
-      Data Type: "{Metadata}"
+      Type: "{Metadata}"
       Required: True
     address:
       Description: "Actual Address Data"
-      Data Type: "{Address}"
+      Type: "{Address}"
       Required: True
 
 SchemaType:
@@ -32,28 +32,28 @@ Address:
   Data Elements:
     street_address:
       Description: "Street Address"
-      Data Type: "String"
+      Type: "String"
     post_office_box:
       Description: "Post office box"
-      Data Type: "String"
+      Type: "String"
     extended_address:
       Description: "Extended Address"
-      Data Type: "String"
+      Type: "String"
     locality:
       Description: "Locality"
-      Data Type: "String"
+      Type: "String"
       Required: True
       Notes: "E.g., city or town"
     postal_code:
       Description: "Postal Code"
-      Data Type: "String"
+      Type: "String"
     region:
       Description: "Region"
-      Data Type: "String"
+      Type: "String"
       Required: True
       Notes: "E.g., state or province"
     country:
       Description: "Country"
-      Data Type: "String"
+      Type: "String"
       Required: True
 

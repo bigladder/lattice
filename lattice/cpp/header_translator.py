@@ -28,7 +28,7 @@ class HeaderEntryExtensionInterface(ABC):
                 cls.extensions[kwargs["base_class"]] = [cls]
 
     @abstractmethod
-    def process_data_group(self, parent_node: HeaderEntry): ...
+    def process_data_group(self, parent_node: HeaderEntry) -> None: ...
 
 
 class HeaderTranslator:
@@ -70,7 +70,7 @@ class HeaderTranslator:
                   input_file_path: Path,
                   forward_declarations_path: Path,
                   output_path: Path,
-                  top_namespace: str):
+                  top_namespace: str) -> None:
         """Translate schema into C++ header file, but store locally as a data structure."""
         self._source_dir = input_file_path.parent.resolve()
         self._forward_declaration_dir = forward_declarations_path
@@ -242,7 +242,7 @@ class HeaderTranslator:
             else:
                 self._add_header_dependencies(entry)
 
-    def _add_member_includes(self, dependency: str):
+    def _add_member_includes(self, dependency: str) -> None:
         """
         Add the dependency (verbatim) to the list of included headers.
         """
@@ -250,7 +250,9 @@ class HeaderTranslator:
         if header_include not in self._preamble:
             self._preamble.append(header_include)
 
-    def _process_data_elements(self, data_group_entry: HeaderEntry, base_level_tag: str, data_group_template: str):
+    def _process_data_elements(
+        self, data_group_entry: HeaderEntry, base_level_tag: str, data_group_template: str
+    ) -> None:
         """Iterate over child Data Elements and assign them to a parent struct."""
 
         # Per-element processing
@@ -326,7 +328,7 @@ class HeaderTranslator:
     #         for listing in self._contents:
     #             if "Data Elements" in self._contents[listing]:
     #                 for element in self._contents[listing]["Data Elements"]:
-    #                     if element == data_element and "Data Type" in
+    #                     if element == data_element and "Type" in
     #                         self._contents[listing]["Data Elements"][element]:
-    #                         return self._contents[listing]["Data Elements"][element]["Data Type"]
+    #                         return self._contents[listing]["Data Elements"][element]["Type"]
     #     return "MissingType"  # Placeholder base class

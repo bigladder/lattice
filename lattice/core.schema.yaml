@@ -90,54 +90,54 @@ Metadata:
   Data Elements:
     schema_author:
       Description: "Name of the organization that published the schema"
-      Data Type: "String"
+      Type: "String"
       Required: True
       Notes: "Identifies the organization that defined the schema"
     schema_name:
       Description: "Schema name or identifier"
-      Data Type: "String"
+      Type: "String"
       Required: True
       Notes: "Identifies the schema used to define the data content"
     schema_version:
       Description: "The version of the schema the data complies with"
-      Data Type: "Version"
+      Type: "Version"
       Required: True
     schema_url:
       Description: "The Uniform Resource Locator (url) for the schema definition and/or documentation"
-      Data Type: "String"
+      Type: "String"
     author:
       Description: "Name of the entity creating the serialization"
-      Data Type: "String"
+      Type: "String"
       Required: True
       Notes: "Identifies the organization that created the file"
     id:
       Description: "Unique data set identifier"
-      Data Type: "UUID"
+      Type: "UUID"
       Notes: "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data."
     description:
       Description: "Description of data content (suitable for display)"
-      Data Type: "String"
+      Type: "String"
       Required: True
     time_of_creation:
       Description: "Timestamp indicating when the serialization was created"
-      Data Type: "Timestamp"
+      Type: "Timestamp"
       Required: True
       Notes: "Updated anytime any data content is modified"
     version:
       Description: "Integer version identifier for the data"
-      Data Type: "Version"
+      Type: "Version"
       Notes:
         - "Used by data publisher to track revisions of the data"
         - "Shall be incremented for each data revision"
     source:
       Description: "Source(s) of the data"
-      Data Type: "String"
+      Type: "String"
       Notes:
         - "Used by data publisher to document methods (e.g., software and version) used to generate data"
         - "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
     disclaimer:
       Description: "Characterization of accuracy, limitations, and applicability of this data"
-      Data Type: "String"
+      Type: "String"
     notes:
       Description: "Additional Information"
-      Data Type: "String"
+      Type: "String"

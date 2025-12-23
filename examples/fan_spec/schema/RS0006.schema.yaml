@@ -39,15 +39,15 @@ RS0006:
   Data Elements:
     metadata:
       Description: "Metadata data group"
-      Data Type: "{Metadata}"
+      Type: "{Metadata}"
       Constraints: schema_name="RS0006"
       Required: True
     description:
       Description: "Data group describing product and rating information"
-      Data Type: "{Description}"
+      Type: "{Description}"
     performance:
       Description: "Data group containing performance information"
-      Data Type: "{Performance}"
+      Type: "{Performance}"
       Required: True
 
 Description:
@@ -55,17 +55,17 @@ Description:
   Data Elements:
     product_information:
       Description: "Data group describing product information"
-      Data Type: "{ProductInformation}"
+      Type: "{ProductInformation}"
 
 ProductInformation:
   Object Type: "Data Group"
   Data Elements:
     manufacturer:
       Description: "Manufacturer name"
-      Data Type: "String"
+      Type: "String"
     model_number:
       Description: "Model number"
-      Data Type: "Pattern"
+      Type: "Pattern"
       Notes: "Pattern shall match all model numbers that can be represented by the representation"
 
 Performance:
@@ -73,29 +73,29 @@ Performance:
   Data Elements:
     maximum_power:
       Description: "Maximum power draw of the drive"
-      Data Type: "Numeric"
+      Type: "Numeric"
       Units: "W"
       Constraints: ">=0.0"
       Required: True
       Scalable: True
     standby_power:
       Description: "Power draw when the motor is not operating"
-      Data Type: "Numeric"
+      Type: "Numeric"
       Units: "W"
       Constraints: ">=0.0"
       Required: True
       Scalable: True
     cooling_method:
       Description: "Method used to cool the drive"
-      Data Type: "<CoolingMethod>"
+      Type: "<CoolingMethod>"
       Required: True
     scaling:
       Description: "Specifies the range the performance data can be scaled to represent different capacity equipment"
-      Data Type: "{Scaling}"
+      Type: "{Scaling}"
       Notes: "If not present, scaling of the performance data is not allowed"
     performance_map:
       Description: "Data group describing drive performance when operating"
-      Data Type: "{PerformanceMap}"
+      Type: "{PerformanceMap}"
       Required: True
 
 PerformanceMap:
@@ -104,11 +104,11 @@ PerformanceMap:
   Data Elements:
     grid_variables:
       Description: "Data group describing grid variables for drive performance"
-      Data Type: "{GridVariables}"
+      Type: "{GridVariables}"
       Required: True
     lookup_variables:
       Description: "Data group describing lookup variables for drive performance"
-      Data Type: "{LookupVariables}"
+      Type: "{LookupVariables}"
       Required: True
 
 GridVariables:
@@ -117,7 +117,7 @@ GridVariables:
   Data Elements:
     output_power:
       Description: "Power delivered to the motor"
-      Data Type: "[Numeric]"
+      Type: "[Numeric]"
       Constraints:
         - ">=0.0"
         - "[1..]"
@@ -126,7 +126,7 @@ GridVariables:
       Scalable: True
     output_frequency:
       Description: "Frequency delivered to the motor"
-      Data Type: "[Numeric]"
+      Type: "[Numeric]"
       Constraints:
         - ">=0.0"
         - "[1..]"
@@ -139,7 +139,7 @@ LookupVariables:
   Data Elements:
     efficiency:
       Description: "Efficiency of drive"
-      Data Type: "[Numeric]"
+      Type: "[Numeric]"
       Constraints:
         - ">=0.0"
         - "<=1.0"
@@ -153,6 +153,6 @@ LookupVariables:
       Required: True
     operation_state:
       Description: "The operation state at the operating conditions"
-      Data Type: "[<OperationState>]"
+      Type: "[<OperationState>]"
       Units: "-"
       Required: True
