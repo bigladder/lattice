@@ -250,20 +250,6 @@ class Lattice:  # pylint:disable=R0902
             schema.cpp_header_file_path = self._cpp_output_include_dir / f"{schema.schema.name}.h"
             schema.cpp_source_file_path = self._cpp_output_src_dir / f"{schema.schema.name}.cpp"
 
-    # def setup_cpp_repository(self, submodules: list[str]) -> None:
-    #     """Initialize the CPP output directory as a Git repo."""
-    #     cwd = os.getcwd()
-    #     os.chdir(self.cpp_output_dir)
-    #     subprocess.run(["git", "init"], check=True)
-    #     vendor_dir = make_dir("vendor")
-    #     os.chdir(vendor_dir)
-    #     try:
-    #         for submodule in submodules:
-    #             subprocess.run(["git", "submodule", "add", submodule], check=False)
-    #     finally:
-    #         os.chdir(cwd)
-    #     os.chdir(cwd)
-
     @property
     def cpp_support_headers(self) -> list[Path]:
         """Wrap list of template-generated headers."""
@@ -318,16 +304,3 @@ class Lattice:  # pylint:disable=R0902
                 if (self.cpp_output_dir / "forge.toml").exists():
                     with open(self.cpp_output_dir / "forge.toml", "a", encoding="utf-8") as config:
                         config.write(subs_list)
-
-        # submodule_names: list[str] = []
-        # submodule_urls: list[str] = []
-
-        # config_file = Path(self.root_directory / "cpp" / "config.yaml").resolve()
-        # if config_file.is_file():
-        #     config = load(config_file)
-        #     submodule_names = [tuple["name"] for tuple in config["dependencies"]]
-        #     submodule_urls = [tuple["url"] for tuple in config["dependencies"] if tuple.get("url")]
-
-        # support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
-        # support.render_build_files(self.root_directory.name, submodule_names, self.cpp_output_dir)
-        # self.setup_cpp_repository(submodule_urls)
