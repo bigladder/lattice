@@ -22,7 +22,7 @@ wheels = [
 [[package]]
 name = "atheneum-forge"
 version = "0.1.0"
-source = { editable = "../../../../../src/atheneum-forge" }
+source = { git = "https://github.com/bigladder/atheneum-forge?branch=make-textual-app#49da2d28c485a3dff3d85283c4de79e2c3aa7d1f" }
 dependencies = [
     { name = "click" },
     { name = "jinja2" },
@@ -31,27 +31,6 @@ dependencies = [
     { name = "tomli-w" },
     { name = "typer" },
     { name = "yamlcore" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = "<8.2.0" },
-    { name = "jinja2", specifier = ">=3.1.4,<4" },
-    { name = "pyyaml", specifier = ">=6.0.0" },
-    { name = "textual" },
-    { name = "tomli-w", specifier = ">=1.1.0,<2" },
-    { name = "typer", specifier = ">=0.12.5,<0.13" },
-    { name = "yamlcore" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "python-lsp-server", specifier = ">=1.12.0,<2" },
-    { name = "ruff" },
-    { name = "textual-dev" },
 ]
 
 [[package]]
@@ -454,7 +433,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "atheneum-forge", editable = "../../../../../src/atheneum-forge" },
+    { name = "atheneum-forge", git = "https://github.com/bigladder/atheneum-forge?branch=make-textual-app" },
     { name = "cbor2" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "jsonschema" },

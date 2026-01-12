@@ -307,8 +307,8 @@ class Lattice:  # pylint:disable=R0902
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
-        self.forge.add_copyright(self._cpp_output_include_dir)
-        self.forge.add_copyright(self._cpp_output_src_dir)
+        self.forge.add_owner_copyright(self._cpp_output_include_dir)
+        self.forge.add_owner_copyright(self._cpp_output_src_dir)
 
     def _add_project_submodules(self):
         """Copy the local project's cpp submodule information into the atheneum-forge config"""
