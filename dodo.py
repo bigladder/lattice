@@ -13,7 +13,6 @@ logging.basicConfig(
     handlers=[logging.FileHandler("lattice.log", mode="w")],
 )
 
-SOURCE_PATH = "lattice"
 EXAMPLES_PATH = "examples"
 BUILD_PATH = "build"
 
@@ -29,6 +28,7 @@ for example_dir in sorted([str(dir_name) for dir_name in Path(EXAMPLES_PATH).ite
             Lattice(example_dir_path, build_dir_path, build_output_directory_name=None, build_validation=False)
         )
 
+SOURCE_PATH = "lattice"
 BASE_META_SCHEMA_PATH = Path(SOURCE_PATH, "meta.schema.yaml")
 CORE_SCHEMA_PATH = Path(SOURCE_PATH, "core.schema.yaml")
 
