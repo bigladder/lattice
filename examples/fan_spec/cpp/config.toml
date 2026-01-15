@@ -1,0 +1,16 @@
+[[deps]]
+name = "btwxt"
+git_url = "https://github.com/bigladder/btwxt.git"
+git_checkout = "main"
+add_to_cmake = true
+[[deps]]
+name = "courier"
+git_url = "https://github.com/bigladder/courier.git"
+git_checkout = "main"
+add_to_cmake = true
+[[deps]]
+name = "json"
+git_url = "https://github.com/nlohmann/json.git"
+git_checkout = "master"
+add_to_cmake = true
+link_library_spec = "json"

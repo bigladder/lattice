@@ -19,6 +19,7 @@ dependencies = [
     "markdown-grid-tables == 0.4.0", # Note: issue with later versions (https://gitlab.com/WillDaSilva/markdown_grid_tables/-/issues/4)
     "regex",
     "networkx",
+    "atheneum-forge"
 ]
 
 [dependency-groups]
@@ -59,3 +60,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build]
 packages = ["lattice"]
+
+[tool.uv.sources]
+atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge" }
