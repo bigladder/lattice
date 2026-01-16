@@ -273,16 +273,21 @@ class Lattice:  # pylint:disable=R0902
             spdx_copyright_text (str, optional): SPDX-compatible copyright string. Defaults to blank.
             spdx_license_id (str, optional): SPDX-compatible license string. Defaults to blank.
         """
-        self.forge.initialize_configuration(
-            self.cpp_output_dir,
-            self.root_directory.name,
-            project_factory.ProjectType.cpp,
-            False,
-            False,
-            False,
-            force_reinitialize,
-        )
-        self._add_project_submodules()
+
+        try:
+            self.forge.initialize_configuration(
+                self.cpp_output_dir,
+                self.root_directory.name,
+                project_factory.ProjectType.cpp,
+                False,
+                False,
+                False,
+                force_reinitialize,
+            )
+        except RuntimeError:
+            pass  # forge.toml exists but wasn't allowed to be overwritten; 'tis ok.
+
+        self._add_project_submodules_to_config()
 
         self.forge.edit_config(
             {
@@ -306,7 +311,7 @@ class Lattice:  # pylint:disable=R0902
         self.forge.add_owner_copyright(self._cpp_output_include_dir)
         self.forge.add_owner_copyright(self._cpp_output_src_dir)
 
-    def _add_project_submodules(self):
+    def _add_project_submodules_to_config(self):
         """Copy the local project's cpp submodule information into the atheneum-forge config"""
         if (self.root_directory / "cpp" / "config.toml").exists():
             with open(self.root_directory / "cpp" / "config.toml", "r", encoding="utf-8") as local_submodules:
