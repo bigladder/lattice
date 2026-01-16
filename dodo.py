@@ -154,7 +154,7 @@ def task_generate_cpp_code(level):
                 # init_repo and init_submodules set to False, because all of this is inside a .gitignore'd directory
                 (
                     example.generate_cpp_project,
-                    [False, False, "Lattice", "info@bigladdersoftware.com", "2025", "BSD-3-Clause"],
+                    [False, False, False, "Lattice", "info@bigladdersoftware.com", "2025", "BSD-3-Clause"],
                 ),
             ],
             "clean": True,
