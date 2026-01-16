@@ -293,6 +293,9 @@ class Lattice:  # pylint:disable=R0902
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
+
+        support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
+
         self.forge.add_owner_copyright(self._cpp_output_include_dir)
         self.forge.add_owner_copyright(self._cpp_output_src_dir)
 
