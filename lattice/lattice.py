@@ -255,8 +255,9 @@ class Lattice:  # pylint:disable=R0902
         """Wrap list of template-generated headers."""
         return support.support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_project(
+    def generate_cpp_project(  # noqa: PLR0913
         self,
+        force_reinitialize=False,
         git_init=False,
         submodule_init=False,
         copyright_holder="",
@@ -273,8 +274,14 @@ class Lattice:  # pylint:disable=R0902
             spdx_license_id (str, optional): SPDX-compatible license string. Defaults to blank.
         """
         self.forge.initialize_configuration(
-            self.cpp_output_dir, self.root_directory.name, project_factory.ProjectType.cpp, False, False, False, True
-        )  # force = True
+            self.cpp_output_dir,
+            self.root_directory.name,
+            project_factory.ProjectType.cpp,
+            False,
+            False,
+            False,
+            force_reinitialize,
+        )
         self._add_project_submodules()
 
         self.forge.edit_config(
