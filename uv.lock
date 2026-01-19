@@ -22,7 +22,7 @@ wheels = [
 [[package]]
 name = "atheneum-forge"
 version = "0.1.0"
-source = { git = "https://github.com/bigladder/atheneum-forge?branch=small-bugs#125a9cf3a593f9816ef6d022c92ec43c0b16eccd" }
+source = { git = "https://github.com/bigladder/atheneum-forge?branch=small-bugs#a3c48cc2560c6f49c787114ef8e5136fe8b6764b" }
 dependencies = [
     { name = "click" },
     { name = "jinja2" },
