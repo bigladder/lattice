@@ -6,6 +6,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Optional, Union
 
+import tomlkit
 from atheneum_forge import forge, project_factory
 from referencing.exceptions import Unresolvable
 
@@ -313,9 +314,16 @@ class Lattice:  # pylint:disable=R0902
 
     def _add_project_submodules_to_config(self):
         """Copy the local project's cpp submodule information into the atheneum-forge config"""
-        if (self.root_directory / "cpp" / "config.toml").exists():
-            with open(self.root_directory / "cpp" / "config.toml", "r", encoding="utf-8") as local_submodules:
-                subs_list = local_submodules.read()
-                if (self.cpp_output_dir / "forge.toml").exists():
-                    with open(self.cpp_output_dir / "forge.toml", "a", encoding="utf-8") as config:
-                        config.write(subs_list)
+        cpp_submodule_config_file = self.root_directory / "cpp" / "config.toml"
+        if (cpp_submodule_config_file).exists():
+            with open(cpp_submodule_config_file, "r", encoding="utf-8") as local_submodules:
+                local = tomlkit.parse(local_submodules.read())
+                forge_config_file = self.cpp_output_dir / "forge.toml"
+                if (forge_config_file).exists():
+                    with open(forge_config_file, "r", encoding="utf-8") as forge_config:
+                        forge = tomlkit.parse(forge_config.read())
+                        for dep in local.get("deps", []):
+                            if dep["name"] not in [f["name"] for f in forge.get("deps", [])]:
+                                forge["deps"].append(dep)  # type: ignore
+                    with open(forge_config_file, "w", encoding="utf-8") as forge_config:
+                        tomlkit.dump(forge, forge_config)

@@ -11,6 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "jsonschema",
     "pyyaml",
+    "tomlkit",
     "cbor2",
     "Jinja2 >=3.1.4",
     "stringcase >=1.2.0",
@@ -62,4 +63,4 @@ build-backend = "hatchling.build"
 packages = ["lattice"]
 
 [tool.uv.sources]
-atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge" }
+atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge", branch="small-bugs" }
