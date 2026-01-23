@@ -50,10 +50,12 @@ def compress_list(a_dict, key="Notes"):
     """
     if key in a_dict:
         if isinstance(a_dict[key], list):
-            a_dict[key] = "\n   ".join([f"- {item}" for item in a_dict[key]])
+            a_dict[key] = "\n    ".join(
+                [f"- {item}" for item in a_dict[key]]
+            )  # TODO: 4 spaces for pandoc, but 3 needed for mkdocs
 
 
-def data_elements_dict_from_data_groups(data_groups):
+def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to be handled with Schema class
     """
     - data_groups: Dict, the data groups dictionary
     RETURN: Dict with data elements as an array
@@ -62,12 +64,12 @@ def data_elements_dict_from_data_groups(data_groups):
     for dat_gr in data_groups:
         data_elements = []
         for element in data_groups[dat_gr]["Data Elements"]:
-            new_obj = data_groups[dat_gr]["Data Elements"][element]
+            new_obj = deepcopy(data_groups[dat_gr]["Data Elements"][element])
             new_obj["Name"] = f"`{element}`"
             if "Required" in new_obj:
                 if isinstance(new_obj["Required"], bool):
                     if new_obj["Required"]:
-                        new_obj["Required"] = "True" if new_obj["Required"] else ""
+                        new_obj["Required"] = "`True`" if new_obj["Required"] else ""
                     else:
                         new_obj["Required"] = ""
                 else:
@@ -77,15 +79,26 @@ def data_elements_dict_from_data_groups(data_groups):
                 gte = "\N{GREATER-THAN OR EQUAL TO}"
                 lte = "\N{LESS-THAN OR EQUAL TO}"
                 if isinstance(new_obj["Constraints"], list):
-                    new_obj["Constraints"] = ", ".join(new_obj["Constraints"])  # TODO: turn into a list
-                new_obj["Constraints"] = f"`{new_obj['Constraints'].replace('<=', lte).replace('>=', gte)}`"
+                    for i, constraint in enumerate(new_obj["Constraints"]):
+                        new_obj["Constraints"][i] = f"`{constraint.replace('<=', lte).replace('>=', gte)}`"
+                else:
+                    new_obj["Constraints"] = f"`{new_obj['Constraints'].replace('<=', lte).replace('>=', gte)}`"
             if "Units" in new_obj:
                 if new_obj["Units"] == "-":
                     new_obj["Units"] = r"\-"
                 else:
                     new_obj["Units"] = new_obj["Units"].replace("-", r"·")
                     new_obj["Units"] = re.sub(r"(\d+)", r"^\1^", new_obj["Units"])
+            if "Scalable" in new_obj:
+                if isinstance(new_obj["Scalable"], bool):
+                    if new_obj["Scalable"]:
+                        new_obj["Scalable"] = "`True`" if new_obj["Scalable"] else ""
+                    else:
+                        new_obj["Scalable"] = ""
+                else:
+                    raise ValueError("Scalable must be a boolean value.")
             compress_list(new_obj)
+            compress_list(new_obj, key="Constraints")
             data_elements.append(new_obj)
         output[dat_gr] = data_elements
     return output
@@ -145,7 +158,7 @@ def load_structure_from_object(instance):
             new_obj = instance[obj]
         elif "Data Elements" in instance[obj]:
             data_groups[obj] = instance[obj]
-        elif object_type == "Meta":
+        elif object_type == "Meta" or object_type == "Custom Attribute":
             pass
         else:
             print(f"Unknown object type: {object_type}.")
@@ -157,57 +170,57 @@ def load_structure_from_object(instance):
     }
 
 
-def create_table_from_list(columns, data_list, description=None, style="2 Columns", level=1):  # noqa: PLR0912 Too many branches
+def create_table_from_list(columns, data_list, description=None, level=1, scope=None):  # noqa: PLR0912 Too many branches
     """
     - columns: array of string, the column headers
     - data_list: array of dict with keys corresponding to columns array
     - description: None or string, if specified, adds a caption
-    - caption: None or string, if specified, adds a caption
+    - level: Heading level for the description (or use 0 to make description a caption instead)
     RETURN: string, the table in Pandoc markdown grid table format
     """
     if len(data_list) == 0:
         return ""
-    if style == "Table":
-        data: dict[str, list] = {col: [] for col in columns}
-        for col in columns:
-            data[col] = []
-            for item in data_list:
-                if col in item:
-                    data[col].append(item[col])
-                else:
-                    data[col].append("")
-        table_string = write_table(data, columns, description) + "\n\n"
-    if style == "Descriptions":
-        table_string = write_header(f"{description} {{-}}", level)
-        for item in data_list:
-            table_string += write_header(f"{item[columns[0]]} {{-}}", level + 1) + "\n"
+    second_column_name = "Attributes"
+    data = {columns[0]: [], second_column_name: []}
+    table_string = ""
+    if description is not None and level > 0:
+        table_string += write_header(f"{description}", level)
+    for item in data_list:
+        data[columns[0]].append(item[columns[0]])
+        details = ""
+        for column in columns[1:]:
             for attribute in item:
-                if attribute != columns[0]:
-                    table_string += f"> {attribute}:\n>\n>   ~ {item[attribute]}\n>\n"
-            table_string += "\n"
-    if style == "2 Columns":
-        second_column_name = "Attributes"
-        data = {columns[0]: [], second_column_name: []}
-        table_string = write_header(f"{description}", level)
-        for item in data_list:
-            data[columns[0]].append(item[columns[0]])
-            details = ""
-            for column in columns[1:]:
-                for attribute in item:
-                    if attribute == column:
-                        details += f"**{attribute}:**\n\n:   {item[attribute]}\n\n"
-            data[second_column_name].append(details[:-1])  # drop last new line
+                if attribute == column:
+                    attribute_string = item[attribute]
+                    if attribute == "Type":
+                        attribute_string = re.sub(r"\((.*)\)", r"Alternative(\1)", attribute_string)
+                        attribute_string = re.sub(r"\[(.*)\]", r"Array(\1)", attribute_string)
+                        attribute_string = re.sub(
+                            r"\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}", r"DataGroup(\1)", attribute_string
+                        )
+                        attribute_string = re.sub(
+                            r"<([A-Z]([A-Z]|[a-z]|[0-9])*)>", r"Enumeration(\1)", attribute_string
+                        )
+                    details += f"{attribute}:\n\n:   {attribute_string}\n\n"
+        data[second_column_name].append(details[:-1])  # drop last new line
+    if level == 0:
+        table_string += write_table(data, [columns[0], second_column_name], description, scope=scope) + "\n\n"
+    else:
         table_string += write_table(data, [columns[0], second_column_name]) + "\n\n"
 
     return table_string
 
 
-def write_data_model(instance, base_level=1, style="2 Columns"):
+def write_data_model(instance, base_level=1, make_headers=True, scope=None):
     """
     - instance:
-    - make_headers:
     - base_level:
+    - make_headers: Use descriptions as section headers if True, otherwise use them as captions
     """
+    if make_headers:
+        next_level = base_level + 1
+    else:
+        next_level = 0
     struct = load_structure_from_object(instance)
     output = None
     with io.StringIO() as output_file:
@@ -219,8 +232,8 @@ def write_data_model(instance, base_level=1, style="2 Columns"):
                 create_table_from_list(
                     ["Type", "Description", "JSON Schema Type", "Examples"],
                     struct["data_types"],
-                    level=base_level + 1,
-                    style=style,
+                    level=next_level,
+                    scope=scope,
                 )
             )
         # String Types
@@ -231,8 +244,8 @@ def write_data_model(instance, base_level=1, style="2 Columns"):
                 create_table_from_list(
                     ["String Type", "Description", "JSON Schema Pattern", "Examples"],
                     struct["string_types"],
-                    level=base_level + 1,
-                    style=style,
+                    level=next_level,
+                    scope=scope,
                 )
             )
         # Enumerations
@@ -245,8 +258,8 @@ def write_data_model(instance, base_level=1, style="2 Columns"):
                         ["Enumerator", "Description", "Notes"],
                         enumerators,
                         description=enum,
-                        level=base_level + 1,
-                        style=style,
+                        level=next_level,
+                        scope=scope,
                     )
                 )
         else:
@@ -261,8 +274,8 @@ def write_data_model(instance, base_level=1, style="2 Columns"):
                         ["Name", "Description", "Type", "Units", "Constraints", "Required", "Scalable", "Notes"],
                         data_elements,
                         description=dg,
-                        level=base_level + 1,
-                        style=style,
+                        level=next_level,
+                        scope=scope,
                     )
                 )
         else:

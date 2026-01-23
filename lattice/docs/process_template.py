@@ -158,17 +158,17 @@ def make_add_schema_table(schema_dir=None, error_log=None):
     """
     schema_dir = determine_schema_dir(schema_dir)
 
-    def add_schema_table(source, table_name, description=None, level=1, style="2 Columns"):
+    def add_schema_table(source, table_name, description=None, level=1):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_schema_table(data, table_name, description, level, style, error_log)
+        return write_schema_table(data, table_name, description, level, error_log)
 
     return add_schema_table
 
 
-def write_schema_table(table_dict, table_name, description=None, level=1, style="2 Columns", error_log=None):
+def write_schema_table(table_dict, table_name, description=None, level=1, error_log=None):
     if description is None:
         description = table_name
     struct = load_structure_from_object(table_dict)
@@ -190,7 +190,7 @@ def write_schema_table(table_dict, table_name, description=None, level=1, style=
             "Type",
             "Units",
             "Constraints",
-            "Req",
+            "Required",
             "Notes",
         ],
     }
@@ -199,16 +199,15 @@ def write_schema_table(table_dict, table_name, description=None, level=1, style=
         target,
         description=description,
         level=level,
-        style=style,
     )
 
 
 def make_add_schema_table_from_string(error_log=None):
-    def add_schema_table_from_string(yaml_string, table_name=None, description=None, level=1, style="2 Columns"):
+    def add_schema_table_from_string(yaml_string, table_name=None, description=None, level=1):
         data = yaml.safe_load(yaml_string)
         if table_name is None:
             table_name = [name for name in data][0]
-        return write_schema_table(data, table_name, description, level, style, error_log)
+        return write_schema_table(data, table_name, description, level, error_log)
 
     return add_schema_table_from_string
 
@@ -246,12 +245,12 @@ def make_add_data_model(schema_dir, error_log):
     """
     schema_dir = determine_schema_dir(schema_dir)
 
-    def add_data_model(source, base_level=1, style="2 Columns"):
+    def add_data_model(source, base_level=1, make_headers=True):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_data_model(data, base_level, style=style)
+        return write_data_model(data, base_level, make_headers=make_headers, scope=source)
 
     return add_data_model
 
@@ -288,6 +287,7 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
                     add_schema_table=make_add_schema_table(schema_dir, errs),
                     add_yaml_table=make_add_yaml_table(),
                     add_data_model=make_add_data_model(schema_dir, errs),
+                    add_schema_table_from_string=make_add_schema_table_from_string(),
                 )
             )
     except TemplateNotFound as exc:
