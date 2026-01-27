@@ -195,9 +195,7 @@ def create_table_from_list(columns, data_list, description=None, level=1, scope=
                     if attribute == "Type":
                         attribute_string = re.sub(r"\((.*)\)", r"Alternative(\1)", attribute_string)
                         attribute_string = re.sub(r"\[(.*)\]", r"Array(\1)", attribute_string)
-                        attribute_string = re.sub(
-                            r"\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}", r"DataGroup(\1)", attribute_string
-                        )
+                        attribute_string = re.sub(r"\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}", r"Group(\1)", attribute_string)
                         attribute_string = re.sub(
                             r"<([A-Z]([A-Z]|[a-z]|[0-9])*)>", r"Enumeration(\1)", attribute_string
                         )
