@@ -21,8 +21,8 @@ wheels = [
 
 [[package]]
 name = "atheneum-forge"
-version = "0.9.2"
-source = { git = "https://github.com/bigladder/atheneum-forge#c59ea744d39884b672937d5335cda094b968fc84" }
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "jinja2" },
@@ -31,6 +31,10 @@ dependencies = [
     { name = "tomli-w" },
     { name = "typer" },
     { name = "yamlcore" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/17/cb/ec5264af2ed635a059d7b3e720a4c0b4f60d7466b4bd00b2f8dcb7956cae/atheneum_forge-1.0.0.tar.gz", hash = "sha256:b3fecee1452adca2f747ee1b33c0d913f6e5151885028ab1925ee39dee08331a", size = 67866, upload-time = "2026-06-26T18:47:14.763Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/39/9f6ba49bd670bb3dcd15d11ab67c431c15471004a0573675a1078866f7f7/atheneum_forge-1.0.0-py3-none-any.whl", hash = "sha256:7f077232543f7e352fad9b5059767e5270a7b0dc3a5e77c7c42d5baa360c5e82", size = 89159, upload-time = "2026-06-26T18:47:13.789Z" },
 ]
 
 [[package]]
@@ -503,7 +507,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "atheneum-forge", git = "https://github.com/bigladder/atheneum-forge" },
+    { name = "atheneum-forge" },
     { name = "cbor2" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "jsonschema" },

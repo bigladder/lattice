@@ -61,6 +61,3 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build]
 packages = ["lattice"]
-
-[tool.uv.sources]
-atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge" }
