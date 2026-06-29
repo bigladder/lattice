@@ -61,6 +61,10 @@ class DataGroup:  # pylint: disable=R0903
                         required.append(e)
                 elif req.startswith("if"):
                     DataGroup._construct_requirement_if_then(elements, dependencies, req[3:], e)
+            if "Scalable" in element:  # TODO: Custom from 205. Needs to be generalized.
+                elements["properties"][e]["scalable"] = element["Scalable"]
+            if "Cycling Order" in element:  # TODO: Custom from 205. Needs to be generalized.
+                elements["properties"][e]["cyclingOrder"] = element["Cycling Order"]
         if required:
             elements["required"] = required
         if dependencies:

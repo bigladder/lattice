@@ -468,6 +468,7 @@ class DataGroup:
         if "Custom Attributes" in self.dictionary:
             for attribute in self.dictionary["Custom Attributes"]:
                 self.custom_element_attributes.append(attribute)
+        # Inherit custom attributes from template if applicable
         if self.parent_template is not None:
             for attribute in self.parent_template.custom_element_attributes:
                 if attribute not in self.custom_element_attributes:
@@ -535,6 +536,7 @@ class CustomAttribute:
         self.dictionary = custom_attribute_dictionary
         self.parent_schema = parent_schema
         self.type = self.dictionary["Type"]
+        self.display_name = self.dictionary.get("Display Name", self.name)
         self.description = self.dictionary.get("Description", "")
         self.applies_to = self.dictionary.get("Applies To", [])
         self.required = self.dictionary.get("Required", False)

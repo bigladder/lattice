@@ -89,7 +89,7 @@ def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to b
                 else:
                     new_obj["Units"] = new_obj["Units"].replace("-", r"·")
                     new_obj["Units"] = re.sub(r"(\d+)", r"^\1^", new_obj["Units"])
-            if "Scalable" in new_obj:
+            if "Scalable" in new_obj:  # TODO: Custom from 205. Needs to be generalized.
                 if isinstance(new_obj["Scalable"], bool):
                     if new_obj["Scalable"]:
                         new_obj["Scalable"] = "`True`" if new_obj["Scalable"] else ""
@@ -97,6 +97,8 @@ def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to b
                         new_obj["Scalable"] = ""
                 else:
                     raise ValueError("Scalable must be a boolean value.")
+            if "Cycling Order" in new_obj:  # TODO: Custom from 205. Needs to be generalized.
+                new_obj["Cycling Order"] = f"`[{', '.join(new_obj['Cycling Order'])}]`"
             compress_list(new_obj)
             compress_list(new_obj, key="Constraints")
             data_elements.append(new_obj)
@@ -269,7 +271,17 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None):
             for dg, data_elements in struct[table_type].items():
                 output_file.writelines(
                     create_table_from_list(
-                        ["Name", "Description", "Type", "Units", "Constraints", "Required", "Scalable", "Notes"],
+                        [
+                            "Name",
+                            "Description",
+                            "Type",
+                            "Units",
+                            "Constraints",
+                            "Required",
+                            "Scalable",  # TODO: Custom from 205. Needs to be generalized.
+                            "Cycling Order",  # TODO: Custom from 205. Needs to be generalized.
+                            "Notes",
+                        ],
                         data_elements,
                         description=dg,
                         level=next_level,
