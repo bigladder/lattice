@@ -9,7 +9,7 @@ import regex
 
 from ..schema import AlternativeType, ArrayType, DataGroupType, EnumerationType, ReferenceType, SelectorConstraint
 
-logger = logging.getLogger()
+logger = logging.getLogger("lattice")
 
 
 def DAG_sort(obj_list: list[HeaderEntry]) -> list[HeaderEntry]:

@@ -1,17 +1,41 @@
-import logging
+import logging.config
 from pathlib import Path
 
-from doit import task_params
 from doit.tools import create_folder
 
 from lattice import Lattice
 from lattice.cpp.extension_loader import load_extensions
 
-logging.basicConfig(
-    level=logging.CRITICAL,
-    format="%(asctime)s: [%(levelname)s]  %(message)s",
-    handlers=[logging.FileHandler("lattice.log", mode="w")],
-)
+config = {
+    "version": 1,
+    "disable_existing_loggers": False,  # re-delcare any imported loggers with the behavior this
+    # project wants, else they will keep their native handling
+    "formatters": {"defaultFormatter": {"format": "%(asctime)s  [%(levelname)s]   %(message)s", "use_colors": False}},
+    "handlers": {
+        "defaultFileHandler": {
+            "formatter": "defaultFormatter",
+            "class": "logging.FileHandler",
+            "filename": "lattice.log",
+            "level": "ERROR",
+            "delay": True,
+        }
+    },
+    "loggers": {
+        "lattice": {
+            "handlers": ["defaultFileHandler"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "forge": {
+            "handlers": ["defaultFileHandler"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+logging.config.dictConfig(config)
+
 
 EXAMPLES_PATH = "examples"
 BUILD_PATH = "build"
@@ -112,24 +136,8 @@ def task_generate_markdown():
         }
 
 
-@task_params(
-    [
-        {
-            "name": "level",
-            "short": "l",
-            "long": "level",
-            "type": str,
-            "default": "CRITICAL",
-            "choices": (("DEBUG", ""), ("INFO", ""), ("WARNING", ""), ("ERROR", ""), ("CRITICAL", "")),
-            "help": "Set the logger level.",
-        }
-    ]
-)
-def task_generate_cpp_code(level):
+def task_generate_cpp_code():
     """Generate CPP headers and source for example schema."""
-
-    def set_log_level(level):
-        logging.getLogger().setLevel(level)
 
     for example in examples:
         name = Path(example.root_directory).name
@@ -149,12 +157,11 @@ def task_generate_cpp_code(level):
             + example.cpp_support_headers
             + [example.cpp_output_dir / "CMakeLists.txt", example.cpp_output_dir / "src" / "CMakeLists.txt"],
             "actions": [
-                (set_log_level, [level]),
                 (load_extensions, [Path(example.root_directory, "cpp", "extensions")]),
                 # init_repo and init_submodules set to False, because all of this is inside a .gitignore'd directory
                 (
                     example.generate_cpp_project,
-                    [False, False, False, "Lattice", "info@bigladdersoftware.com", "2025", "BSD-3-Clause"],
+                    [True, False, False, "Lattice", "info@bigladdersoftware.com", "2025", "BSD-3-Clause"],
                 ),
             ],
             "clean": True,
