@@ -309,6 +309,27 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 
 
 # Required
+class Required:
+    pattern: RegularExpressionPattern
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        self.text = text
+        self.parent_data_element = parent_data_element
+
+    def resolve(self):
+        pass
+
+
+class PrerequisiteDefinitionRequired(Required):
+    pattern = RegularExpressionPattern(f"if !?({_data_element_names})")
+
+
+class PrerequisiteValueRequired(Required):
+    pattern = RegularExpressionPattern(f"if ({_data_element_names})!?=({_value_pattern})")
+
+
+class PrerequisiteArrayValueRequired(Required):
+    pattern = RegularExpressionPattern(rf"if ({_data_element_names}) contains\(({_value_pattern})\)")
 
 
 class DataElement:
@@ -591,8 +612,14 @@ class SchemaPatterns:
         )
 
         # Conditional Requirements
+        self.prerequisite_definition_required = PrerequisiteDefinitionRequired.pattern.cleaned()
+        self.prerequisite_value_required = PrerequisiteValueRequired.pattern.cleaned()
+        self.prerequisite_array_value_required = PrerequisiteArrayValueRequired.pattern.cleaned()
+
         self.conditional_requirements = RegularExpressionPattern(
-            f"if (!?{self.data_element_names})(!?=({self.values}))?"
+            f"({self.prerequisite_definition_required})|"
+            f"({self.prerequisite_value_required})|"
+            f"({self.prerequisite_array_value_required})"
         )
 
 
