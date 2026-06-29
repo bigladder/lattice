@@ -6,6 +6,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import List, Optional, Union
 
+import tomlkit
 from atheneum_forge import forge, project_factory
 from referencing.exceptions import Unresolvable
 
@@ -255,8 +256,9 @@ class Lattice:  # pylint:disable=R0902
         """Wrap list of template-generated headers."""
         return support.support_header_pathnames(self.cpp_output_dir)
 
-    def generate_cpp_project(
+    def generate_cpp_project(  # noqa: PLR0913
         self,
+        force_reinitialize=False,
         git_init=False,
         submodule_init=False,
         copyright_holder="",
@@ -272,10 +274,21 @@ class Lattice:  # pylint:disable=R0902
             spdx_copyright_text (str, optional): SPDX-compatible copyright string. Defaults to blank.
             spdx_license_id (str, optional): SPDX-compatible license string. Defaults to blank.
         """
-        self.forge.initialize_configuration(
-            self.cpp_output_dir, self.root_directory.name, project_factory.ProjectType.cpp, False, False, False, True
-        )  # force = True
-        self._add_project_submodules()
+
+        try:
+            self.forge.initialize_configuration(
+                self.cpp_output_dir,
+                self.root_directory.name,
+                project_factory.ProjectType.cpp,
+                False,
+                False,
+                False,
+                force_reinitialize,
+            )
+        except RuntimeError:
+            pass  # forge.toml exists but wasn't allowed to be overwritten; 'tis ok.
+
+        self._add_project_submodules_to_config()
 
         self.forge.edit_config(
             {
@@ -293,14 +306,24 @@ class Lattice:  # pylint:disable=R0902
             string_to_file(str(h), schema.cpp_header_file_path)
             c = CPPTranslator(self.root_directory.name, h)
             string_to_file(str(c), schema.cpp_source_file_path)
+
+        support.render_support_headers(self.root_directory.name, self._cpp_output_include_dir)
+
         self.forge.add_owner_copyright(self._cpp_output_include_dir)
         self.forge.add_owner_copyright(self._cpp_output_src_dir)
 
-    def _add_project_submodules(self):
+    def _add_project_submodules_to_config(self):
         """Copy the local project's cpp submodule information into the atheneum-forge config"""
-        if (self.root_directory / "cpp" / "config.toml").exists():
-            with open(self.root_directory / "cpp" / "config.toml", "r", encoding="utf-8") as local_submodules:
-                subs_list = local_submodules.read()
-                if (self.cpp_output_dir / "forge.toml").exists():
-                    with open(self.cpp_output_dir / "forge.toml", "a", encoding="utf-8") as config:
-                        config.write(subs_list)
+        cpp_submodule_config_file = self.root_directory / "cpp" / "config.toml"
+        if (cpp_submodule_config_file).exists():
+            with open(cpp_submodule_config_file, "r", encoding="utf-8") as local_submodules:
+                local = tomlkit.parse(local_submodules.read())
+                forge_config_file = self.cpp_output_dir / "forge.toml"
+                if (forge_config_file).exists():
+                    with open(forge_config_file, "r", encoding="utf-8") as forge_config:
+                        forge = tomlkit.parse(forge_config.read())
+                        for dep in local.get("deps", []):
+                            if dep["name"] not in [f["name"] for f in forge.get("deps", [])]:
+                                forge["deps"].append(dep)  # type: ignore
+                    with open(forge_config_file, "w", encoding="utf-8") as forge_config:
+                        tomlkit.dump(forge, forge_config)

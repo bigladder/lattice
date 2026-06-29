@@ -11,7 +11,7 @@ from lattice.cpp.header_entries import *  # noqa: F403
 from lattice.file_io import get_base_stem, load
 from lattice.util import hyphen_separated_lowercase_style, namespace_style, snake_style
 
-logger = logging.getLogger()
+logger = logging.getLogger("lattice")
 
 # ruff: noqa: F841
 

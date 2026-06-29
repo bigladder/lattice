@@ -20,7 +20,7 @@ from .header_entries import (
     VirtualDestructor,
 )
 
-logger = logging.getLogger()
+logger = logging.getLogger("lattice")
 
 # ruff: noqa: F841
 
