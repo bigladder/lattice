@@ -4,7 +4,8 @@ Markdown grid-table creation utilities
 
 import copy
 import io
-import stringcase
+
+import casefy
 
 
 def flatten(list_of_lists):
@@ -254,7 +255,7 @@ def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blan
     return table
 
 
-def write_table(dat, columns, caption=None, preferred_sizes=None):
+def write_table(dat, columns, caption=None, preferred_sizes=None, scope=None):
     """
     - dat: (Dict String (Array String)), dict of arrays of data for the table
     - columns: (Array String), the column names in desired order
@@ -270,7 +271,11 @@ def write_table(dat, columns, caption=None, preferred_sizes=None):
     with io.StringIO() as handle:
         handle.write(make_table_from_dict_of_arrays(dat, columns=columns, preferred_sizes=preferred_sizes))
         if caption is not None:
-            handle.write(f"\nTable: {caption} {{#tbl:{stringcase.snakecase(caption)}}}\n")
+            if scope is not None:
+                caption_string = f"{casefy.snakecase(scope)}:{casefy.snakecase(caption)}"
+            else:
+                caption_string = casefy.snakecase(caption)
+            handle.write(f"\nTable: {caption} {{#tbl:{caption_string}}}\n")
         the_str = handle.getvalue()
     return the_str
 

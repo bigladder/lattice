@@ -168,10 +168,28 @@ _value_pattern = RegularExpressionPattern(
 # Constraints
 class Constraint:
     pattern: RegularExpressionPattern
+    # Data Types this constraint may be applied to. Empty means unrestricted.
+    # If the parent Data Element's Type is an ArrayType, the constraint is checked
+    # against the array's element type unless `applies_to_array_container` is set.
+    applicable_data_types: List[Type[DataType]] = []
+    applies_to_array_container: bool = False
 
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
         self.parent_data_element = parent_data_element
+        self._validate_applicable_data_type()
+
+    def _validate_applicable_data_type(self) -> None:
+        if not self.applicable_data_types:
+            return
+        data_type = self.parent_data_element.data_type
+        if isinstance(data_type, ArrayType) and not self.applies_to_array_container:
+            data_type = data_type.array_data_type
+        if not isinstance(data_type, tuple(self.applicable_data_types)):
+            raise Exception(
+                f"Constraint '{self.text}' is not applicable to Data Type '{data_type.text}' "
+                f"for Data Element '{self.parent_data_element.name}'."
+            )
 
     def resolve(self):
         pass
@@ -179,24 +197,29 @@ class Constraint:
 
 class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
+    applicable_data_types = [IntegerType, NumericType]
 
 
 class MultipleConstraint(Constraint):
     pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
+    applicable_data_types = [IntegerType, NumericType]
 
 
 class SetConstraint(Constraint):
-    pattern = RegularExpressionPattern(rf"\[{NumericType.value_pattern}(, ?{NumericType.value_pattern})*\]")
+    pattern = RegularExpressionPattern(rf"\[{_value_pattern}(, ?{_value_pattern})*\]")
+    applicable_data_types = [IntegerType, NumericType, StringType, EnumerationType]
 
 
 class SelectorConstraint(Constraint):
     pattern = RegularExpressionPattern(
         rf"(?P<SelectorElementName>{_data_element_names})\((?P<SelectorValue>{EnumerationType.value_pattern})(, ?(?P<SelectorValue>{EnumerationType.value_pattern}))*\)"  # noqa: E501
     )
+    applicable_data_types = [AlternativeType]
 
 
 class StringPatternConstraint(Constraint):
     pattern = RegularExpressionPattern('".*"')
+    applicable_data_types = [StringType, PatternType]
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
@@ -210,17 +233,13 @@ class DataElementValueConstraint(Constraint):
     pattern = RegularExpressionPattern(
         f"(?P<DataElementName>{_data_element_names})=(?P<ConstrainedValue>{_value_pattern})"
     )  # noqa: E501
+    applicable_data_types = [DataGroupType]
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
         self.pattern = parent_data_element.parent_data_group.parent_schema.schema_patterns.data_element_value_constraint
         match = self.pattern.match(self.text)
         assert match is not None
-        # parent data element must be a data group
-        if not isinstance(self.parent_data_element.data_type, DataGroupType):
-            raise Exception(
-                f"Data Element Value Constraint must be a Data Group Type, not {type(self.parent_data_element)}"
-            )
 
         self.data_element_name = match.group("DataElementName")
         self.data_element_value = match.group("ConstrainedValue")
@@ -246,6 +265,7 @@ class DataElementValueConstraint(Constraint):
 
 class DataElementValueSubConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"({_data_element_names})\.Constraints=\"(({RangeConstraint.pattern},?\s?)*)\"")
+    applicable_data_types = [DataGroupType]
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
@@ -254,11 +274,6 @@ class DataElementValueSubConstraint(Constraint):
         )
         match = self.pattern.match(self.text)
         assert match is not None
-        # parent data element must be a data group
-        if not isinstance(self.parent_data_element.data_type, DataGroupType):
-            raise Exception(
-                f"Data Element Value Constraint must be a Data Group Type, not {type(self.parent_data_element)}"
-            )
 
         self.data_element_name = match.group(1)  # TODO: Named groups?
         self.data_element_constraint = match.group(5)
@@ -280,6 +295,8 @@ class DataElementValueSubConstraint(Constraint):
 
 class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]")
+    applicable_data_types = [ArrayType]
+    applies_to_array_container = True
 
 
 _constraint_list: List[Type[Constraint]] = [
@@ -309,6 +326,27 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 
 
 # Required
+class Required:
+    pattern: RegularExpressionPattern
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        self.text = text
+        self.parent_data_element = parent_data_element
+
+    def resolve(self):
+        pass
+
+
+class PrerequisiteDefinitionRequired(Required):
+    pattern = RegularExpressionPattern(f"if !?({_data_element_names})")
+
+
+class PrerequisiteValueRequired(Required):
+    pattern = RegularExpressionPattern(f"if ({_data_element_names})!?=({_value_pattern})")
+
+
+class PrerequisiteArrayValueRequired(Required):
+    pattern = RegularExpressionPattern(rf"if ({_data_element_names}) contains\(({_value_pattern})\)")
 
 
 class DataElement:
@@ -447,6 +485,7 @@ class DataGroup:
         if "Custom Attributes" in self.dictionary:
             for attribute in self.dictionary["Custom Attributes"]:
                 self.custom_element_attributes.append(attribute)
+        # Inherit custom attributes from template if applicable
         if self.parent_template is not None:
             for attribute in self.parent_template.custom_element_attributes:
                 if attribute not in self.custom_element_attributes:
@@ -514,6 +553,7 @@ class CustomAttribute:
         self.dictionary = custom_attribute_dictionary
         self.parent_schema = parent_schema
         self.type = self.dictionary["Type"]
+        self.display_name = self.dictionary.get("Display Name", self.name)
         self.description = self.dictionary.get("Description", "")
         self.applies_to = self.dictionary.get("Applies To", [])
         self.required = self.dictionary.get("Required", False)
@@ -591,8 +631,14 @@ class SchemaPatterns:
         )
 
         # Conditional Requirements
+        self.prerequisite_definition_required = PrerequisiteDefinitionRequired.pattern.cleaned()
+        self.prerequisite_value_required = PrerequisiteValueRequired.pattern.cleaned()
+        self.prerequisite_array_value_required = PrerequisiteArrayValueRequired.pattern.cleaned()
+
         self.conditional_requirements = RegularExpressionPattern(
-            f"if (!?{self.data_element_names})(!?=({self.values}))?"
+            f"({self.prerequisite_definition_required})|"
+            f"({self.prerequisite_value_required})|"
+            f"({self.prerequisite_array_value_required})"
         )
 
 
