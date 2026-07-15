@@ -136,6 +136,10 @@ def load_yaml_source(schema_dir, source, args_str):
     """
     src_path = os.path.join(schema_dir, source + ".schema.yaml")
     if not os.path.exists(src_path):
+        # Fall back to the lattice package's built-in schema directory (e.g., core.schema.yaml)
+        lattice_schema_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        src_path = os.path.join(lattice_schema_dir, source + ".schema.yaml")
+    if not os.path.exists(src_path):
         return (make_error_string(f'Schema source "{source}" ("{src_path}") doesn\'t exist!', args_str), None)
     data = load(src_path)
     return (None, data)
