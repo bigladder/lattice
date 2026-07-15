@@ -160,8 +160,8 @@ def load_structure_from_object(instance):
             new_obj = instance[obj]
         elif "Data Elements" in instance[obj]:
             data_groups[obj] = instance[obj]
-        elif object_type == "Meta" or object_type == "Custom Attribute":
-            pass
+        elif object_type in ("Meta", "Custom Attribute", "Data Type"):
+            pass  # TODO: "Data Type" objects (from core.schema.yaml) are silenced here pending a full Markdown generation overhaul
         else:
             print(f"Unknown object type: {object_type}.")
     return {
