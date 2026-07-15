@@ -291,8 +291,13 @@ class DataGroup:  # pylint: disable=R0903
         requirement_list = regex.split(separator, requirement_str)
         # pylint: disable-next=line-too-long
         dependent_req = r"(?P<selector>!?[0-9a-zA-Z_]*)((?P<is_equal>!?=)(?P<selector_state>[0-9a-zA-Z_]*))?"
+        # TODO: contains() conditions need proper if/then generation; skip for now so the
+        # field remains optional (but still validated against its type when present).
+        contains_req = r"[0-9a-zA-Z_]+\s+contains\([0-9a-zA-Z_]+\)"
 
         for req in requirement_list:
+            if regex.match(contains_req, req):
+                continue
             m = regex.match(dependent_req, req)
             if m:
                 selector = m.group("selector")

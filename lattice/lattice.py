@@ -187,7 +187,7 @@ class Lattice:  # pylint:disable=R0902
         if self.example_directory_path is not None:
             extensions = ["json", "yaml", "cbor"]
             for ext in extensions:
-                self.examples.extend(self.example_directory_path.glob(f"*.{ext}"))
+                self.examples.extend(self.example_directory_path.rglob(f"*.{ext}"))
         self.examples.sort()
 
     def validate_example_files(self):
