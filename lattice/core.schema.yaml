@@ -141,11 +141,11 @@ Metadata:
     copyright:
       Description: "Copyright notice for the data"
       Type: "String"
-      Notes: "e.g., 'Copyright © 2024 Acme Corporation. All rights reserved.'"
+      Notes: "**Informative note:** e.g., 'Copyright © 2024 Acme Corporation. All rights reserved.'"
     license:
       Description: "License governing use, reproduction, and distribution of the data"
       Type: "String"
-      Notes: "May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+      Notes: "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
     expiration_date:
       Description: "Date after which the data is no longer considered valid by the data publisher"
       Type: "Date"
