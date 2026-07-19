@@ -151,7 +151,10 @@ definitions:
       - kg/s
       - N
       - J
+      - J/kg
+      - J/m2
       - W
+      - W/m2
       - Pa
       - K
       - J/K
@@ -161,6 +164,7 @@ definitions:
       - A
       - C
       - Hz
+      - lx
       - rev/s
   DataTypePattern:
     type: string

@@ -76,7 +76,11 @@ def test_value_pattern():
 def test_data_element_value_constraint_pattern():
     execute_pattern_test(
         pattern=lattice.schema.DataElementValueConstraint.pattern,
-        valid_examples=["schema=RS0001"],
+        valid_examples=[
+            "schema=RS0001",
+            "annual.statistic_type=SINGLE_VALUE",
+            "(annual|monthly).statistic_type=SINGLE_VALUE",
+        ],
         invalid_examples=["Wrong", "data_element=wronG"],
         anchored=True,
     )
@@ -96,5 +100,27 @@ def test_string_pattern_constraint_pattern():
         pattern=lattice.schema.StringPatternConstraint.pattern,
         valid_examples=['"[A-Z]{2}"'],
         invalid_examples=["[A-Z]{2}"],
+        anchored=True,
+    )
+
+
+def test_array_length_limits_constraint_pattern():
+    execute_pattern_test(
+        pattern=lattice.schema.ArrayLengthLimitsConstraint.pattern,
+        valid_examples=["[1..4]", "[..4]", "[1..]", "[12]"],
+        invalid_examples=["[1,2]", "Wrong"],
+        anchored=True,
+    )
+
+
+def test_nested_attribute_override_path_pattern():
+    execute_pattern_test(
+        pattern=lattice.schema.NestedAttributeOverride.path_pattern,
+        valid_examples=[
+            "values",
+            "annual.mean",
+            "(annual|monthly).(mean|maximum)",
+        ],
+        invalid_examples=["Wrong", "annual.mean.Units=\"K\"", "", "**", "annual.*"],
         anchored=True,
     )
