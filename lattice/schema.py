@@ -1151,7 +1151,26 @@ class Schema:
             else:
                 raise Exception(f'Unrecognized Object Type, "{object_type}" in {self.file_path}')
 
-        # Get top level info
+        # Get top level info.
+        #
+        # Three distinct names are in play here, and only one of them matters for
+        # instance validation:
+        #   - `self.name`: this schema *file's* own name (e.g. "ClimateInformation"
+        #     from "ClimateInformation.schema.yaml"). Used only to name generated
+        #     artifacts (meta-schema/JSON-schema/C++ file names); it's the weakest
+        #     fallback for schema_name below, nothing more.
+        #   - `self.root_data_group_name`: the "Root Data Group" declared in this
+        #     schema's own `Schema:` block. Identifies the entry Data Group type, and
+        #     is a stronger fallback for schema_name if no explicit override exists.
+        #   - `self.schema_name`: the *public* schema identifier that a compliant
+        #     instance file must declare in its own `metadata.schema_name` for
+        #     validate_file() to match it to this schema (see lattice.py). Defaults to
+        #     the fallbacks above, but a schema may pin it to something else entirely
+        #     via a `schema_name="..."` constraint on the root data group's `metadata`
+        #     element -- e.g. ClimateInformation's root data group is named
+        #     "ClimateInformation" (PascalCase, an internal/code-facing name) but pins
+        #     schema_name to "CLIMATE_INFORMATION" (the long-standing public
+        #     identifier data files actually carry).
         self.root_data_group = None
         self.metadata = None
         self.schema_author = None
@@ -1165,16 +1184,22 @@ class Schema:
                 if "metadata" in self.root_data_group.data_elements
                 else None
             )
-            if self.metadata is not None:
-                for constraint in self.metadata.constraints:
-                    if isinstance(constraint, DataElementValueConstraint):
-                        if constraint.data_element_name == "schema_author":
-                            self.schema_author = constraint.data_element_value
-                        elif constraint.data_element_name == "schema_name":
-                            self.schema_name = constraint.data_element_value.strip('"')
 
         for data_group in self.data_groups.values():
             data_group.resolve()
+
+        # A schema_name/schema_author self-override is a Constraint on the metadata
+        # Data Element, and Constraints are only parsed into `.constraints` by
+        # DataElement.resolve() (called above via data_group.resolve()) -- so this
+        # must run after that loop, not before it, or the override is silently never
+        # seen and schema_name quietly falls back to root_data_group_name/self.name.
+        if self.metadata is not None:
+            for constraint in self.metadata.constraints:
+                if isinstance(constraint, DataElementValueConstraint):
+                    if constraint.data_element_name == "schema_author":
+                        self.schema_author = constraint.data_element_value
+                    elif constraint.data_element_name == "schema_name":
+                        self.schema_name = constraint.data_element_value.strip('"')
 
         resolve_occurrences(self)
 
