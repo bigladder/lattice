@@ -1,5 +1,6 @@
 """This module encapsulates JSON translation and validation functions for YAML source schema"""
 
+import copy
 import os
 import warnings
 from pathlib import Path
@@ -543,16 +544,20 @@ def generate_core_json_schema(processing_path: Path) -> dict:
 
 
 # -------------------------------------------------------------------------------------------------
-def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
+def replace_reference(referenced_schemas: dict, subdict: dict, _expanding: tuple = ()) -> bool:
     """
     Search for $ref keys and replace the associated dictionary entry in-situ.
 
     :param referenced_schemas:   Keys = schema names, Values = JSON dictionary representations
     :param subdict:              Nested piece of JSON dictionary relevant to the current iteration
+    :param _expanding:           Internal use only. Definitions already being expanded along the
+                                  current path, tracked by object identity (see
+                                  generate_json_schema, which seeds this per top-level
+                                  definition) so a self-referencing Data Group is left as an
+                                  unexpanded $ref instead of inlined forever.
     """
     subbed = False
     if "$ref" in subdict.keys():
-        subbed = True
         # parse the ref and locate the sub-dict (e.g. core.schema.json#/definitions/Metadata
         # parses to core.schema.json and /definitions/Metadata)
         source_file, ref_loc = subdict["$ref"].split("#")
@@ -565,20 +570,27 @@ def replace_reference(referenced_schemas: dict, subdict: dict) -> bool:
             sub_d = ref[key_tree[0]]
             for k in key_tree[1:]:
                 sub_d = sub_d[k]
-            # replace the $ref with its contents
-            subdict.update(sub_d)
-            subdict.pop("$ref")
-            # re-search the substituted dictionary
-            subbed = replace_reference(referenced_schemas, subdict)
         except KeyError:
-            subbed = False  # leave schema subdictionary as-is
+            return False  # leave schema subdictionary as-is
+        if any(sub_d is expanding_dict for expanding_dict in _expanding):
+            return False
+        # Deep-copy: sub_d is shared, so a shallow update would alias a self-referencing
+        # Data Group into an actually-circular dict, not just a repeated $ref string.
+        subdict.update(copy.deepcopy(sub_d))
+        subdict.pop("$ref")
+        subbed = True
+        # re-search the substituted dictionary in this same pass, remembering this definition
+        # so a cycle back to it gets left as a $ref instead of expanded again
+        replace_reference(referenced_schemas, subdict, (*_expanding, sub_d))
     else:
         for key, value in subdict.items():
             if isinstance(value, dict):
-                subbed = replace_reference(referenced_schemas, value)
+                if replace_reference(referenced_schemas, value, _expanding):
+                    subbed = True
             if isinstance(value, list):
                 for entry in [item for item in value if isinstance(item, dict)]:
-                    subbed = replace_reference(referenced_schemas, entry)
+                    if replace_reference(referenced_schemas, entry, _expanding):
+                        subbed = True
     return subbed
 
 
@@ -598,8 +610,15 @@ def generate_json_schema(source_schema_input_path: Path, json_schema_output_path
             schema_ref_map[ref_source.stem] = JsonTranslator(ref_source.absolute()).schema
 
         main_schema_instance = schema_ref_map[Path(source_schema_input_path).stem]
-        while replace_reference(schema_ref_map, main_schema_instance):
-            pass
+
+        # Resolve each definition's own body separately, seeded with its own identity: a
+        # self-reference is recognized immediately, and replace_reference re-searches after
+        # each substitution, so recursion is fully handled in this one call.
+        for definition in main_schema_instance.get("definitions", {}).values():
+            replace_reference(schema_ref_map, definition, (definition,))
+
+        # Final pass for anything outside "definitions" (e.g. the root Data Group's $ref).
+        replace_reference(schema_ref_map, main_schema_instance)
 
         dump(main_schema_instance, json_schema_output_path)
 
