@@ -223,11 +223,20 @@ def create_table_from_list(columns, data_list, description=None, level=1, scope=
                 if attribute == column:
                     attribute_string = item[attribute]
                     if attribute == "Type":
-                        attribute_string = re.sub(r"\((.*)\)", r"Alternative(\1)", attribute_string)
-                        attribute_string = re.sub(r"\[(.*)\]", r"Array(\1)", attribute_string)
-                        attribute_string = re.sub(r"\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}", r"Group(\1)", attribute_string)
+                        # Each substitution expands a compact wrapper ("(X)", "[X]", "{X}",
+                        # "<X>") into its spelled-out predicate form. A Type string is also
+                        # allowed to spell the predicate out already (e.g. "Array(Timestamp)",
+                        # per Standard 232 5.3.3), and the two conventions can be mixed freely.
+                        # The negative lookbehind keeps this idempotent on that already-spelled
+                        # form -- without it, "Array(Timestamp)" (predicate immediately
+                        # preceding the bracket) doubles up into "ArrayAlternative(Timestamp)".
+                        attribute_string = re.sub(r"(?<![A-Za-z])\((.*)\)", r"Alternative(\1)", attribute_string)
+                        attribute_string = re.sub(r"(?<![A-Za-z])\[(.*)\]", r"Array(\1)", attribute_string)
                         attribute_string = re.sub(
-                            r"<([A-Z]([A-Z]|[a-z]|[0-9])*)>", r"Enumeration(\1)", attribute_string
+                            r"(?<![A-Za-z])\{([A-Z]([A-Z]|[a-z]|[0-9])*)\}", r"Group(\1)", attribute_string
+                        )
+                        attribute_string = re.sub(
+                            r"(?<![A-Za-z])<([A-Z]([A-Z]|[a-z]|[0-9])*)>", r"Enumeration(\1)", attribute_string
                         )
                     details += f"{attribute}:\n\n:   {attribute_string}\n\n"
         data[second_column_name].append(details[:-1])  # drop last new line
