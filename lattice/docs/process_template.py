@@ -198,6 +198,7 @@ def write_schema_table(table_dict, table_name, description=None, level=1, error_
             "Notes",
             "Scalable",  # TODO: Custom from 205. Needs to be generalized.
             "Cycling Order",  # TODO: Custom from 205. Needs to be generalized.
+            "Canonical End Uses",  # TODO: Custom from output-reporting. Needs to be generalized.
         ],
     }
     return create_table_from_list(

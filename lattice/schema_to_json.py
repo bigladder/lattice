@@ -66,6 +66,10 @@ class DataGroup:  # pylint: disable=R0903
                 elements["properties"][e]["scalable"] = element["Scalable"]
             if "Cycling Order" in element:  # TODO: Custom from 205. Needs to be generalized.
                 elements["properties"][e]["cyclingOrder"] = element["Cycling Order"]
+            if "Canonical End Uses" in element:  # TODO: Custom from output-reporting. Needs to be generalized.
+                # Informative only; deliberately not folded into "items"/"required" below, since
+                # the whole point is a non-enforcing, freely-extensible reference structure.
+                elements["properties"][e]["canonicalEndUses"] = element["Canonical End Uses"]
         if required:
             elements["required"] = required
         if dependencies:
