@@ -50,9 +50,16 @@ def compress_list(a_dict, key="Notes"):
     """
     if key in a_dict:
         if isinstance(a_dict[key], list):
-            a_dict[key] = "\n    ".join(
-                [f"- {item}" for item in a_dict[key]]
-            )  # TODO: 4 spaces for pandoc, but 3 needed for mkdocs
+            if len(a_dict[key]) == 1:
+                # Every key this is called for (Notes, Constraints, ...) accepts either a
+                # bare scalar or a list per the meta-schema; a one-item list and a scalar
+                # mean the same thing to the schema author, so render them the same way
+                # instead of bulleting only the list form.
+                a_dict[key] = a_dict[key][0]
+            else:
+                a_dict[key] = "\n    ".join(
+                    [f"- {item}" for item in a_dict[key]]
+                )  # TODO: 4 spaces for pandoc, but 3 needed for mkdocs
 
 
 def _format_nested_group_attribute(node, label_key="name", children_key="subcategories"):
