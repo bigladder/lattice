@@ -3,7 +3,6 @@
 import shutil
 from datetime import datetime
 from pathlib import Path
-from shutil import copytree
 from typing import List
 from urllib.parse import urlparse
 
@@ -356,7 +355,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             # Process template
             process_template(template_path, output_path, schema_dir=schema_dir_path)
         else:
-            copytree(template_path, output_path)
+            shutil.copy(template_path, output_path)
 
         title = get_file_basename(template_path, depth=2)
 
