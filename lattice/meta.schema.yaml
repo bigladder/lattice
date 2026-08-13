@@ -11,6 +11,7 @@ definitions:
       - Enumeration
       - Data Group
       - Data Group Template
+      - Custom Attribute
   Meta:
     type: object
     properties:
@@ -244,6 +245,35 @@ definitions:
     required:
       - Object Type
     additionalProperties: false
+  CustomAttribute:
+    type: object
+    properties:
+      Object Type:
+        type: string
+        const: Custom Attribute
+      Type:
+        "$ref": meta.schema.json#/definitions/DataTypePattern
+        description: >-
+          The type of this attribute's value, using the same type-expression syntax as a
+          Data Element's own "Type" (e.g. Boolean, String, Array(Group(EndUse))). Wherever
+          this attribute is actually set (e.g. on a Data Element that declares it via
+          "Custom Attributes"), its value is written as plain, native YAML conforming to
+          that shape — not as an encoded string.
+      Display Name:
+        type: string
+      Description:
+        type: string
+      Applies To:
+        type: array
+        items:
+          "$ref": meta.schema.json#/definitions/DataTypePattern
+      Required:
+        type: boolean
+    required:
+      - Object Type
+      - Type
+      - Description
+    additionalProperties: false
 type: object
 patternProperties:
   "**GENERATED**":
@@ -297,4 +327,10 @@ patternProperties:
               const: Data Group Template
         then:
           "$ref": meta.schema.json#/definitions/DataGroupTemplate
+      - if:
+          properties:
+            Object Type:
+              const: Custom Attribute
+        then:
+          "$ref": meta.schema.json#/definitions/CustomAttribute
 additionalProperties: false
