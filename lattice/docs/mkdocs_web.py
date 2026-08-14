@@ -127,11 +127,16 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
             "markdown_extensions": [
-                "markdown_grid_tables",
+                # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
+                # column-width wrapping happens to break a long cell line becomes a forced
+                # <br>, instead of leaving the paragraph to reflow naturally in the reader's
+                # browser.
+                {"markdown_grid_tables": {"hard_linebreaks": False}},
                 "pymdownx.smartsymbols",
                 "def_list",
                 "pymdownx.caret",  # Superscripts
                 "pymdownx.tilde",  # Subscripts
+                "pymdownx.superfences",  # ``` fenced code blocks, incl. nested inside table cells
             ],
         }
 

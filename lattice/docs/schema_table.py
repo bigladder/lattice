@@ -6,6 +6,8 @@ import io
 import re
 from copy import deepcopy
 
+import yaml
+
 from .grid_table import write_table
 
 
@@ -62,30 +64,6 @@ def compress_list(a_dict, key="Notes"):
                 )  # TODO: 4 spaces for pandoc, but 3 needed for mkdocs
 
 
-def _format_nested_group_attribute(node, label_key="name", children_key="subcategories"):
-    """
-    - node: Dict, a single Group instance from a recursive Array(Group(X)) custom attribute
-    - label_key: str, the field to display as this node's label
-    - children_key: str, the field holding nested child nodes (or None if not recursive)
-    RETURN: str, "Name" for a leaf, or "Name [Child, Child]" when it has children
-
-    Generalized for any custom attribute shaped as a self-referential Array(Group(X)) with
-    one label field and one recursive-children field — not specific to end uses. It can't be
-    made fully generic to *any* Group, though: a Group can have arbitrarily many fields, and
-    nothing in the schema says which one is the display label versus which one recurses, so
-    the caller has to name them explicitly. (Used today by the "Canonical End Uses" custom
-    attribute, whose Group happens to use "name"/"subcategories" — hence those defaults.)
-    """
-    label = node.get(label_key, "")
-    children = node.get(children_key) if children_key else None
-    if children:
-        formatted_children = ", ".join(
-            _format_nested_group_attribute(child, label_key, children_key) for child in children
-        )
-        return f"{label} [{formatted_children}]"
-    return label
-
-
 def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to be handled with Schema class
     """
     - data_groups: Dict, the data groups dictionary
@@ -130,10 +108,8 @@ def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to b
                     raise ValueError("Scalable must be a boolean value.")
             if "Cycling Order" in new_obj:  # TODO: Custom from 205. Needs to be generalized.
                 new_obj["Cycling Order"] = f"`[{', '.join(new_obj['Cycling Order'])}]`"
-            if "Canonical End Uses" in new_obj:  # TODO: Custom from output-reporting. Needs to be generalized.
-                new_obj["Canonical End Uses"] = ", ".join(
-                    _format_nested_group_attribute(node) for node in new_obj["Canonical End Uses"]
-                )
+            if "Canonical End Uses" in new_obj:
+                new_obj["Canonical End Uses"] = "```\n" + yaml.dump(new_obj["Canonical End Uses"], sort_keys=False) + "```"
             compress_list(new_obj)
             compress_list(new_obj, key="Constraints")
             data_elements.append(new_obj)
