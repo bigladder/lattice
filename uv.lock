@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -525,7 +525,7 @@ requires-dist = [
     { name = "cbor2" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "jsonschema" },
-    { name = "markdown-grid-tables", specifier = "==0.4.0" },
+    { name = "markdown-grid-tables", editable = "/Users/neal-kruis/projects/.worktrees/markdown-grid-tables/fix-def-list-and-preprocessing" },
     { name = "mkdocs-material" },
     { name = "networkx" },
     { name = "pygit2", specifier = ">=1.15.1" },
@@ -639,14 +639,13 @@ wheels = [
 
 [[package]]
 name = "markdown-grid-tables"
-version = "0.4.0"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "/Users/neal-kruis/projects/.worktrees/markdown-grid-tables/fix-def-list-and-preprocessing" }
 dependencies = [
     { name = "markdown" },
 ]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/13/bd9128c8c304c072a6c66becbfeb0b379fd9e590a6b2e0a78a78d27c8704/markdown_grid_tables-0.4.0-py3-none-any.whl", hash = "sha256:6f3422b854e8dbfe25a4e35e337df32f1bd901c420d4d6f132886334709939f5", size = 20960, upload-time = "2025-01-05T01:20:07.058Z" },
-]
+
+[package.metadata]
+requires-dist = [{ name = "markdown", specifier = ">=3.0.0" }]
 
 [[package]]
 name = "markdown-it-py"

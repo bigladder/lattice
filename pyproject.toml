@@ -16,7 +16,7 @@ dependencies = [
     "casefy >=1.1.0",
     "pygit2 >=1.15.1",
     "mkdocs-material",
-    "markdown-grid-tables == 0.4.0", # Note: issue with later versions (https://gitlab.com/WillDaSilva/markdown_grid_tables/-/issues/4)
+    "markdown-grid-tables", # Pinned via [tool.uv.sources] to our fork -- see its README for why
     "regex",
     "networkx",
     "atheneum-forge"
@@ -56,3 +56,4 @@ packages = ["lattice"]
 
 [tool.uv.sources]
 atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge" }
+markdown-grid-tables = { git = "https://github.com/bigladder/markdown-grid-tables.git", branch = "fix-def-list-and-preprocessing" }
