@@ -35,3 +35,10 @@ dl > dd > * {
   /* TODO: Increase selector specificity so we don't have to use !important. */
   margin: 0 !important;
 }
+
+dl > dd pre {
+  /* A fenced code block sits two levels inside dd (dd > .highlight > pre), past the
+     direct-child rule above; the theme's own pre{margin:1em -.8rem} reintroduces the gap
+     that rule already fixed for a dd's direct children. */
+  margin-top: 0 !important;
+}
