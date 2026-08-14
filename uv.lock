@@ -525,7 +525,7 @@ requires-dist = [
     { name = "cbor2" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "jsonschema" },
-    { name = "markdown-grid-tables", editable = "/Users/neal-kruis/projects/.worktrees/markdown-grid-tables/fix-def-list-and-preprocessing" },
+    { name = "markdown-grid-tables", git = "https://github.com/bigladder/markdown-grid-tables.git?branch=fix-def-list-and-preprocessing" },
     { name = "mkdocs-material" },
     { name = "networkx" },
     { name = "pygit2", specifier = ">=1.15.1" },
@@ -639,13 +639,11 @@ wheels = [
 
 [[package]]
 name = "markdown-grid-tables"
-source = { editable = "/Users/neal-kruis/projects/.worktrees/markdown-grid-tables/fix-def-list-and-preprocessing" }
+version = "0.6.1.dev4+g193493127"
+source = { git = "https://github.com/bigladder/markdown-grid-tables.git?branch=fix-def-list-and-preprocessing#193493127920b02c0715e5eca16c260d580bc8c6" }
 dependencies = [
     { name = "markdown" },
 ]
-
-[package.metadata]
-requires-dist = [{ name = "markdown", specifier = ">=3.0.0" }]
 
 [[package]]
 name = "markdown-it-py"

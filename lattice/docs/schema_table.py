@@ -64,6 +64,39 @@ def compress_list(a_dict, key="Notes"):
                 )  # TODO: 4 spaces for pandoc, but 3 needed for mkdocs
 
 
+_KNOWN_DATA_ELEMENT_ATTRIBUTES = {
+    "Name",
+    "Description",
+    "Type",
+    "Units",
+    "Constraints",
+    "Required",
+    "ID",
+    "Notes",
+    "Scalable",  # TODO: Custom from 205. Needs to be generalized.
+    "Cycling Order",  # TODO: Custom from 205. Needs to be generalized.
+}
+
+
+def _format_custom_attribute_values(new_obj):
+    """
+    - new_obj: Dict, a single Data Element's attributes, mutated in place
+    RETURN: None
+
+    Renders any custom attribute (any key not among the core Data Element attributes above)
+    whose value is a list or dict as a fenced YAML block. Generalizes what was previously
+    hardcoded per attribute name (just "Canonical End Uses") -- any custom attribute shaped
+    this way, from any project's schema, gets the same treatment automatically. Still requires
+    the attribute's name to be added to the Data Groups table's own column list to be
+    displayed at all; that part isn't generalized here.
+    """
+    for attribute, value in new_obj.items():
+        if attribute in _KNOWN_DATA_ELEMENT_ATTRIBUTES:
+            continue
+        if isinstance(value, (list, dict)):
+            new_obj[attribute] = "```\n" + yaml.dump(value, sort_keys=False) + "```"
+
+
 def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to be handled with Schema class
     """
     - data_groups: Dict, the data groups dictionary
@@ -108,8 +141,7 @@ def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to b
                     raise ValueError("Scalable must be a boolean value.")
             if "Cycling Order" in new_obj:  # TODO: Custom from 205. Needs to be generalized.
                 new_obj["Cycling Order"] = f"`[{', '.join(new_obj['Cycling Order'])}]`"
-            if "Canonical End Uses" in new_obj:
-                new_obj["Canonical End Uses"] = "```\n" + yaml.dump(new_obj["Canonical End Uses"], sort_keys=False) + "```"
+            _format_custom_attribute_values(new_obj)
             compress_list(new_obj)
             compress_list(new_obj, key="Constraints")
             data_elements.append(new_obj)
@@ -301,6 +333,7 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None):
                             "Scalable",  # TODO: Custom from 205. Needs to be generalized.
                             "Cycling Order",  # TODO: Custom from 205. Needs to be generalized.
                             "Canonical End Uses",  # TODO: Custom from output-reporting. Needs to be generalized.
+                            "Canonical Energy Sources",  # TODO: Custom from output-reporting. Needs to be generalized.
                             "Notes",
                         ],
                         data_elements,
