@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import List
 from urllib.parse import urlparse
 
+import markdown
 import pygit2
 from jinja2 import Environment, FileSystemLoader
 from mkdocs.__main__ import cli as mkdocs_cli
@@ -68,6 +69,8 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.colors = {"primary": "blue gray", "accent": "blue"}
         self.favicon_path = None
         self.logo_path = None
+        self.banner = None
+        self.banner_dismissable = False
         self.setup_build_directory_structure()
         self.get_git_info()
         self.specification_order = None
@@ -115,14 +118,24 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         logo = (
             str(Path(self.logo_path).relative_to(self.content_directory_path)) if self.logo_path is not None else None
         )
+        theme = {"name": "material", "favicon": favicon, "logo": logo, "palette": self.colors}
+        extra = {}
+        if self.banner is not None:
+            # Wires the optional `banner`/`banner_dismissable` config values into
+            # mkdocs-material's built-in announce block; see overrides/main.html.
+            theme["custom_dir"] = str(Path(__file__).parent / "overrides")
+            if self.banner_dismissable:
+                theme["features"] = ["announce.dismiss"]
+            extra["banner"] = self.banner
         return {
             "extra_css": ["assets/stylesheets/extra_styles.css"],
+            "extra": extra,
             "site_name": self.title,
             "site_url": self.base_url,
             "site_author": self.author,
             "site_description": self.description,
             "copyright": f"&copy {self.timestamp.year} {self.author} All rights reserved",
-            "theme": {"name": "material", "favicon": favicon, "logo": logo, "palette": self.colors},
+            "theme": theme,
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
@@ -172,6 +185,12 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             if "colors" in config:
                 for item in config["colors"]:
                     self.colors[item] = config["colors"][item]
+            if "banner" in config:
+                # Rendered to HTML now so overrides/main.html can inject it into mkdocs-material's
+                # announce block with `| safe` instead of escaping it.
+                self.banner = markdown.markdown(config["banner"])
+            if "banner_dismissable" in config:
+                self.banner_dismissable = config["banner_dismissable"]
 
         if about_page_content is not None:
             self.make_main_menu_page(

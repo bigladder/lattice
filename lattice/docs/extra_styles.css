@@ -42,3 +42,16 @@ dl > dd pre {
      that rule already fixed for a dd's direct children. */
   margin-top: 0 !important;
 }
+
+.md-banner {
+  /* The theme's default announce banner is footer-colored and .7rem -- easy to miss for a
+     notice that matters. Reuse the theme's own warning palette (already used by its
+     "outdated version" banner) so a project's `banner` config value reads as a real notice. */
+  background-color: var(--md-warning-bg-color);
+  color: var(--md-warning-fg-color);
+}
+
+.md-banner__inner {
+  font-size: 0.85rem;
+  padding: 0.5rem 0.8rem;
+}
