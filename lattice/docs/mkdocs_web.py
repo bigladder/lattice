@@ -247,6 +247,14 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                     file_path = Path(self.source_schema_directory_path, schema_file)
                     template.corresponding_schema_path = file_path
 
+        # Copy specification assets (e.g., images referenced by templates via `![](assets/...)`)
+        source_assets_directory = Path(self.docs_source_directory, "assets")
+        if source_assets_directory.exists():
+            specification_assets_directory = make_dir(Path(self.specifications_directory_path, "assets"))
+            for asset_file in source_assets_directory.iterdir():
+                if asset_file.is_file():
+                    shutil.copy(asset_file, specification_assets_directory)
+
         # Process templates
         sub_page_list = []
         for template in self.specification_templates:
