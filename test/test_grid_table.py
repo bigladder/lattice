@@ -43,3 +43,15 @@ def test_table_with_multiline_fenced_block_stays_a_valid_rectangle():
     }
     table = write_table(data, ["Name", "Attributes"])
     _assert_valid_grid_table(table)
+
+
+def test_multiline_cell_width_is_bounded_by_its_longest_line_not_its_total_length():
+    # A cell built from several concatenated attributes (see schema_table.create_table_from_list)
+    # is one long multi-line string; wrap_text_to_lines already splits it into separate physical
+    # rows, so the column only needs to fit its longest individual line, not the whole cell.
+    short_line_cell = "\n".join(f"line {i}" for i in range(20))
+    data = {"Name": ["a", "b"], "Attributes": ["one short line", short_line_cell]}
+    table = write_table(data, ["Name", "Attributes"])
+    _assert_valid_grid_table(table)
+    border_width = next(len(line) for line in table.splitlines() if line.startswith("+"))
+    assert border_width < len(short_line_cell)

@@ -293,24 +293,27 @@ def _real_width_floor(doa, columns):
 
     `get_column_sizes` measures against `visual_length`, so it may choose a column narrower than
     a cell's literal text whenever that cell carries Markdown syntax overhead (backticks, links,
-    ...). A wrapped line is always a subset of one cell's own atoms plus the same left/right
-    spacing every line gets (see `wrap_text_to_lines`), so that cell's own literal length, padded
-    the same way `get_column_sizes` pads a whole (unwrapped) cell -- bold **markers** on the
-    header, the +2 spacing `has_spacing` always adds here -- bounds every line it could produce,
-    just measured in literal characters instead of `visual_length`. Without this floor, the final
-    width could fall below what a cell's literal characters need, and the grid table's `+`/`|`
-    borders must land at the same real character position on every row or `markdown-grid-tables`
-    (or Pandoc) can't parse it.
+    ...). `wrap_text_to_lines` splits a cell on "\n" before wrapping each piece separately, so no
+    single physical row ever has to hold more than one "\n"-delimited line's own literal length --
+    a multi-paragraph cell (e.g. several attributes concatenated) never needs its *entire* length
+    on one row, only its longest individual line does. That line's literal length, padded the same
+    way `get_column_sizes` pads a whole (unwrapped) line -- bold **markers** on the header, the +2
+    spacing `has_spacing` always adds here -- bounds every row that line could produce, just
+    measured in literal characters instead of `visual_length`. Without this floor, the final width
+    could fall below what a cell's literal characters need, and the grid table's `+`/`|` borders
+    must land at the same real character position on every row or `markdown-grid-tables` (or
+    Pandoc) can't parse it.
     """
     floor = []
     for column in columns:
         cells = [(column, True)] + [(cell, False) for cell in doa[column]]
         column_floor = 0
         for cell, is_bold in cells:
-            full_size = len(cell) + 2  # +2: has_spacing is always True in make_table_from_dict_of_arrays
-            if is_bold:
-                full_size += 4 if len(cell.replace("\n", " ").split(" ")) == 1 else 2
-            column_floor = max(column_floor, full_size)
+            for line in cell.split("\n"):
+                full_size = len(line) + 2  # +2: has_spacing is always True in make_table_from_dict_of_arrays
+                if is_bold:
+                    full_size += 4 if len(line.split(" ")) == 1 else 2
+                column_floor = max(column_floor, full_size)
         floor.append(column_floor)
     return floor
 
