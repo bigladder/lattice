@@ -22,6 +22,9 @@ dependencies = [
     "atheneum-forge"
 ]
 
+[project.entry-points."mkdocs.plugins"]
+lattice = "lattice.docs.mkdocs_plugin:LatticePlugin"
+
 [dependency-groups]
 dev = ["pytest >= 7.1.3", "doit", "pre-commit", "pylint", "ruff", "mypy"]
 

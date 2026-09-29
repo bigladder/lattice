@@ -24,6 +24,49 @@ from .grid_table import write_table
 from .process_template import process_template
 
 
+def find_hook(config, name):
+    """Find a callable named `name` on any plugin or hooks.py module loaded for this build.
+
+    MkDocs loads each `hooks:` entry as a plain module and stores it in `config["plugins"]`
+    alongside real plugins (see `mkdocs.config.config_options.Hooks`), so this looks for `name`
+    on any of them - it isn't restricted to MkDocs's own fixed set of `on_*` event names.
+    """
+    if config is None:
+        return None
+    for candidate in config["plugins"].values():
+        method = getattr(candidate, name, None)
+        if callable(method):
+            return method
+    return None
+
+
+# The `--md-*` custom properties mkdocs-material reads for a "custom" palette color (see
+# https://squidfunk.github.io/mkdocs-material -- "Custom colors"). "fg" is the color itself;
+# "bg" is the text/icon color to show on top of it, which `resolve_palette` picks - light or
+# dark - from the fg color's own brightness, so a light custom color (e.g. a light gray accent)
+# doesn't end up with unreadable white-on-white text.
+CUSTOM_PALETTE_VARIABLE_NAMES = {
+    "primary": ["--md-primary-fg-color", "--md-primary-bg-color", "--md-primary-bg-color--light"],
+    "accent": [
+        "--md-accent-fg-color",
+        "--md-accent-fg-color--transparent",
+        "--md-accent-bg-color",
+        "--md-accent-bg-color--light",
+        "--md-typeset-a-color",
+    ],
+}
+
+
+LIGHT_COLOR_BRIGHTNESS_THRESHOLD = 0.6
+
+
+def _is_light(hex_color):
+    """True if `hex_color` (e.g. "#9e9e9e") reads as visually light rather than dark."""
+    red, green, blue = (int(hex_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
+    perceived_brightness = (0.299 * red + 0.587 * green + 0.114 * blue) / 255
+    return perceived_brightness > LIGHT_COLOR_BRIGHTNESS_THRESHOLD
+
+
 class DocumentFile:
     """Parse the components of a documentation file"""
 
@@ -107,9 +150,41 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.git_remote_url = rf"https://{self.git_repo_host}.com/{self.git_repo_owner}/{self.git_repo_name}"
         self.base_url = rf"https://{self.git_repo_owner}.{self.git_repo_host}.io/{self.git_repo_name}/"
 
+    def resolve_palette(self):
+        """Splits `self.colors` into an mkdocs `theme.palette` dict and, if any entry is a hex
+        color rather than one of mkdocs-material's own named palettes, a generated stylesheet
+        path defining it. A project sets its own brand color this way (`colors: {primary:
+        "#2c358e"}` in docs/web/config.yaml) instead of picking from mkdocs-material's limited
+        built-in palette names.
+        """
+        palette = dict(self.colors)
+        css_rules = []
+        for key, variable_names in CUSTOM_PALETTE_VARIABLE_NAMES.items():
+            color = palette.get(key)
+            if not (isinstance(color, str) and color.startswith("#")):
+                continue
+            # Dark text on a light color, light text on a dark one, so the contrast holds
+            # regardless of which way round a project's own color happens to fall.
+            text_color, text_color_light = ("#000", "#000000b3") if _is_light(color) else ("#fff", "#ffffffb3")
+            if key == "primary":
+                values = [color, text_color, text_color_light]
+            else:
+                values = [color, f"{color}1a", text_color, text_color_light, color]
+            declarations = "\n".join(f"  {name}: {value};" for name, value in zip(variable_names, values))
+            css_rules.append(f'[data-md-color-{key}="custom"] {{\n{declarations}\n}}')
+            palette[key] = "custom"
+
+        if not css_rules:
+            return palette, None
+
+        css_path = Path(self.style_css_dir, "custom_palette.css")
+        css_path.write_text("\n\n".join(css_rules) + "\n", encoding="utf-8")
+        return palette, str(Path(css_path).relative_to(self.content_directory_path))
+
     # pylint: disable-next=missing-function-docstring, too-many-branches, too-many-statements
 
     def make_config(self):  # pylint: disable=missing-function-docstring
+        project_hooks_path = Path(self.docs_config_directory, "hooks.py")
         favicon = (
             str(Path(self.favicon_path).relative_to(self.content_directory_path))
             if self.favicon_path is not None
@@ -118,8 +193,13 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         logo = (
             str(Path(self.logo_path).relative_to(self.content_directory_path)) if self.logo_path is not None else None
         )
-        theme = {"name": "material", "favicon": favicon, "logo": logo, "palette": self.colors}
+        palette, custom_palette_css_path = self.resolve_palette()
+        theme = {"name": "material", "favicon": favicon, "logo": logo, "palette": palette}
         extra = {}
+        hooks = [str(project_hooks_path)] if project_hooks_path.exists() else []
+        extra_css = ["assets/stylesheets/extra_styles.css"]
+        if custom_palette_css_path is not None:
+            extra_css.append(custom_palette_css_path)
         if self.banner is not None:
             # Wires the optional `banner`/`banner_dismissable` config values into
             # mkdocs-material's built-in announce block; see overrides/main.html.
@@ -128,7 +208,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                 theme["features"] = ["announce.dismiss"]
             extra["banner"] = self.banner
         return {
-            "extra_css": ["assets/stylesheets/extra_styles.css"],
+            "extra_css": extra_css,
             "extra": extra,
             "site_name": self.title,
             "site_url": self.base_url,
@@ -139,12 +219,15 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
+            "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}],
+            "hooks": hooks,
             "markdown_extensions": [
                 # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
                 # column-width wrapping happens to break a long cell line becomes a forced
                 # <br>, instead of leaving the paragraph to reflow naturally in the reader's
                 # browser.
                 {"markdown_grid_tables": {"hard_linebreaks": False}},
+                "attr_list",
                 "pymdownx.smartsymbols",
                 "def_list",
                 "pymdownx.caret",  # Superscripts
@@ -153,7 +236,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             ],
         }
 
-    def make_pages(self):  # noqa: PLR0912 Too many branches
+    def make_pages(self, mkdocs_config=None):  # noqa: PLR0912 Too many branches
         # Check config directory
         about_page_content = None
         background_image_path = None
@@ -222,7 +305,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.make_schema_page()
 
         # Examples
-        self.make_examples_page()
+        self.make_examples_page(mkdocs_config)
 
     def make_specification_pages(self):  # noqa: PLR0912
         # Collect list of doc template files
@@ -297,13 +380,24 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         content = "# JSON Schema\n\n" + write_table(schema_files, ["Schema", "Description"]) + reference_string + "\n"
         self.make_main_menu_page(self.schema_directory_path, "Schema", content=content)
 
-    def make_examples_page(self):  # pylint: disable=missing-function-docstring
+    def make_examples_page(self, mkdocs_config=None):  # pylint: disable=missing-function-docstring
         example_files = {"File Name": [], "Description": [], "Download": []}
         example_assets_directory = Path(self.examples_directory_path, "assets")
         make_dir(example_assets_directory)
+
+        # Downstream projects can add their own columns to this table - e.g., a link to a
+        # generated report for the example - by defining `lattice_example_columns(example_path,
+        # content)` in an MkDocs hooks.py (see the `hooks` config option). It's called once per
+        # example file and should return a `{column_name: markdown}` dict; column names are
+        # collected in first-seen order and added after the built-in columns. Rows that don't
+        # return a given column get an empty cell.
+        extra_columns_hook = find_hook(mkdocs_config, "lattice_example_columns")
+        extra_column_names = []
+        extra_column_rows = []
         references = {}
         reference_counter = 1
         reference_string = "\n"
+
         for example in self.lattice.examples:
             content = load(example)
             file_base_name = get_file_basename(example, depth=1)
@@ -313,7 +407,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             for fmt in formats:
                 output_path[fmt] = Path(example_assets_directory, f"{file_base_name}.{fmt}")
                 references[reference_counter] = str(Path(output_path[fmt]).relative_to(self.examples_directory_path))
-                web_links[fmt] = f"[{fmt.upper()}][{reference_counter}]"
+                web_links[fmt] = f"[{fmt.upper()}][{reference_counter}]{{: .md-button .md-button--small }}"
                 reference_string += f"\n[{reference_counter}]: {references[reference_counter]}"
                 reference_counter += 1
                 translate(example, output_path[fmt])
@@ -322,11 +416,21 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                 example_files["Description"].append(content["metadata"]["description"])
             else:
                 example_files["Description"].append('No description: Example has no "metadata" element.')
-            example_files["Download"].append(f"{web_links['yaml']} {web_links['json']} {web_links['cbor']}")
+            # "<br>", not "\n": a plain newline would get reflowed away as if it were only wrapping.
+            example_files["Download"].append(f"{web_links['yaml']}<br>{web_links['json']}<br>{web_links['cbor']}")
+
+            row_columns = extra_columns_hook(Path(example), content) if extra_columns_hook else {}
+            for column_name in row_columns:
+                if column_name not in extra_column_names:
+                    extra_column_names.append(column_name)
+            extra_column_rows.append(row_columns)
+
+        for column_name in extra_column_names:
+            example_files[column_name] = [row.get(column_name, "") for row in extra_column_rows]
 
         content = (
             "# Example Files\n\n"
-            + write_table(example_files, ["File Name", "Description", "Download"])
+            + write_table(example_files, ["File Name", "Description", "Download"] + extra_column_names)
             + reference_string
             + "\n"
         )
