@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoe
 
 from lattice.file_io import load
 
+from .diagram import build_data_group_tree, render_tree
 from .grid_table import write_table
 from .schema_table import create_table_from_list, load_structure_from_object, write_data_model
 
@@ -262,6 +263,37 @@ def make_add_data_model(schema_dir, error_log):
     return add_data_model
 
 
+def make_add_schema_diagram(schema_dir, error_log=None):
+    """
+    - schema_dir: string or pathlike, the path to the schema directory.
+    - error_log: None or list, if a list, then errors will be appended to the
+      log as well as rendered into the final product
+    RETURN: returns the add_schema_diagram function with the following characteristics:
+        - source: string, the source key. E.g., for
+          schema-source/ASHRAE205.schema.yaml, 'ASHRAE205'
+        - root: None or string, the Data Group to start the diagram from; defaults to `source`,
+          the convention this and `add_data_model` both rely on: a schema file's own root Data
+          Group is named the same as the file itself (e.g. `RS0001.schema.yaml` defines `RS0001`)
+        - caption: None or string, an optional diagram caption
+        RETURN: string, a Mermaid flowchart in Markdown of the Data Groups reachable from `root`
+    """
+    schema_dir = determine_schema_dir(schema_dir)
+
+    def add_schema_diagram(source, root=None, caption=None):
+        args_str = make_args_string(locals())
+        err, data = load_yaml_source(schema_dir, source, args_str)
+        if err is not None:
+            return log_error(err, error_log)
+        root = root if root is not None else source
+        if root not in data:
+            msg = f'Data Group "{root}" was not found in schema source "{source}".'
+            return log_error(make_error_string(msg, args_str), error_log)
+        tree = build_data_group_tree(data, root)
+        return render_tree([tree], caption=caption)
+
+    return add_schema_diagram
+
+
 def process_template(template_path, output_path, schema_dir=None, log_file=None):
     """
     - template_path: string, path to the main template file.
@@ -295,6 +327,7 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
                     add_yaml_table=make_add_yaml_table(),
                     add_data_model=make_add_data_model(schema_dir, errs),
                     add_schema_table_from_string=make_add_schema_table_from_string(),
+                    add_schema_diagram=make_add_schema_diagram(schema_dir, errs),
                 )
             )
     except TemplateNotFound as exc:

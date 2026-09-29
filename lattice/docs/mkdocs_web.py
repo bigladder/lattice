@@ -10,6 +10,7 @@ import markdown
 import pygit2
 from jinja2 import Environment, FileSystemLoader
 from mkdocs.__main__ import cli as mkdocs_cli
+from pymdownx.superfences import fence_code_format
 
 from ..file_io import (
     dump,
@@ -232,7 +233,20 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                 "def_list",
                 "pymdownx.caret",  # Superscripts
                 "pymdownx.tilde",  # Subscripts
-                "pymdownx.superfences",  # ``` fenced code blocks, incl. nested inside table cells
+                {
+                    "pymdownx.superfences": {
+                        # ``` fenced code blocks, incl. nested inside table cells, plus
+                        # ```mermaid fences rendered as diagrams by mkdocs-material's bundled
+                        # Mermaid support (see add_schema_diagram in process_template.py).
+                        "custom_fences": [
+                            {
+                                "name": "mermaid",
+                                "class": "mermaid",
+                                "format": fence_code_format,
+                            }
+                        ]
+                    }
+                },
             ],
         }
 
