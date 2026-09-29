@@ -4,6 +4,7 @@ Markdown grid-table creation utilities
 
 import copy
 import io
+import re
 
 import casefy
 
@@ -14,6 +15,64 @@ def flatten(list_of_lists):
     RETURN: (List *), the list flattened
     """
     return [item for sublist in list_of_lists for item in sublist]
+
+
+def scoped_anchor_id(name, scope=None):
+    """
+    - name: string, the name to build an id from (e.g. a Data Group or Enumeration name, or a
+      table caption)
+    - scope: None or string, a namespace to prefix the id with (e.g. the schema source it came
+      from), so the same name defined in two different schema files doesn't collide
+    RETURN: string, a stable, snake_cased anchor id
+    """
+    slug = casefy.snakecase(name)
+    return f"{casefy.snakecase(scope)}:{slug}" if scope is not None else slug
+
+
+# Markdown syntax that a renderer consumes as punctuation rather than showing as characters:
+# inline code spans, links (inline and reference-style, keeping only the visible link text and
+# dropping the target/reference id entirely), emphasis/strong, superscript/subscript (this
+# schema format uses `^2^` for unit exponents, e.g. "m^2^"), and trailing attr_list annotations
+# (e.g. "{: .md-button }"). Applied repeatedly (innermost-first) so nested markup -- e.g. a link
+# whose visible text is itself a code span -- resolves the same way regardless of which layer
+# is written first.
+_ATTR_LIST = re.compile(r"\{:[^}]*\}")
+_LINK = re.compile(r"\[([^\]]*)\](?:\([^)]*\)|\[[^\]]*\])")
+_CODE_SPAN = re.compile(r"`([^`]*)`")
+_SUPER_OR_SUBSCRIPT = re.compile(r"(\^|~)([^\^~]+?)\1")
+_EMPHASIS = re.compile(r"(\*\*\*|\*\*|\*|___|__|_)([^*_]+?)\1")
+
+
+def _strip_markdown_syntax(text):
+    """
+    - text: string, possibly containing Markdown syntax
+    RETURN: string, `text` with any syntax markup removed, leaving only what a Markdown
+    renderer would actually display. Used only to *measure* rendered width -- the literal
+    markup itself is never altered in the text that actually gets written out.
+    """
+    previous = None
+    while previous != text:
+        previous = text
+        text = _ATTR_LIST.sub("", text)
+        text = _LINK.sub(r"\1", text)
+        text = _CODE_SPAN.sub(r"\1", text)
+        text = _SUPER_OR_SUBSCRIPT.sub(r"\2", text)
+        text = _EMPHASIS.sub(r"\2", text)
+    return text
+
+
+def visual_length(text):
+    """
+    - text: string, possibly containing Markdown syntax
+    RETURN: int, how many characters of `text` would actually be visible once rendered as
+    Markdown. Used in place of `len()` when deciding column proportions and word-wrap points, so
+    that syntax overhead (backticks, link brackets, emphasis markers, ...) doesn't inflate a
+    cell's apparent size. It is never used to decide the final real column width written to
+    disk -- that must still fit every cell's literal (unstripped) character count, since the
+    grid table's `+`/`|` borders have to line up at the same real character position on every
+    row for `markdown-grid-tables` (or Pandoc) to parse the table at all.
+    """
+    return len(_strip_markdown_syntax(text))
 
 
 # pylint: disable-next=too-many-branches
@@ -37,7 +96,7 @@ def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
     if bold:
         atoms[0] = "**" + atoms[0]
         atoms[-1] = atoms[-1] + "**"
-    longest_atom = max([len(s) for s in atoms])
+    longest_atom = max([visual_length(s) for s in atoms])
     if longest_atom + left_space + right_space > width:
         print("Warning! Need to hyphenate atoms!")
     lines = []
@@ -56,7 +115,7 @@ def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
             first = False
         else:
             new_line = line + " " + atoms[atom_idx]
-        if len(new_line) + right_space <= width:
+        if visual_length(new_line) + right_space <= width:
             line = new_line
         else:
             lines.append(line + " " * right_space)
@@ -127,9 +186,9 @@ def get_column_sizes(content, is_bold=False, has_spacing=True, preferred_sizes=N
     max_diff_col = 0
     assert len(content) == len(sizes), "len(content) must equal len(sizes)"
     for col_num, col_content in enumerate(content):
-        full_size = len(col_content)
+        full_size = visual_length(col_content)
         atoms = col_content.replace("\n", " ").split(" ")
-        longest_atom = max([len(s) for s in atoms])
+        longest_atom = max([visual_length(s) for s in atoms])
         if is_bold:
             num_atoms = len(atoms)
             if num_atoms == 1:
@@ -225,6 +284,37 @@ def remove_blank_columns(doa, columns, sizes):
     return new_columns, new_sizes
 
 
+def _real_width_floor(doa, columns):
+    """
+    - doa: (Dict String (Array String)), dictionary with string keys to arrays of string
+    - columns: (Array String), the columns to compute a floor for
+    RETURN: (Array int), for each column, the greatest literal (unstripped) width any single
+    wrapped line of that column's header or cells could reach.
+
+    `get_column_sizes` measures against `visual_length`, so it may choose a column narrower than
+    a cell's literal text whenever that cell carries Markdown syntax overhead (backticks, links,
+    ...). A wrapped line is always a subset of one cell's own atoms plus the same left/right
+    spacing every line gets (see `wrap_text_to_lines`), so that cell's own literal length, padded
+    the same way `get_column_sizes` pads a whole (unwrapped) cell -- bold **markers** on the
+    header, the +2 spacing `has_spacing` always adds here -- bounds every line it could produce,
+    just measured in literal characters instead of `visual_length`. Without this floor, the final
+    width could fall below what a cell's literal characters need, and the grid table's `+`/`|`
+    borders must land at the same real character position on every row or `markdown-grid-tables`
+    (or Pandoc) can't parse it.
+    """
+    floor = []
+    for column in columns:
+        cells = [(column, True)] + [(cell, False) for cell in doa[column]]
+        column_floor = 0
+        for cell, is_bold in cells:
+            full_size = len(cell) + 2  # +2: has_spacing is always True in make_table_from_dict_of_arrays
+            if is_bold:
+                full_size += 4 if len(cell.replace("\n", " ").split(" ")) == 1 else 2
+            column_floor = max(column_floor, full_size)
+        floor.append(column_floor)
+    return floor
+
+
 def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blank_columns=False):
     """
     - doa: (Dict String (Array String)), dictionary with string keys to arrays of string
@@ -249,6 +339,7 @@ def make_table_from_dict_of_arrays(doa, columns, preferred_sizes=None, drop_blan
         row = [doa[c][row_num] for c in columns]
         rows.append(row)
         sizes = get_column_sizes(row, is_bold=False, has_spacing=True, preferred_sizes=sizes, full_width=full_width)
+    sizes = [max(size, floor) for size, floor in zip(sizes, _real_width_floor(doa, columns))]
     table = write_row(columns, sizes, True)
     for row in rows:
         table += write_row(row, sizes, False)
@@ -271,11 +362,7 @@ def write_table(dat, columns, caption=None, preferred_sizes=None, scope=None):
     with io.StringIO() as handle:
         handle.write(make_table_from_dict_of_arrays(dat, columns=columns, preferred_sizes=preferred_sizes))
         if caption is not None:
-            if scope is not None:
-                caption_string = f"{casefy.snakecase(scope)}:{casefy.snakecase(caption)}"
-            else:
-                caption_string = casefy.snakecase(caption)
-            handle.write(f"\nTable: {caption} {{#tbl:{caption_string}}}\n")
+            handle.write(f"\nTable: {caption} {{#tbl:{scoped_anchor_id(caption, scope)}}}\n")
         the_str = handle.getvalue()
     return the_str
 
