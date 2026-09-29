@@ -8,16 +8,21 @@ from copy import deepcopy
 
 import yaml
 
-from .grid_table import write_table
+from .autorefs import link_mentions
+from .grid_table import scoped_anchor_id, write_table
 
 
-def write_header(heading, level=1):
+def write_header(heading, level=1, anchor=None):
     """
     - heading: string, the heading
     - level: integer, level > 0, the markdown level
+    - anchor: None or string, if given, an explicit attr_list id attached to the heading (e.g.
+      "rs0003:assemblycomponent"), so other content can link directly to this section regardless
+      of how Markdown's own heading-slugify would have named it
     RETURN: string
     """
-    return ("#" * level) + " " + heading + "\n\n"
+    anchor_suffix = f" {{: #{anchor} }}" if anchor is not None else ""
+    return ("#" * level) + " " + heading + anchor_suffix + "\n\n"
 
 
 def process_string_types(string_types):
@@ -116,7 +121,6 @@ def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to b
                         new_obj["Required"] = ""
                 else:
                     new_obj["Required"] = f"`{new_obj['Required']}`"
-            new_obj["Type"] = f"`{new_obj['Type']}`"
             if "Constraints" in new_obj:
                 gte = "\N{GREATER-THAN OR EQUAL TO}"
                 lte = "\N{LESS-THAN OR EQUAL TO}"
@@ -215,12 +219,39 @@ def load_structure_from_object(instance):
     }
 
 
-def create_table_from_list(columns, data_list, description=None, level=1, scope=None):  # noqa: PLR0912 Too many branches
+_TYPE_REFERENCE_NAME = re.compile(r"(?:Group|Enumeration)\((\w+)\)")
+
+
+def _style_type_predicate(predicate):
+    """
+    - predicate: string, a Type predicate already expanded to its spelled-out form (e.g.
+      "Array(Group(LiquidComponent))")
+    RETURN: string, `predicate` with everything wrapped in code spans except any Data
+    Group/Enumeration name it references, which is left bare. A Markdown link can't open inside
+    a code span, so leaving the name bare is what lets a later pass turn it into one (see
+    autorefs.py); "Group(", "Enumeration(", "Array(", ")", etc. stay styled as code either way.
+    """
+    pieces = []
+    last_end = 0
+    for match in _TYPE_REFERENCE_NAME.finditer(predicate):
+        pieces.append(f"`{predicate[last_end:match.start(1)]}`")
+        pieces.append(match.group(1))
+        last_end = match.end(1)
+    pieces.append(f"`{predicate[last_end:]}`")
+    return "".join(piece for piece in pieces if piece != "``")
+
+
+def create_table_from_list(  # noqa: PLR0912 Too many branches
+    columns, data_list, description=None, level=1, scope=None, reference_index=None
+):
     """
     - columns: array of string, the column headers
     - data_list: array of dict with keys corresponding to columns array
     - description: None or string, if specified, adds a caption
     - level: Heading level for the description (or use 0 to make description a caption instead)
+    - reference_index: None or autorefs.ReferenceIndex, if given, every attribute value is
+      scanned for mentions of a known Data Group/Enumeration name and linked back to its own
+      section (see autorefs.link_mentions).
     RETURN: string, the table in Pandoc markdown grid table format
     """
     if len(data_list) == 0:
@@ -229,7 +260,8 @@ def create_table_from_list(columns, data_list, description=None, level=1, scope=
     data = {columns[0]: [], second_column_name: []}
     table_string = ""
     if description is not None and level > 0:
-        table_string += write_header(f"{description}", level)
+        anchor = scoped_anchor_id(description, scope) if scope is not None else None
+        table_string += write_header(f"{description}", level, anchor=anchor)
     for item in data_list:
         data[columns[0]].append(item[columns[0]])
         details = ""
@@ -239,7 +271,7 @@ def create_table_from_list(columns, data_list, description=None, level=1, scope=
                     attribute_string = item[attribute]
                     if attribute == "Type":
                         # Each substitution expands a compact wrapper ("(X)", "[X]", "{X}",
-                        # "<X>") into its spelled-out predicate form. A Type string is also
+                        # "<X>", ":X:") into its spelled-out predicate form. A Type string is also
                         # allowed to spell the predicate out already (e.g. "Array(Timestamp)",
                         # per Standard 232 5.3.3), and the two conventions can be mixed freely.
                         # The negative lookbehind keeps this idempotent on that already-spelled
@@ -253,6 +285,12 @@ def create_table_from_list(columns, data_list, description=None, level=1, scope=
                         attribute_string = re.sub(
                             r"(?<![A-Za-z])<([A-Z]([A-Z]|[a-z]|[0-9])*)>", r"Enumeration(\1)", attribute_string
                         )
+                        attribute_string = re.sub(
+                            r"(?<![A-Za-z]):([A-Z]([A-Z]|[a-z]|[0-9])*):", r"Reference(Group(\1))", attribute_string
+                        )
+                        attribute_string = _style_type_predicate(attribute_string)
+                    if reference_index is not None:
+                        attribute_string = link_mentions(attribute_string, reference_index, scope)
                     details += f"{attribute}:\n\n:   {attribute_string}\n\n"
         data[second_column_name].append(details[:-1])  # drop last new line
     if level == 0:
@@ -263,11 +301,12 @@ def create_table_from_list(columns, data_list, description=None, level=1, scope=
     return table_string
 
 
-def write_data_model(instance, base_level=1, make_headers=True, scope=None):
+def write_data_model(instance, base_level=1, make_headers=True, scope=None, reference_index=None):
     """
     - instance:
     - base_level:
     - make_headers: Use descriptions as section headers if True, otherwise use them as captions
+    - reference_index: None or autorefs.ReferenceIndex, threaded through to create_table_from_list
     """
     if make_headers:
         next_level = base_level + 1
@@ -286,6 +325,7 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None):
                     struct["data_types"],
                     level=next_level,
                     scope=scope,
+                    reference_index=reference_index,
                 )
             )
         # String Types
@@ -298,6 +338,7 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None):
                     struct["string_types"],
                     level=next_level,
                     scope=scope,
+                    reference_index=reference_index,
                 )
             )
         # Enumerations
@@ -312,6 +353,7 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None):
                         description=enum,
                         level=next_level,
                         scope=scope,
+                        reference_index=reference_index,
                     )
                 )
         else:
@@ -340,6 +382,7 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None):
                         description=dg,
                         level=next_level,
                         scope=scope,
+                        reference_index=reference_index,
                     )
                 )
         else:

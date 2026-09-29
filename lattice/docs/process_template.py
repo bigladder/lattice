@@ -12,6 +12,7 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoe
 
 from lattice.file_io import load
 
+from .autorefs import ReferenceIndex
 from .diagram import build_data_group_tree, render_tree
 from .grid_table import write_table
 from .schema_table import create_table_from_list, load_structure_from_object, write_data_model
@@ -162,18 +163,23 @@ def make_add_schema_table(schema_dir=None, error_log=None):
         RETURN: string, returns a string representation of the given table
     """
     schema_dir = determine_schema_dir(schema_dir)
+    reference_index = ReferenceIndex(schema_dir)
 
     def add_schema_table(source, table_name, description=None, level=1):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_schema_table(data, table_name, description, level, error_log)
+        return write_schema_table(
+            data, table_name, description, level, error_log, scope=source, reference_index=reference_index
+        )
 
     return add_schema_table
 
 
-def write_schema_table(table_dict, table_name, description=None, level=1, error_log=None):
+def write_schema_table(  # noqa: PLR0913 Too many arguments
+    table_dict, table_name, description=None, level=1, error_log=None, scope=None, reference_index=None
+):
     if description is None:
         description = table_name
     struct = load_structure_from_object(table_dict)
@@ -207,6 +213,8 @@ def write_schema_table(table_dict, table_name, description=None, level=1, error_
         target,
         description=description,
         level=level,
+        scope=scope,
+        reference_index=reference_index,
     )
 
 
@@ -252,13 +260,16 @@ def make_add_data_model(schema_dir, error_log):
         RETURN: string, returns a string representation of the given data models
     """
     schema_dir = determine_schema_dir(schema_dir)
+    reference_index = ReferenceIndex(schema_dir)
 
     def add_data_model(source, base_level=1, make_headers=True):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_data_model(data, base_level, make_headers=make_headers, scope=source)
+        return write_data_model(
+            data, base_level, make_headers=make_headers, scope=source, reference_index=reference_index
+        )
 
     return add_data_model
 

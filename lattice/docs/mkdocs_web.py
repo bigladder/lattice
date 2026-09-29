@@ -21,6 +21,7 @@ from ..file_io import (
     make_dir,
     translate,
 )
+from .autorefs import ReferenceIndex
 from .grid_table import write_table
 from .process_template import process_template
 
@@ -122,6 +123,10 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.specification_templates: List[DocumentFile] = []
         self.navigation = []
         self.timestamp = datetime.now()
+        self.reference_index = ReferenceIndex(self.source_schema_directory_path)
+        # {page path relative to docs_dir: schema source}, e.g. "specifications/RS0003.md" ->
+        # "RS0003". Read by LatticePlugin.on_page_markdown.
+        self.page_source_map: dict = {}
 
     def setup_build_directory_structure(self):  # pylint: disable=missing-function-docstring
         self.content_directory_path = make_dir(Path(self.build_directory, "docs"))
@@ -220,7 +225,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
-            "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}],
+            "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}, "autorefs"],
             "hooks": hooks,
             "markdown_extensions": [
                 # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
@@ -355,9 +360,9 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         # Process templates
         sub_page_list = []
         for template in self.specification_templates:
-            template.markdown_output_path = Path(
-                self.specifications_directory_path, f"{get_file_basename(template.path, depth=2)}.md"
-            )
+            source = get_file_basename(template.path, depth=2)
+            template.markdown_output_path = Path(self.specifications_directory_path, f"{source}.md")
+            self.page_source_map[str(template.markdown_output_path.relative_to(self.content_directory_path))] = source
 
             sub_page_list.append(
                 self.make_specification_page(

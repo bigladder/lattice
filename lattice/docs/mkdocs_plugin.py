@@ -13,6 +13,7 @@ from mkdocs.config import config_options
 from mkdocs.plugins import BasePlugin
 
 from ..lattice import Lattice
+from .autorefs import link_diagram_nodes, link_prose_mentions
 from .mkdocs_web import MkDocsWeb
 
 
@@ -29,6 +30,15 @@ class LatticePlugin(BasePlugin):
 
         config["nav"] = self.web_docs.navigation
         return config
+
+    def on_page_markdown(self, markdown, *, page, config, files):  # pylint: disable=unused-argument
+        # Data Group/Enumeration mentions inside Lattice's own generated tables are already
+        # linked as they're built (see schema_table.create_table_from_list); this covers the
+        # rest of the page -- hand-written prose from the project's own .md.j2 templates, and
+        # Mermaid diagram nodes (see diagram.render_tree).
+        source = self.web_docs.page_source_map.get(page.file.src_uri)
+        markdown = link_diagram_nodes(markdown, self.web_docs.reference_index, source)
+        return link_prose_mentions(markdown, self.web_docs.reference_index, source)
 
     def on_serve(self, server, *, config, builder):  # pylint: disable=unused-argument
         # The generated docs_dir is rewritten on every build (see on_config above), so
