@@ -143,6 +143,19 @@ class EnumerationType(DataType):
     )
     value_pattern = RegularExpressionPattern("([A-Z]([A-Z]|[0-9])*)(_([A-Z]|[0-9])+)*")
 
+    def __init__(self, text, parent_data_element):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.enumeration_name = match.group("EnumerationTypeName")
+        self.enumeration: Enumeration | None = None  # only valid once resolve() is called
+
+    def resolve(self):
+        self.enumeration = self.parent_data_element.parent_data_group.parent_schema.get_enumeration(
+            self.enumeration_name
+        )
+        assert self.enumeration is not None
+
 
 class AlternativeType(DataType):
     pattern = RegularExpressionPattern(
@@ -781,6 +794,46 @@ class DataGroup:
         for data_element in self.data_elements.values():
             data_element.resolve()
 
+    def referenced_children(self) -> List[Tuple[DataElement, Union["DataGroup", "Enumeration"]]]:
+        """
+        RETURN: list of (DataElement, DataGroup|Enumeration) pairs, one per Data Element (in
+        declared order) whose resolved Type -- unwrapped through any Array(...)/Alternative(...)
+        wrapping -- references a Data Group or Enumeration, paired with the referenced object
+        itself. Each reference is already resolved to wherever it's actually defined (this
+        schema, `core`, or a schema named in this schema's own Schema.References), the same way
+        DataGroupType/EnumerationType.resolve() already resolve it for validation. A Data
+        Element with more than one such reference (e.g. Alternative(Group(A), Group(B))) yields
+        one pair per referenced object, in the order written.
+        """
+        children: List[Tuple[DataElement, Union[DataGroup, Enumeration]]] = []
+        for data_element in self.data_elements.values():
+            for leaf in _unwrap_data_type(data_element.data_type):
+                if isinstance(leaf, DataGroupType):
+                    assert leaf.data_group is not None
+                    children.append((data_element, leaf.data_group))
+                elif isinstance(leaf, EnumerationType):
+                    assert leaf.enumeration is not None
+                    children.append((data_element, leaf.enumeration))
+        return children
+
+
+def _unwrap_data_type(data_type: DataType) -> List[DataType]:
+    """
+    - data_type: DataType, possibly an Array(...)/Alternative(...) wrapping another DataType (or
+      several, for Alternative)
+    RETURN: list of DataType, every DataType `data_type` wraps once Array(...)/Alternative(...)
+    layers are peeled away (an Alternative may yield more than one), or `[data_type]` itself if
+    it wraps nothing.
+    """
+    if isinstance(data_type, ArrayType):
+        return _unwrap_data_type(data_type.array_data_type)
+    if isinstance(data_type, AlternativeType):
+        unwrapped = []
+        for alternative in data_type.alternative_data_types:
+            unwrapped.extend(_unwrap_data_type(alternative))
+        return unwrapped
+    return [data_type]
+
 
 def _path_matches(pattern: List[PathSegment], actual: List[str]) -> bool:
     # Every segment is a literal name or an alternation, and each consumes exactly one actual
@@ -1203,6 +1256,37 @@ class Schema:
 
         resolve_occurrences(self)
 
+    @staticmethod
+    def resolve_path(schema_dir: str | pathlib.Path, source: str) -> pathlib.Path | None:
+        """
+        - schema_dir: pathlike, the primary directory to look for `source`'s schema file
+        - source: string, the schema source key. E.g., for schema-source/ASHRAE205.schema.yaml,
+          "ASHRAE205"
+        RETURN: None or pathlib.Path, the path to `source`'s *.schema.yaml file -- in
+        `schema_dir` if present there, else the lattice package's own built-in schema directory
+        (the same one core_schema_path lives in, e.g. for "core"); None if neither has it.
+        """
+        src_path = pathlib.Path(schema_dir, f"{source}.schema.yaml")
+        if not src_path.exists():
+            src_path = pathlib.Path(core_schema_path.parent, f"{source}.schema.yaml")
+        return src_path if src_path.exists() else None
+
+    @classmethod
+    def from_source(cls, schema_dir: str | pathlib.Path, source: str) -> Schema:
+        """
+        - schema_dir: pathlike, the primary directory to look for `source`'s schema file
+        - source: string, the schema source key
+        RETURN: Schema, constructed from `source`'s *.schema.yaml -- found in `schema_dir` if
+        present there, else the lattice package's own built-in schema directory (e.g. for "core")
+        RAISES: FileNotFoundError if neither location has it
+        """
+        src_path = cls.resolve_path(schema_dir, source)
+        if src_path is None:
+            raise FileNotFoundError(
+                f'Schema source "{source}" doesn\'t exist in "{schema_dir}" or the lattice package.'
+            )
+        return cls(src_path)
+
     def set_reference_schemas(self):
         self.reference_schemas: dict[str, Schema] = {}
         if self.file_path != core_schema_path:
@@ -1250,6 +1334,68 @@ class Schema:
             raise Exception(f'Data Group "{data_group_name}" not found in "{self.file_path}" or its referenced schemas')
 
         return matching_schemas[0].data_groups[data_group_name]
+
+    def get_enumeration(self, enumeration_name: str) -> Enumeration:
+        matching_schemas = []
+        # 1. Search this schema first
+        if enumeration_name in self.enumerations:
+            matching_schemas.append(self)
+        for reference_schema in self.reference_schemas.values():
+            if enumeration_name in reference_schema.enumerations:
+                matching_schemas.append(reference_schema)
+
+        if len(matching_schemas) == 0:
+            raise Exception(
+                f'Enumeration "{enumeration_name}" not found in "{self.file_path}" or its referenced schemas'
+            )
+
+        return matching_schemas[0].enumerations[enumeration_name]
+
+    def hierarchy_order(
+        self, root: DataGroup | None = None
+    ) -> Tuple[List[DataGroup], List[Enumeration], List[DataGroup], List[Enumeration]]:
+        """
+        - root: None or DataGroup, the Data Group to start the walk from; defaults to this
+          schema's own declared Root Data Group
+        RETURN: (ordered_data_groups, ordered_enumerations, orphan_data_groups,
+                 orphan_enumerations)
+            - ordered_data_groups: list of DataGroup, every Data Group reachable by walking Data
+              Element references depth-first from `root` (diving fully into a Data Element's
+              referenced Data Group before moving to the next Data Element), each listed once, at
+              its first reference. Includes a common Data Group from `core`/a declared Reference,
+              resolved the same way DataGroupType.resolve() already resolves one for validation.
+            - ordered_enumerations: list of Enumeration, built the same way, for every
+              Enumeration reachable from `root`
+            - orphan_data_groups / orphan_enumerations: list of DataGroup/Enumeration defined in
+              this schema itself (not a reference schema) that the walk from `root` never
+              reaches -- e.g. a Data Group nothing in the schema actually references
+        """
+        root = root if root is not None else self.root_data_group
+        if root is None:
+            raise Exception(f'"{self.name}" has no declared Root Data Group to walk from.')
+
+        visited_group_ids: set[int] = set()
+        visited_enum_ids: set[int] = set()
+        ordered_groups: List[DataGroup] = []
+        ordered_enums: List[Enumeration] = []
+
+        def visit(data_group: DataGroup) -> None:
+            if id(data_group) in visited_group_ids:
+                return
+            visited_group_ids.add(id(data_group))
+            ordered_groups.append(data_group)
+            for _element, child in data_group.referenced_children():
+                if isinstance(child, DataGroup):
+                    visit(child)
+                elif id(child) not in visited_enum_ids:
+                    visited_enum_ids.add(id(child))
+                    ordered_enums.append(child)
+
+        visit(root)
+
+        orphan_groups = [dg for dg in self.data_groups.values() if id(dg) not in visited_group_ids]
+        orphan_enums = [en for en in self.enumerations.values() if id(en) not in visited_enum_ids]
+        return ordered_groups, ordered_enums, orphan_groups, orphan_enums
 
     def data_type_factory(self, text: str, parent_data_element: DataElement) -> DataType:
         number_of_matches = 0

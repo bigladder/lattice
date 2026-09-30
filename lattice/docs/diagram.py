@@ -4,11 +4,12 @@ Data Group references (directly or through an array) via another Data Element, w
 root Data Group.
 """
 
+from __future__ import annotations
+
 import re
+from typing import Any
 
-from ..schema import DataGroupType
-
-_GROUP_REFERENCE_PATTERN = DataGroupType.pattern.pattern
+from ..schema import DataGroup
 
 
 def _slugify(path):
@@ -64,66 +65,39 @@ def render_tree(roots, caption=None):
     return diagram
 
 
-def _referenced_group_name(type_string):
+def build_data_group_tree(
+    data_group: DataGroup,
+    required: bool = True,
+    ancestors: tuple[tuple[DataGroup, list[str]], ...] = (),
+) -> dict[str, Any]:
     """
-    - type_string: string, a Data Element's `Type` value, e.g. "Array(Group(EndUse))",
-      "Group(TimeSeries)", "{EndUse}", or a non-group type such as "String" or "<SomeEnum>"
-    RETURN: None or string, the referenced Data Group's name, if `type_string` references one
-      (through either the spelled-out `Group(X)` form or the compact `{X}` form, at any depth,
-      e.g. wrapped in Array(...))
-    """
-    match = _GROUP_REFERENCE_PATTERN.search(type_string)
-    return match.group("DataGroupName") if match is not None else None
-
-
-def _referenced_groups(data, group_name):
-    """
-    - data: dict, a loaded *.schema.yaml file's contents
-    - group_name: string, a Data Group's name
-    RETURN: array of (string, bool) tuples, the name of each Data Group referenced by one of
-      `group_name`'s Data Elements (through a `Group(X)` or `Array(Group(X))` type, in either
-      spelled-out or compact form), paired with whether that Data Element is required. A Data
-      Group defined outside this schema file (e.g. a Standard 232 common data group) yields no
-      children of its own further down, since it isn't present in `data` to recurse into.
-    """
-    group = data.get(group_name)
-    if not isinstance(group, dict):
-        return []
-    referenced = []
-    for element in group.get("Data Elements", {}).values():
-        target = _referenced_group_name(element.get("Type", ""))
-        if target is not None:
-            referenced.append((target, bool(element.get("Required", False))))
-    return referenced
-
-
-def build_data_group_tree(data, group_name, required=True, ancestors=()):
-    """
-    - data: dict, a loaded *.schema.yaml file's contents
-    - group_name: string, the Data Group to build a tree node for
-    - required: bool, whether the Data Element that references `group_name` is required --
+    - data_group: lattice.schema.DataGroup, the Data Group to build a tree node for -- already
+      resolved (see DataGroup.referenced_children), so a common Data Group defined outside this
+      schema file (e.g. a Standard 232 common data group from `core` or a declared Reference) is
+      walked into just like a locally-defined one, instead of stopping as a leaf
+    - required: bool, whether the Data Element that references `data_group` is required --
       carried into the rendered label as the same "*" (not required) marker used in hand-written
       Data Group Hierarchy sections
-    - ancestors: tuple of (string, array of string) pairs, each an ancestor Data Group's name
-      paired with its own rendered node path (in render_tree's path terms), used both to stop
-      recursion at a repeated (e.g. self-referencing) Data Group and to point a cycle back at the
-      exact node already emitted for it
+    - ancestors: tuple of (DataGroup, array of string) pairs, each an ancestor Data Group paired
+      with its own rendered node path (in render_tree's path terms), used both to stop recursion
+      at a repeated (e.g. self-referencing) Data Group and to point a cycle back at the exact
+      node already emitted for it. Ancestors are compared by identity, not name, since two
+      different schemas may each define a same-named Data Group (e.g. "Description").
     RETURN: dict, a {"name": string, "subcategories": [...]} node suitable for render_tree, or a
       {"name": string, "recursive_target_path": array of string} back-reference node
     """
-    label = group_name if required else f"{group_name}*"
+    label = data_group.name if required else f"{data_group.name}*"
     parent_path = ancestors[-1][1] if ancestors else []
     my_path = parent_path + [label]
-    for ancestor_name, ancestor_path in ancestors:
-        if ancestor_name == group_name:
+    for ancestor_group, ancestor_path in ancestors:
+        if ancestor_group is data_group:
             return {"name": label, "recursive_target_path": ancestor_path}
     children = [
-        build_data_group_tree(
-            data, child_name, required=child_required, ancestors=(*ancestors, (group_name, my_path))
-        )
-        for child_name, child_required in _referenced_groups(data, group_name)
+        build_data_group_tree(child, required=bool(element.required), ancestors=(*ancestors, (data_group, my_path)))
+        for element, child in data_group.referenced_children()
+        if isinstance(child, DataGroup)
     ]
-    node = {"name": label}
+    node: dict[str, Any] = {"name": label}
     if children:
         node["subcategories"] = children
     return node

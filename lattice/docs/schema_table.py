@@ -241,8 +241,8 @@ def _style_type_predicate(predicate):
     return "".join(piece for piece in pieces if piece != "``")
 
 
-def create_table_from_list(  # noqa: PLR0912 Too many branches
-    columns, data_list, description=None, level=1, scope=None, reference_index=None
+def create_table_from_list(  # noqa: PLR0912, PLR0913 Too many branches, too many arguments
+    columns, data_list, description=None, level=1, scope=None, reference_index=None, note=None
 ):
     """
     - columns: array of string, the column headers
@@ -252,6 +252,9 @@ def create_table_from_list(  # noqa: PLR0912 Too many branches
     - reference_index: None or autorefs.ReferenceIndex, if given, every attribute value is
       scanned for mentions of a known Data Group/Enumeration name and linked back to its own
       section (see autorefs.link_mentions).
+    - note: None or string, if given (and `level > 0`), a line of Markdown placed right after the
+      `description` heading and before the table itself -- e.g. to mark a common Data
+      Group/Enumeration embedded here from elsewhere (see write_data_model).
     RETURN: string, the table in Pandoc markdown grid table format
     """
     if len(data_list) == 0:
@@ -262,6 +265,8 @@ def create_table_from_list(  # noqa: PLR0912 Too many branches
     if description is not None and level > 0:
         anchor = scoped_anchor_id(description, scope) if scope is not None else None
         table_string += write_header(f"{description}", level, anchor=anchor)
+        if note is not None:
+            table_string += note + "\n\n"
     for item in data_list:
         data[columns[0]].append(item[columns[0]])
         details = ""
@@ -301,18 +306,62 @@ def create_table_from_list(  # noqa: PLR0912 Too many branches
     return table_string
 
 
-def write_data_model(instance, base_level=1, make_headers=True, scope=None, reference_index=None):
+def write_data_model(  # noqa: PLR0912, PLR0913 Too many branches, too many arguments
+    instance,
+    base_level=1,
+    make_headers=True,
+    scope=None,
+    reference_index=None,
+    schema=None,
+    include_common=True,
+    error_log=None,
+):
     """
-    - instance:
+    - instance: dict, the result of loading a *.schema.yaml file (this schema's own raw content)
     - base_level:
     - make_headers: Use descriptions as section headers if True, otherwise use them as captions
     - reference_index: None or autorefs.ReferenceIndex, threaded through to create_table_from_list
+    - schema: None or lattice.schema.Schema, given only when `instance`'s own Schema Meta block
+      declares a "Root Data Group". When given, Enumerations/Data Groups are ordered by a
+      depth-first walk from that root (diving into a Data Element's referenced Data Group before
+      moving to the next Data Element) instead of raw file order, and a Data Group/Enumeration
+      the walk reaches that isn't defined in `instance` itself -- e.g. a common Data Group from
+      `core`, or a schema named in this schema's own Schema.References -- is pulled in and
+      rendered too, marked with where it's actually defined. A locally-defined Data
+      Group/Enumeration the walk never reaches is omitted, with a warning appended to
+      `error_log` -- see Schema.hierarchy_order.
+    - include_common: bool, when `schema` is given, whether to embed such common Data
+      Groups/Enumerations (True) or omit them, as if `schema` weren't given (False) -- for a
+      page that documents its common Data Groups elsewhere.
+    - error_log: None or list, a warning is appended here for each locally-defined Data
+      Group/Enumeration that `schema`'s hierarchy walk never reaches (only used when `schema` is
+      given)
     """
     if make_headers:
         next_level = base_level + 1
     else:
         next_level = 0
     struct = load_structure_from_object(instance)
+    origin_by_name = {}
+    if schema is not None:
+        ordered_groups, ordered_enums, orphan_groups, orphan_enums = schema.hierarchy_order()
+        if not include_common:
+            ordered_groups = [dg for dg in ordered_groups if dg.parent_schema is schema]
+            ordered_enums = [en for en in ordered_enums if en.parent_schema is schema]
+        else:
+            origin_by_name = {
+                item.name: _origin_phrase(item.parent_schema)
+                for item in (*ordered_groups, *ordered_enums)
+                if item.parent_schema is not schema
+            }
+        if error_log is not None:
+            for orphan in (*orphan_groups, *orphan_enums):
+                error_log.append(
+                    f'"{orphan.name}" is defined in "{scope}" but is never referenced from its '
+                    f'Root Data Group "{schema.root_data_group.name}"; omitted from the generated Data Model.'
+                )
+        struct["data_groups"] = data_elements_dict_from_data_groups({dg.name: dg.dictionary for dg in ordered_groups})
+        struct["enumerations"] = enumerators_dict_from_enumerations({en.name: en.dictionary for en in ordered_enums})
     output = None
     with io.StringIO() as output_file:
         # Data Types
@@ -354,6 +403,7 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None, refe
                         level=next_level,
                         scope=scope,
                         reference_index=reference_index,
+                        note=_origin_note(enum, origin_by_name),
                     )
                 )
         else:
@@ -383,9 +433,38 @@ def write_data_model(instance, base_level=1, make_headers=True, scope=None, refe
                         level=next_level,
                         scope=scope,
                         reference_index=reference_index,
+                        note=_origin_note(dg, origin_by_name),
                     )
                 )
         else:
             output_file.writelines(["None.", "\n" * 2])
         output = output_file.getvalue()
     return output
+
+
+def _origin_phrase(defining_schema):
+    """
+    - defining_schema: lattice.schema.Schema, the schema a common Data Group/Enumeration is
+      actually defined in (not the one it's being embedded into; see write_data_model)
+    RETURN: string, how to describe `defining_schema` in an origin note. `core` is lattice's own
+      built-in library of ASHRAE Standard 232 common types -- not something a reader would look
+      up by its file-level Title ("Core") -- so it's named after the standard it implements
+      instead; any other reference schema (e.g. one named in a Schema.References list) is
+      described generically, by its own Title.
+    """
+    if defining_schema.name == "core":
+        return "ANSI/ASHRAE/IBPSA Standard 232"
+    return f'the "{defining_schema.title}" schema'
+
+
+def _origin_note(name, origin_by_name):
+    """
+    - name: string, a Data Group or Enumeration name
+    - origin_by_name: dict, name -> the phrase describing where it's actually defined (see
+      _origin_phrase), for a common Data Group/Enumeration embedded here from elsewhere (see
+      write_data_model)
+    RETURN: None or string, a line of Markdown marking `name` as defined elsewhere, or None if
+      `name` is defined locally
+    """
+    origin = origin_by_name.get(name)
+    return f"_Defined in {origin}._" if origin is not None else None
