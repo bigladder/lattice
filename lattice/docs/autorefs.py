@@ -11,7 +11,7 @@ autorefs resolves each one to wherever that id's heading actually landed.
 import re
 from pathlib import Path
 
-from ..file_io import get_file_basename, load
+from ..schema import Schema
 from .grid_table import scoped_anchor_id
 
 
@@ -26,19 +26,22 @@ def _schema_files(schema_dir):
     )
 
 
-def _data_group_and_enumeration_names(schema_data):
+def _data_group_and_enumeration_names(schema: Schema):
     """
-    - schema_data: dict, a loaded *.schema.yaml file's contents
-    RETURN: set of string, the name of every Data Group and Enumeration defined at the top level
-    of `schema_data`. A lighter-weight stand-in for schema_table.load_structure_from_object here
-    (which this module can't import without a circular dependency: schema_table.py itself calls
-    into link_mentions below) -- only the names are needed, not the fully-rendered table data.
+    - schema: lattice.schema.Schema
+    RETURN: set of string, the name of every Data Group and Enumeration `schema` itself defines,
+    plus -- if `schema` declares a Root Data Group -- every common Data Group/Enumeration its own
+    hierarchy walk reaches from a reference schema (`core`, or one named in its own
+    Schema.References). This is exactly what add_data_model embeds on `schema`'s own page (see
+    schema_table.write_data_model), so a mention of such a name (e.g. `Metadata`, from `core`)
+    resolves to where it's actually rendered, rather than staying unlinked because it isn't a
+    schema file of its own in `schema_dir`.
     """
-    return {
-        name
-        for name, obj in schema_data.items()
-        if isinstance(obj, dict) and obj.get("Object Type") in ("Data Group", "Enumeration")
-    }
+    names = set(schema.data_groups) | set(schema.enumerations)
+    if schema.root_data_group_name is not None:
+        ordered_groups, ordered_enums, _orphan_groups, _orphan_enums = schema.hierarchy_order()
+        names |= {item.name for item in (*ordered_groups, *ordered_enums) if item.parent_schema is not schema}
+    return names
 
 
 class ReferenceIndex:
@@ -56,8 +59,9 @@ class ReferenceIndex:
         by_source: dict[str, dict[str, str]] = {}
         occurrences: dict[str, int] = {}
         for path in _schema_files(schema_dir):
-            source = get_file_basename(path, depth=2)
-            names = _data_group_and_enumeration_names(load(path))
+            schema = Schema(path)
+            source = schema.name
+            names = _data_group_and_enumeration_names(schema)
             by_source[source] = {name: scoped_anchor_id(name, source) for name in names}
             for name in names:
                 occurrences[name] = occurrences.get(name, 0) + 1
