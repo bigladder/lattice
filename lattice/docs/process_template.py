@@ -206,7 +206,7 @@ def write_schema_table(  # noqa: PLR0913 Too many arguments
             "JSON Schema Pattern",
             "Examples",
         ],
-        "enumerations": ["Enumerator", "Description", "Notes"],
+        "enumerations": ["Name", "Description", "Notes"],
         "data_groups": [
             "Name",
             "Description",

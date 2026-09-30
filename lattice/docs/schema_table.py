@@ -166,7 +166,7 @@ def enumerators_dict_from_enumerations(enumerations):
                 item = deepcopy(enumerations[enum]["Enumerators"][enumerator])
             else:
                 item = {}
-            item["Enumerator"] = f"`{enumerator}`"
+            item["Name"] = f"`{enumerator}`"
             compress_list(item)
             output[enum].append(item)
     return output
@@ -397,7 +397,7 @@ def write_data_model(  # noqa: PLR0912, PLR0913 Too many branches, too many argu
             for enum, enumerators in struct[table_type].items():
                 output_file.writelines(
                     create_table_from_list(
-                        ["Enumerator", "Description", "Notes"],
+                        ["Name", "Description", "Notes"],
                         enumerators,
                         description=enum,
                         level=next_level,
