@@ -121,6 +121,6 @@ def test_nested_attribute_override_path_pattern():
             "annual.mean",
             "(annual|monthly).(mean|maximum)",
         ],
-        invalid_examples=["Wrong", "annual.mean.Units=\"K\"", "", "**", "annual.*"],
+        invalid_examples=["Wrong", 'annual.mean.Units="K"', "", "**", "annual.*"],
         anchored=True,
     )

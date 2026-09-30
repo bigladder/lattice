@@ -89,7 +89,7 @@ def test_range_constraint_checked_against_array_element_type(tmp_path):
 @pytest.mark.parametrize(
     ("data_type", "constraint"),
     [
-        ("Numeric", '[0.0, 1.0, 2.0]'),
+        ("Numeric", "[0.0, 1.0, 2.0]"),
         ("Integer", "[0, 1, 2]"),
         ("String", '["A", "B"]'),
     ],
@@ -166,7 +166,7 @@ def test_data_element_value_constraint_resolves_against_array_element_type(tmp_p
                     "items": {
                         "Description": "an array of Item groups",
                         "Type": "Array(Group(Item))",
-                        "Constraints": ['value=0.0'],
+                        "Constraints": ["value=0.0"],
                     },
                 },
             },
@@ -186,7 +186,7 @@ def test_data_element_value_constraint_rejected_for_array_of_non_data_group(tmp_
                         "Description": "an array of numerics",
                         "Type": "Array(Numeric)",
                         "Units": "-",
-                        "Constraints": ['value=0.0'],
+                        "Constraints": ["value=0.0"],
                     },
                 },
             },

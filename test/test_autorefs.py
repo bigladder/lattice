@@ -27,8 +27,7 @@ def test_reference_index_prefers_same_source_when_name_is_ambiguous(tmp_path):
         _write_schema(
             tmp_path,
             source,
-            _base_schema_block(source)
-            + "Description:\n  Object Type: Data Group\n  Data Elements:\n"
+            _base_schema_block(source) + "Description:\n  Object Type: Data Group\n  Data Elements:\n"
             "    a:\n      Description: d\n      Type: String\n",
         )
     index = ReferenceIndex(tmp_path)
@@ -58,8 +57,7 @@ def test_link_mentions_links_a_self_reference_too(tmp_path):
     _write_schema(
         tmp_path,
         "Alpha",
-        _base_schema_block("Alpha")
-        + "Recursive:\n  Object Type: Data Group\n  Data Elements:\n"
+        _base_schema_block("Alpha") + "Recursive:\n  Object Type: Data Group\n  Data Elements:\n"
         "    child:\n      Description: d\n      Type: Group(Recursive)\n",
     )
     index = ReferenceIndex(tmp_path)
@@ -71,8 +69,7 @@ def test_type_column_links_referenced_group_and_stays_a_valid_grid_table(tmp_pat
     _write_schema(
         tmp_path,
         "Alpha",
-        _base_schema_block("Alpha")
-        + "Sample:\n  Object Type: Data Group\n  Data Elements:\n"
+        _base_schema_block("Alpha") + "Sample:\n  Object Type: Data Group\n  Data Elements:\n"
         "    child:\n      Description: d\n      Type: Group(Child)\n      Required: True\n"
         "Child:\n  Object Type: Data Group\n  Data Elements:\n    name:\n      Description: d\n      Type: String\n",
     )
@@ -95,8 +92,7 @@ def test_reference_syntax_expands_and_links_like_group_syntax(tmp_path):
     _write_schema(
         tmp_path,
         "Alpha",
-        _base_schema_block("Alpha")
-        + "Sample:\n  Object Type: Data Group\n  Data Elements:\n"
+        _base_schema_block("Alpha") + "Sample:\n  Object Type: Data Group\n  Data Elements:\n"
         '    child_id:\n      Description: d\n      Type: ":Child:"\n'
         "Child:\n  Object Type: Data Group\n  Data Elements:\n    name:\n      Description: d\n      Type: String\n",
     )
@@ -113,12 +109,7 @@ def test_link_prose_mentions_skips_grid_table_lines_and_link_definitions(tmp_pat
         + "Target:\n  Object Type: Data Group\n  Data Elements:\n    a:\n      Description: d\n      Type: String\n",
     )
     index = ReferenceIndex(tmp_path)
-    markdown = (
-        "See Target in prose.\n"
-        "| Target | more |\n"
-        "+--------+------+\n"
-        "[1]: assets/Target.schema.json\n"
-    )
+    markdown = "See Target in prose.\n| Target | more |\n+--------+------+\n[1]: assets/Target.schema.json\n"
     result = link_prose_mentions(markdown, index, source="Alpha")
     lines = result.splitlines()
     assert lines[0] == "See [`Target`][alpha:target] in prose."

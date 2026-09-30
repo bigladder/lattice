@@ -234,7 +234,7 @@ def _style_type_predicate(predicate):
     pieces = []
     last_end = 0
     for match in _TYPE_REFERENCE_NAME.finditer(predicate):
-        pieces.append(f"`{predicate[last_end:match.start(1)]}`")
+        pieces.append(f"`{predicate[last_end : match.start(1)]}`")
         pieces.append(match.group(1))
         last_end = match.end(1)
     pieces.append(f"`{predicate[last_end:]}`")
