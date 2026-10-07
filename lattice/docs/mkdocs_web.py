@@ -230,7 +230,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
-            "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}, "autorefs"],
+            "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}, "autorefs", "search"],
             "hooks": hooks,
             "markdown_extensions": [
                 # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
