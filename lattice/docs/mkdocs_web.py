@@ -62,6 +62,11 @@ CUSTOM_PALETTE_VARIABLE_NAMES = {
 LIGHT_COLOR_BRIGHTNESS_THRESHOLD = 0.6
 
 
+def page_source_key(markdown_output_path, content_directory_path):
+    """The key MkDocs's `page.file.src_uri` uses for a page: forward slashes on every OS."""
+    return markdown_output_path.relative_to(content_directory_path).as_posix()
+
+
 def _is_light(hex_color):
     """True if `hex_color` (e.g. "#9e9e9e") reads as visually light rather than dark."""
     red, green, blue = (int(hex_color.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
@@ -362,7 +367,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         for template in self.specification_templates:
             source = get_file_basename(template.path, depth=2)
             template.markdown_output_path = Path(self.specifications_directory_path, f"{source}.md")
-            self.page_source_map[str(template.markdown_output_path.relative_to(self.content_directory_path))] = source
+            self.page_source_map[page_source_key(template.markdown_output_path, self.content_directory_path)] = source
 
             sub_page_list.append(
                 self.make_specification_page(
