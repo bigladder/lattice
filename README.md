@@ -23,9 +23,17 @@ Future additions under development include:
 Installing
 ----------
 
-To install Lattice, simply:
+Install Lattice from git through [uv](https://docs.astral.sh/uv/). This also installs the Big Ladder Software fork of `markdown-grid-tables` that the web documentation's tables rely on. In your project's `pyproject.toml`:
 
-`pip install lattice`
+```toml
+[project]
+dependencies = ["lattice"]
+
+[tool.uv.sources]
+lattice = { git = "https://github.com/bigladder/lattice.git" }
+```
+
+Then run `uv sync`.
 
 Example Usage
 -------------
