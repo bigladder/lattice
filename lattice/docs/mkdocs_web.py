@@ -1,5 +1,6 @@
 """Build web documentation"""
 
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -65,6 +66,16 @@ LIGHT_COLOR_BRIGHTNESS_THRESHOLD = 0.6
 def page_source_key(markdown_output_path, content_directory_path):
     """The key MkDocs's `page.file.src_uri` uses for a page: forward slashes on every OS."""
     return markdown_output_path.relative_to(content_directory_path).as_posix()
+
+
+def normalize_hex_color(color):
+    """`color` as six-digit "#rrggbb", expanding a CSS shorthand like "#fff"."""
+    digits = color.lstrip("#")
+    if len(digits) == 3:
+        digits = "".join(digit * 2 for digit in digits)
+    if not re.fullmatch(r"[0-9a-fA-F]{6}", digits):
+        raise ValueError(f'Color "{color}" must be a 3- or 6-digit hex value such as "#2c358e".')
+    return f"#{digits}"
 
 
 def _is_light(hex_color):
@@ -174,6 +185,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             color = palette.get(key)
             if not (isinstance(color, str) and color.startswith("#")):
                 continue
+            color = normalize_hex_color(color)
             # Dark text on a light color, light text on a dark one, so the contrast holds
             # regardless of which way round a project's own color happens to fall.
             text_color, text_color_light = ("#000", "#000000b3") if _is_light(color) else ("#fff", "#ffffffb3")
