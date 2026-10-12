@@ -119,9 +119,12 @@ class ReferenceIndex:
 
 
 # Matches whatever a mention must never be inserted into: a fenced code block, an inline code
-# span, or an existing link (inline or reference-style). Wrapped in one capturing group so
-# `re.split` keeps these spans in its result instead of discarding them.
-_CODE_OR_LINK_SPAN = re.compile(r"(```[\s\S]*?```|`[^`]*`|\[[^\]]+\]\([^)]+\)|\[[^\]]+\]\[[^\]]*\])")
+# span, an existing link (inline or reference-style; inline text may be empty, as in an image
+# with no alt text), an HTML tag, or a bare URL. Wrapped in one capturing group so `re.split`
+# keeps these spans in its result instead of discarding them.
+_CODE_OR_LINK_SPAN = re.compile(
+    r"(```[\s\S]*?```|`[^`]*`|\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\[[^\]]*\]|<[A-Za-z/!][^>]*>|https?://[^\s)>\]]+)"
+)
 
 
 def link_mentions(text, reference_index, source=None):

@@ -1,3 +1,5 @@
+import pytest
+
 from lattice.docs.autorefs import ReferenceIndex, link_diagram_nodes, link_mentions, link_prose_mentions
 from lattice.docs.process_template import make_add_data_model
 
@@ -116,6 +118,28 @@ def test_link_prose_mentions_skips_grid_table_lines_and_link_definitions(tmp_pat
     assert lines[1] == "| Target | more |"
     assert lines[2] == "+--------+------+"
     assert lines[3] == "[1]: assets/Target.schema.json"
+
+
+@pytest.mark.parametrize(
+    "markdown",
+    [
+        "![](assets/Target.png)",
+        "![alt](assets/Target.png)",
+        '<img src="assets/Target.png">',
+        "See https://example.com/Target/page now",
+        "<https://example.com/Target>",
+        '<a href="x/Target">link</a>',
+    ],
+)
+def test_link_prose_mentions_leaves_a_name_inside_an_image_url_or_html_tag_alone(tmp_path, markdown):
+    _write_schema(
+        tmp_path,
+        "Alpha",
+        _base_schema_block("Alpha")
+        + "Target:\n  Object Type: Data Group\n  Data Elements:\n    a:\n      Description: d\n      Type: String\n",
+    )
+    index = ReferenceIndex(tmp_path)
+    assert link_prose_mentions(markdown, index, source="Alpha") == markdown
 
 
 def test_link_prose_mentions_links_a_self_reference_but_not_the_heading_itself(tmp_path):
