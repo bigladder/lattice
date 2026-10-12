@@ -29,19 +29,18 @@ def _schema_files(schema_dir):
 def _data_group_and_enumeration_names(schema: Schema):
     """
     - schema: lattice.schema.Schema
-    RETURN: set of string, the name of every Data Group and Enumeration `schema` itself defines,
-    plus -- if `schema` declares a Root Data Group -- every common Data Group/Enumeration its own
-    hierarchy walk reaches from a reference schema (`core`, or one named in its own
-    Schema.References). This is exactly what add_data_model embeds on `schema`'s own page (see
-    schema_table.write_data_model), so a mention of such a name (e.g. `Metadata`, from `core`)
-    resolves to where it's actually rendered, rather than staying unlinked because it isn't a
-    schema file of its own in `schema_dir`.
+    RETURN: set of string, the name of every Data Group and Enumeration add_data_model renders on
+    `schema`'s own page (see schema_table.write_data_model). Without a Root Data Group that is
+    everything `schema` defines. With one, it is what its hierarchy walk reaches, including any
+    common Data Group/Enumeration from a reference schema (`core`, or one named in its own
+    Schema.References) -- so a mention of such a name (e.g. `Metadata`, from `core`) resolves to
+    where it's actually rendered -- and excluding an orphan the walk never reaches, since that
+    isn't rendered at all.
     """
-    names = set(schema.data_groups) | set(schema.enumerations)
-    if schema.root_data_group_name is not None:
-        ordered_groups, ordered_enums, _orphan_groups, _orphan_enums = schema.hierarchy_order()
-        names |= {item.name for item in (*ordered_groups, *ordered_enums) if item.parent_schema is not schema}
-    return names
+    if schema.root_data_group_name is None:
+        return set(schema.data_groups) | set(schema.enumerations)
+    ordered_groups, ordered_enums, _orphan_groups, _orphan_enums = schema.hierarchy_order()
+    return {item.name for item in (*ordered_groups, *ordered_enums)}
 
 
 class ReferenceIndex:

@@ -157,6 +157,24 @@ def test_link_prose_mentions_links_a_self_reference_but_not_the_heading_itself(t
     assert lines[2] == "[`Target`][alpha:target] describes itself here."
 
 
+def test_reference_index_omits_a_data_group_the_root_never_reaches(tmp_path):
+    # An orphan isn't rendered on the page (see schema_table.write_data_model), so a link to it
+    # would have no target.
+    _write_schema(
+        tmp_path,
+        "Alpha",
+        _base_schema_block("Alpha")
+        + "  Root Data Group: Root\n"
+        + "Root:\n  Object Type: Data Group\n  Data Elements:\n    part:\n      Description: d\n      Type: Group(Part)\n"
+        + "Part:\n  Object Type: Data Group\n  Data Elements:\n    a:\n      Description: d\n      Type: String\n"
+        + "Orphan:\n  Object Type: Data Group\n  Data Elements:\n    a:\n      Description: d\n      Type: String\n",
+    )
+    index = ReferenceIndex(tmp_path)
+    assert index.resolve("Part", source="Alpha") == "alpha:part"
+    assert index.resolve("Orphan", source="Alpha") is None
+    assert "Orphan" not in index.names()
+
+
 def test_link_diagram_nodes_links_same_page_and_cross_page_targets(tmp_path):
     _write_schema(
         tmp_path,
