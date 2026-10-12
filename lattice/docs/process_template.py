@@ -11,7 +11,10 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 
 from lattice.file_io import load
+from lattice.schema import Schema
 
+from .autorefs import ReferenceIndex
+from .diagram import build_data_group_tree, render_tree
 from .grid_table import write_table
 from .schema_table import create_table_from_list, load_structure_from_object, write_data_model
 
@@ -134,11 +137,26 @@ def load_yaml_source(schema_dir, source, args_str):
     RETURN: (string or None, None or dict), tuple of the error string if didn't
             load or the data to return
     """
-    src_path = os.path.join(schema_dir, source + ".schema.yaml")
-    if not os.path.exists(src_path):
-        return (make_error_string(f'Schema source "{source}" ("{src_path}") doesn\'t exist!', args_str), None)
-    data = load(src_path)
-    return (None, data)
+    src_path = Schema.resolve_path(schema_dir, source)
+    if src_path is None:
+        return (make_error_string(f'Schema source "{source}" doesn\'t exist!', args_str), None)
+    return (None, load(src_path))
+
+
+def load_schema_object(schema_dir, source, args_str):
+    """
+    - schema_dir: pathlike, the path to the schema directory
+    - source: string, the source key
+    - args_str: string, the arguments to the calling function (for error reporting)
+    RETURN: (string or None, None or lattice.schema.Schema), the same error-tuple shape as
+    load_yaml_source, but constructing a full Schema -- which eagerly validates and resolves
+    every Data Group/Data Element in the file, including across `core` and any schema this one
+    names in its own Schema.References -- rather than just parsing the YAML.
+    """
+    try:
+        return (None, Schema.from_source(schema_dir, source))
+    except Exception as exc:
+        return (make_error_string(str(exc), args_str), None)
 
 
 def make_add_schema_table(schema_dir=None, error_log=None):
@@ -157,18 +175,23 @@ def make_add_schema_table(schema_dir=None, error_log=None):
         RETURN: string, returns a string representation of the given table
     """
     schema_dir = determine_schema_dir(schema_dir)
+    reference_index = ReferenceIndex(schema_dir)
 
-    def add_schema_table(source, table_name, description=None, level=1, style="2 Columns"):
+    def add_schema_table(source, table_name, description=None, level=1):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_schema_table(data, table_name, description, level, style, error_log)
+        return write_schema_table(
+            data, table_name, description, level, error_log, scope=source, reference_index=reference_index
+        )
 
     return add_schema_table
 
 
-def write_schema_table(table_dict, table_name, description=None, level=1, style="2 Columns", error_log=None):
+def write_schema_table(  # noqa: PLR0913 Too many arguments
+    table_dict, table_name, description=None, level=1, error_log=None, scope=None, reference_index=None
+):
     if description is None:
         description = table_name
     struct = load_structure_from_object(table_dict)
@@ -183,15 +206,18 @@ def write_schema_table(table_dict, table_name, description=None, level=1, style=
             "JSON Schema Pattern",
             "Examples",
         ],
-        "enumerations": ["Enumerator", "Description", "Notes"],
+        "enumerations": ["Name", "Description", "Notes"],
         "data_groups": [
             "Name",
             "Description",
             "Type",
             "Units",
             "Constraints",
-            "Req",
+            "Required",
             "Notes",
+            "Scalable",  # TODO: Custom from 205. Needs to be generalized.
+            "Cycling Order",  # TODO: Custom from 205. Needs to be generalized.
+            "Canonical End Uses",  # TODO: Custom from output-reporting. Needs to be generalized.
         ],
     }
     return create_table_from_list(
@@ -199,16 +225,17 @@ def write_schema_table(table_dict, table_name, description=None, level=1, style=
         target,
         description=description,
         level=level,
-        style=style,
+        scope=scope,
+        reference_index=reference_index,
     )
 
 
 def make_add_schema_table_from_string(error_log=None):
-    def add_schema_table_from_string(yaml_string, table_name=None, description=None, level=1, style="2 Columns"):
+    def add_schema_table_from_string(yaml_string, table_name=None, description=None, level=1):
         data = yaml.safe_load(yaml_string)
         if table_name is None:
             table_name = [name for name in data][0]
-        return write_schema_table(data, table_name, description, level, style, error_log)
+        return write_schema_table(data, table_name, description, level, error_log)
 
     return add_schema_table_from_string
 
@@ -242,18 +269,77 @@ def make_add_data_model(schema_dir, error_log):
     RETURN: returns the add_data_model function with the following characteristics:
         - source: string, the source key. E.g., for
           schema-source/ASHRAE205.schema.yaml, 'ASHRAE205'
+        - include_common: bool, defaults to True. When `source`'s own Schema Meta block
+          declares a "Root Data Group", whether to embed a common Data Group/Enumeration it
+          references but doesn't itself define (e.g. Metadata, from `core`). Pass False for a
+          page that documents its common Data Groups elsewhere.
         RETURN: string, returns a string representation of the given data models
     """
     schema_dir = determine_schema_dir(schema_dir)
+    reference_index = ReferenceIndex(schema_dir)
 
-    def add_data_model(source, base_level=1, style="2 Columns"):
+    def add_data_model(source, base_level=1, make_headers=True, include_common=True):
         args_str = make_args_string(locals())
         err, data = load_yaml_source(schema_dir, source, args_str)
         if err is not None:
             return log_error(err, error_log)
-        return write_data_model(data, base_level, style=style)
+
+        if not data.get("Schema", {}).get("Root Data Group"):
+            # No declared root to walk from: render exactly as before -- raw file order, no
+            # common-Data-Group insertion. This is the expected shape for a common-types-only
+            # schema like `core`, not an error.
+            return write_data_model(
+                data, base_level, make_headers=make_headers, scope=source, reference_index=reference_index
+            )
+
+        err, schema = load_schema_object(schema_dir, source, args_str)
+        if err is not None:
+            return log_error(err, error_log)
+        return write_data_model(
+            data,
+            base_level,
+            make_headers=make_headers,
+            scope=source,
+            reference_index=reference_index,
+            schema=schema,
+            include_common=include_common,
+            error_log=error_log,
+        )
 
     return add_data_model
+
+
+def make_add_schema_diagram(schema_dir, error_log=None):
+    """
+    - schema_dir: string or pathlike, the path to the schema directory.
+    - error_log: None or list, if a list, then errors will be appended to the
+      log as well as rendered into the final product
+    RETURN: returns the add_schema_diagram function with the following characteristics:
+        - source: string, the source key. E.g., for
+          schema-source/ASHRAE205.schema.yaml, 'ASHRAE205'
+        - root: None or string, the Data Group to start the diagram from; defaults to `source`,
+          the convention this and `add_data_model` both rely on: a schema file's own root Data
+          Group is named the same as the file itself (e.g. `RS0001.schema.yaml` defines `RS0001`)
+        - caption: None or string, an optional diagram caption
+        RETURN: string, a Mermaid flowchart in Markdown of the Data Groups reachable from `root`
+    """
+    schema_dir = determine_schema_dir(schema_dir)
+
+    def add_schema_diagram(source, root=None, caption=None):
+        args_str = make_args_string(locals())
+        err, schema = load_schema_object(schema_dir, source, args_str)
+        if err is not None:
+            return log_error(err, error_log)
+        root_name = root if root is not None else source
+        try:
+            root_data_group = schema.get_data_group(root_name)
+        except Exception:
+            msg = f'Data Group "{root_name}" was not found in schema source "{source}".'
+            return log_error(make_error_string(msg, args_str), error_log)
+        tree = build_data_group_tree(root_data_group)
+        return render_tree([tree], caption=caption)
+
+    return add_schema_diagram
 
 
 def process_template(template_path, output_path, schema_dir=None, log_file=None):
@@ -288,6 +374,8 @@ def process_template(template_path, output_path, schema_dir=None, log_file=None)
                     add_schema_table=make_add_schema_table(schema_dir, errs),
                     add_yaml_table=make_add_yaml_table(),
                     add_data_model=make_add_data_model(schema_dir, errs),
+                    add_schema_table_from_string=make_add_schema_table_from_string(),
+                    add_schema_diagram=make_add_schema_diagram(schema_dir, errs),
                 )
             )
     except TemplateNotFound as exc:

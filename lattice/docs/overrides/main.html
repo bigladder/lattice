@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{#
+  Site-wide announcement banner, driven by an optional top-level `banner` string in the
+  project's docs/web/config.yaml. The string is Markdown, rendered to HTML by MkDocsWeb
+  before it reaches this template, so it's injected here with `safe` rather than escaped.
+#}
+{% block announce %}
+  {% if config.extra.banner %}
+    {{ config.extra.banner | safe }}
+  {% endif %}
+{% endblock %}
