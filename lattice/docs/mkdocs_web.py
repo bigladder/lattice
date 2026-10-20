@@ -134,6 +134,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         # None keeps the default footer built from the author (see footer_copyright).
         self.copyright = None
         self.banner_dismissable = False
+        self.print_page = False
         self.setup_build_directory_structure()
         self.get_git_info()
         self.specification_order = None
@@ -255,7 +256,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
             "nav": self.navigation,
-            "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}, "autorefs", "search"],
+            "plugins": site_plugins(self.lattice.root_directory, self.print_page),
             "hooks": hooks,
             "markdown_extensions": [
                 # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
@@ -306,6 +307,8 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             self.banner_dismissable = config["banner_dismissable"]
         if "copyright" in config:
             self.copyright = config["copyright"]
+        if "print_page" in config:
+            self.print_page = config["print_page"]
 
     def make_pages(self, mkdocs_config=None):  # noqa: PLR0912 Too many branches
         # Check config directory
@@ -591,6 +594,19 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             ["build", "--config-file", str(config_file_path), "--site-dir", str(self.output_directory_path)],
             standalone_mode=False,
         )
+
+
+def site_plugins(root_directory, print_page=False):
+    """The MkDocs plugins for a generated site.
+
+    With `print_page: true` in docs/web/config.yaml, mkdocs-print-site-plugin also combines every
+    page in the nav into one `print_page/` (with a table of contents and numbered headings), for
+    printing the whole site to PDF. It isn't added to the nav. It has to be the last plugin.
+    """
+    plugins = [{"lattice": {"root_directory": str(root_directory)}}, "autorefs", "search"]
+    if print_page:
+        plugins.append("print-site")
+    return plugins
 
 
 LICENSE_FILE_NAMES = ("LICENSE", "LICENSE.txt", "LICENSE.md")

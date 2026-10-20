@@ -9,6 +9,7 @@ from lattice.docs.mkdocs_web import (
     footer_copyright,
     normalize_hex_color,
     page_source_key,
+    site_plugins,
 )
 
 
@@ -104,6 +105,14 @@ def test_a_license_file_is_found_under_any_of_its_common_names(tmp_path):
     assert find_license_file(tmp_path) is None
     (tmp_path / "LICENSE.txt").write_text("BSD-3-Clause\n")
     assert find_license_file(tmp_path) == tmp_path / "LICENSE.txt"
+
+
+def test_the_print_page_is_off_unless_configured():
+    assert "print-site" not in site_plugins("/project")
+
+
+def test_a_configured_print_page_adds_the_print_site_plugin_last():
+    assert site_plugins("/project", print_page=True)[-1] == "print-site"
 
 
 def test_a_project_without_extra_pages_adds_no_nav_entries(tmp_path):

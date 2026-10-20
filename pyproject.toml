@@ -20,7 +20,8 @@ dependencies = [
     "markdown-grid-tables", # Pinned via [tool.uv.sources] to our fork -- see its README for why
     "regex",
     "networkx",
-    "atheneum-forge"
+    "atheneum-forge",
+    "mkdocs-print-site-plugin>=2.9",
 ]
 
 [project.entry-points."mkdocs.plugins"]
