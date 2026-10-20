@@ -285,6 +285,28 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             ],
         }
 
+    def apply_config(self, config):
+        """Apply the site options from a project's docs/web/config.yaml."""
+        if "title" in config:
+            self.title = config["title"]
+        if "author" in config:
+            self.author = config["author"]
+        if "description" in config:
+            self.description = config["description"]
+        if "specifications" in config:
+            self.specification_order = config["specifications"]
+        if "colors" in config:
+            for item in config["colors"]:
+                self.colors[item] = config["colors"][item]
+        if "banner" in config:
+            # Rendered to HTML now so overrides/main.html can inject it into mkdocs-material's
+            # announce block with `| safe` instead of escaping it.
+            self.banner = markdown.markdown(config["banner"])
+        if "banner_dismissable" in config:
+            self.banner_dismissable = config["banner_dismissable"]
+        if "copyright" in config:
+            self.copyright = config["copyright"]
+
     def make_pages(self, mkdocs_config=None):  # noqa: PLR0912 Too many branches
         # Check config directory
         about_page_content = None
@@ -305,26 +327,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                     self.favicon_path = file_path
 
         if config_path is not None:
-            config = load(config_path)
-            if "title" in config:
-                self.title = config["title"]
-            if "author" in config:
-                self.author = config["author"]
-            if "description" in config:
-                self.description = config["description"]
-            if "specifications" in config:
-                self.specification_order = config["specifications"]
-            if "colors" in config:
-                for item in config["colors"]:
-                    self.colors[item] = config["colors"][item]
-            if "banner" in config:
-                # Rendered to HTML now so overrides/main.html can inject it into mkdocs-material's
-                # announce block with `| safe` instead of escaping it.
-                self.banner = markdown.markdown(config["banner"])
-            if "banner_dismissable" in config:
-                self.banner_dismissable = config["banner_dismissable"]
-            if "copyright" in config:
-                self.copyright = config["copyright"]
+            self.apply_config(load(config_path))
 
         if about_page_content is not None:
             self.make_main_menu_page(
