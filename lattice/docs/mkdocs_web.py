@@ -343,6 +343,13 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         # Examples
         self.make_examples_page(mkdocs_config)
 
+        # Extra pages
+        self.navigation += copy_extra_pages(
+            Path(self.docs_config_directory, EXTRA_PAGES_DIRECTORY_NAME),
+            self.content_directory_path,
+            self.source_schema_directory_path,
+        )
+
     def make_specification_pages(self):  # noqa: PLR0912
         # Collect list of doc template files
         if self.specification_order is not None:
@@ -566,6 +573,35 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             ["build", "--config-file", str(config_file_path), "--site-dir", str(self.output_directory_path)],
             standalone_mode=False,
         )
+
+
+EXTRA_PAGES_DIRECTORY_NAME = "extra-pages"
+
+
+def copy_extra_pages(source_directory, content_directory, schema_directory=None):
+    """Copy a project's `docs/web/extra-pages/` directory into the site and return its nav entries.
+
+    Each top-level page -- plain Markdown (`.md`) or a Jinja template (`.md.j2`, rendered with
+    the same schema context as a specification template) -- becomes one nav entry, ordered by
+    file name; MkDocs titles it from its first heading. A file whose name starts with `_` is a
+    partial: available to templates' `{% include %}` but not published as a page. The rest of
+    the directory is copied, so images and relative links between its pages keep working.
+    Returns an empty list if the project has no such directory.
+    """
+    output_directory = Path(content_directory, EXTRA_PAGES_DIRECTORY_NAME)
+    # The content directory persists between builds, so clear the old copy; otherwise a page
+    # deleted from the source would still be built from its stale copy.
+    if output_directory.exists():
+        shutil.rmtree(output_directory)
+    if not Path(source_directory).is_dir():
+        return []
+    shutil.copytree(source_directory, output_directory, ignore=shutil.ignore_patterns("_*.md", "_*.md.j2"))
+    # Rendered from the source directory, not the copy, so a template's relative includes
+    # (partials among them) resolve the same way they do for specification templates.
+    for template_path in Path(source_directory).glob("[!_]*.md.j2"):
+        process_template(template_path, Path(output_directory, template_path.stem), schema_dir=schema_directory)
+        Path(output_directory, template_path.name).unlink()
+    return [page_path.relative_to(content_directory).as_posix() for page_path in sorted(output_directory.glob("*.md"))]
 
 
 def make_front_matter(front_matter):  # pylint: disable=missing-function-docstring
