@@ -61,4 +61,4 @@ packages = ["lattice"]
 
 [tool.uv.sources]
 atheneum-forge = { git = "https://github.com/bigladder/atheneum-forge" }
-markdown-grid-tables = { git = "https://github.com/bigladder/markdown-grid-tables.git", branch = "fix-def-list-and-preprocessing" }
+markdown-grid-tables = { git = "https://github.com/bigladder/markdown-grid-tables.git", branch = "bigladder" }
