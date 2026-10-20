@@ -63,6 +63,37 @@ CUSTOM_PALETTE_VARIABLE_NAMES = {
 LIGHT_COLOR_BRIGHTNESS_THRESHOLD = 0.6
 
 
+def markdown_extensions():
+    """The Markdown extensions a generated site renders with -- shared with the tests, so they
+    render table cells exactly the way the site does."""
+    return [
+        # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
+        # column-width wrapping happens to break a long cell line becomes a forced
+        # <br>, instead of leaving the paragraph to reflow naturally in the reader's
+        # browser.
+        {"markdown_grid_tables": {"hard_linebreaks": False}},
+        "attr_list",
+        "pymdownx.smartsymbols",
+        "def_list",
+        "pymdownx.caret",  # Superscripts
+        "pymdownx.tilde",  # Subscripts
+        {
+            "pymdownx.superfences": {
+                # ``` fenced code blocks, incl. nested inside table cells, plus
+                # ```mermaid fences rendered as diagrams by mkdocs-material's bundled
+                # Mermaid support (see add_schema_diagram in process_template.py).
+                "custom_fences": [
+                    {
+                        "name": "mermaid",
+                        "class": "mermaid",
+                        "format": fence_code_format,
+                    }
+                ]
+            }
+        },
+    ]
+
+
 def page_source_key(markdown_output_path, content_directory_path):
     """The key MkDocs's `page.file.src_uri` uses for a page: forward slashes on every OS."""
     return markdown_output_path.relative_to(content_directory_path).as_posix()
@@ -244,32 +275,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "nav": self.navigation,
             "plugins": [{"lattice": {"root_directory": str(self.lattice.root_directory)}}, "autorefs", "search"],
             "hooks": hooks,
-            "markdown_extensions": [
-                # Off, unlike markdown_grid_tables' own default: with it on, wherever our own
-                # column-width wrapping happens to break a long cell line becomes a forced
-                # <br>, instead of leaving the paragraph to reflow naturally in the reader's
-                # browser.
-                {"markdown_grid_tables": {"hard_linebreaks": False}},
-                "attr_list",
-                "pymdownx.smartsymbols",
-                "def_list",
-                "pymdownx.caret",  # Superscripts
-                "pymdownx.tilde",  # Subscripts
-                {
-                    "pymdownx.superfences": {
-                        # ``` fenced code blocks, incl. nested inside table cells, plus
-                        # ```mermaid fences rendered as diagrams by mkdocs-material's bundled
-                        # Mermaid support (see add_schema_diagram in process_template.py).
-                        "custom_fences": [
-                            {
-                                "name": "mermaid",
-                                "class": "mermaid",
-                                "format": fence_code_format,
-                            }
-                        ]
-                    }
-                },
-            ],
+            "markdown_extensions": markdown_extensions(),
         }
 
     def make_pages(self, mkdocs_config=None):  # noqa: PLR0912 Too many branches
