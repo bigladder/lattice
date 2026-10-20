@@ -2,7 +2,14 @@ from pathlib import PureWindowsPath
 
 import pytest
 
-from lattice.docs.mkdocs_web import _is_light, copy_extra_pages, normalize_hex_color, page_source_key
+from lattice.docs.mkdocs_web import (
+    _is_light,
+    copy_extra_pages,
+    find_license_file,
+    footer_copyright,
+    normalize_hex_color,
+    page_source_key,
+)
 
 
 def test_page_source_key_uses_forward_slashes_on_windows_paths():
@@ -76,6 +83,27 @@ def test_an_extra_page_can_be_a_jinja_template(tmp_path):
     assert not (content / "extra-pages" / "rendered.md.j2").exists()
     assert not (content / "extra-pages" / "_footer.md").exists()
     assert nav == ["extra-pages/rendered.md"]
+
+
+def test_a_configured_copyright_is_used_as_written():
+    notice = "Copyright (c) IBPSA-USA. Licensed under BSD-3-Clause."
+    assert footer_copyright(notice, "IBPSA-USA", 2026, "https://example.com/LICENSE") == notice
+
+
+def test_the_default_footer_links_to_the_license_instead_of_reserving_all_rights():
+    footer = footer_copyright(None, "IBPSA-USA", 2026, "https://github.com/o/r/blob/HEAD/LICENSE.txt")
+    assert footer == '&copy; 2026 IBPSA-USA &middot; <a href="https://github.com/o/r/blob/HEAD/LICENSE.txt">License</a>'
+    assert "All rights reserved" not in footer
+
+
+def test_without_a_license_file_the_default_footer_credits_only_the_author():
+    assert footer_copyright(None, "IBPSA-USA", 2026) == "&copy; 2026 IBPSA-USA"
+
+
+def test_a_license_file_is_found_under_any_of_its_common_names(tmp_path):
+    assert find_license_file(tmp_path) is None
+    (tmp_path / "LICENSE.txt").write_text("BSD-3-Clause\n")
+    assert find_license_file(tmp_path) == tmp_path / "LICENSE.txt"
 
 
 def test_a_project_without_extra_pages_adds_no_nav_entries(tmp_path):

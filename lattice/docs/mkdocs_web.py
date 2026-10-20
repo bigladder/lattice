@@ -131,6 +131,8 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         self.favicon_path = None
         self.logo_path = None
         self.banner = None
+        # None keeps the default footer built from the author (see footer_copyright).
+        self.copyright = None
         self.banner_dismissable = False
         self.setup_build_directory_structure()
         self.get_git_info()
@@ -204,6 +206,17 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
         css_path.write_text("\n\n".join(css_rules) + "\n", encoding="utf-8")
         return palette, str(Path(css_path).relative_to(self.content_directory_path))
 
+    def license_url(self):
+        """GitHub link to the project's license file, or None if it has none.
+
+        `blob/HEAD` follows the repository's default branch, so the link holds whichever branch
+        the docs happen to be built from.
+        """
+        license_path = find_license_file(self.lattice.root_directory)
+        if license_path is None:
+            return None
+        return f"{self.git_remote_url}/blob/HEAD/{license_path.name}"
+
     # pylint: disable-next=missing-function-docstring, too-many-branches, too-many-statements
 
     def make_config(self):  # pylint: disable=missing-function-docstring
@@ -237,7 +250,7 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             "site_url": self.base_url,
             "site_author": self.author,
             "site_description": self.description,
-            "copyright": f"&copy {self.timestamp.year} {self.author} All rights reserved",
+            "copyright": footer_copyright(self.copyright, self.author, self.timestamp.year, self.license_url()),
             "theme": theme,
             "repo_name": self.git_repo_name,
             "repo_url": self.git_remote_url,
@@ -310,6 +323,8 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
                 self.banner = markdown.markdown(config["banner"])
             if "banner_dismissable" in config:
                 self.banner_dismissable = config["banner_dismissable"]
+            if "copyright" in config:
+                self.copyright = config["copyright"]
 
         if about_page_content is not None:
             self.make_main_menu_page(
@@ -573,6 +588,33 @@ class MkDocsWeb:  # pylint: disable=too-many-instance-attributes
             ["build", "--config-file", str(config_file_path), "--site-dir", str(self.output_directory_path)],
             standalone_mode=False,
         )
+
+
+LICENSE_FILE_NAMES = ("LICENSE", "LICENSE.txt", "LICENSE.md")
+
+
+def find_license_file(root_directory):
+    """The project's license file in `root_directory`, or None if it has none."""
+    for name in LICENSE_FILE_NAMES:
+        path = Path(root_directory, name)
+        if path.is_file():
+            return path
+    return None
+
+
+def footer_copyright(copyright_notice, author, year, license_url=None):
+    """The site footer's copyright line.
+
+    A project's own `copyright` from docs/web/config.yaml is used as written. Otherwise the
+    footer credits the author and, if there's a license file, links to it, so the stated terms
+    are always the project's actual ones.
+    """
+    if copyright_notice is not None:
+        return copyright_notice
+    notice = f"&copy; {year} {author}"
+    if license_url is not None:
+        notice += f' &middot; <a href="{license_url}">License</a>'
+    return notice
 
 
 EXTRA_PAGES_DIRECTORY_NAME = "extra-pages"
