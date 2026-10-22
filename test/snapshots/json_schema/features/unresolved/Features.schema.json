@@ -1,0 +1,324 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Features",
+    "description": "Exercises schema syntax the examples use rarely or not at all",
+    "definitions": {
+        "Identifier": {
+            "type": "string",
+            "pattern": "[A-Z]+"
+        },
+        "Kind": {
+            "type": "string",
+            "enum": [
+                "KIND_A",
+                "KIND_B"
+            ],
+            "enum_text": [
+                "Kind A",
+                "Kind B"
+            ],
+            "descriptions": [
+                "First kind",
+                "Second kind"
+            ],
+            "notes": [
+                "Note about A",
+                null
+            ]
+        },
+        "Color": {
+            "type": "string",
+            "enum": [
+                "RED",
+                "GREEN"
+            ]
+        },
+        "FirstAlternative": {
+            "type": "object",
+            "properties": {
+                "first_value": {
+                    "description": "Value for the first alternative",
+                    "type": "number",
+                    "units": "W"
+                }
+            },
+            "additionalProperties": false
+        },
+        "SecondAlternative": {
+            "type": "object",
+            "properties": {
+                "second_value": {
+                    "description": "Value for the second alternative",
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Statistics": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "description": "Selects the alternative",
+                    "$ref": "Features.schema.json#/definitions/Kind"
+                },
+                "mean": {
+                    "description": "Mean value, units supplied by the referencing element",
+                    "type": "number"
+                },
+                "detail": {
+                    "description": "Alternative selected by kind",
+                    "allOf": [
+                        {
+                            "if": {
+                                "properties": {
+                                    "kind": {
+                                        "const": "KINDA"
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "detail": {
+                                        "$ref": "Features.schema.json#/definitions/FirstAlternative"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "if": {
+                                "properties": {
+                                    "kind": {
+                                        "const": "KINDB"
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "detail": {
+                                        "$ref": "Features.schema.json#/definitions/SecondAlternative"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "kind"
+            ],
+            "additionalProperties": false
+        },
+        "Node": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Node name",
+                    "type": "string"
+                },
+                "children": {
+                    "description": "Recursive children",
+                    "type": "array",
+                    "items": {
+                        "$ref": "Features.schema.json#/definitions/Node"
+                    }
+                }
+            },
+            "required": [
+                "name"
+            ],
+            "additionalProperties": false
+        },
+        "Root": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "description": "Kind selector",
+                    "$ref": "Features.schema.json#/definitions/Kind"
+                },
+                "flag": {
+                    "description": "Boolean flag",
+                    "type": "boolean"
+                },
+                "count": {
+                    "description": "Exclusive lower and upper bounds, multiple of two",
+                    "type": "integer",
+                    "notes": "Count notes"
+                },
+                "ratio": {
+                    "description": "Inclusive bounds",
+                    "type": "number",
+                    "units": "-",
+                    "cyclingOrder": 1
+                },
+                "level": {
+                    "description": "Value from a set",
+                    "type": "integer"
+                },
+                "code": {
+                    "description": "String with a pattern constraint",
+                    "type": "string",
+                    "pattern": "[a-z]+"
+                },
+                "pattern": {
+                    "description": "Pattern type",
+                    "type": "string"
+                },
+                "colors": {
+                    "description": "Array of enumerations with a closed length range",
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 5,
+                    "items": {
+                        "$ref": "Features.schema.json#/definitions/Color"
+                    }
+                },
+                "exact_values": {
+                    "description": "Array with an exact length",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "m"
+                },
+                "open_values": {
+                    "description": "Array with an open-ended length range",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    },
+                    "canonicalEndUses": "heating, cooling"
+                },
+                "statistics": {
+                    "description": "Shared group with nested attribute overrides and a pinned selector",
+                    "$ref": "Features.schema.json#/definitions/Statistics"
+                },
+                "nodes": {
+                    "description": "Array of recursive groups",
+                    "type": "array",
+                    "items": {
+                        "$ref": "Features.schema.json#/definitions/Node"
+                    }
+                },
+                "node_reference": {
+                    "description": "Reference to a node",
+                    "type": "string"
+                },
+                "if_defined": {
+                    "description": "Required if flag is defined",
+                    "type": "string"
+                },
+                "if_not_defined": {
+                    "description": "Required if code is not defined",
+                    "type": "string"
+                },
+                "if_equal": {
+                    "description": "Required if kind is KIND_A",
+                    "type": "string"
+                },
+                "if_not_equal": {
+                    "description": "Required if kind is not KIND_A",
+                    "type": "string"
+                },
+                "if_also_equal": {
+                    "description": "Shares a condition with if_equal",
+                    "type": "string"
+                },
+                "if_boolean": {
+                    "description": "Required if flag is True",
+                    "type": "string"
+                },
+                "if_both": {
+                    "description": "Required if flag is defined and kind is KIND_B",
+                    "type": "string"
+                },
+                "if_contains": {
+                    "description": "Required if colors contains RED",
+                    "type": "string"
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "kind": {
+                                "const": "KIND_A"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "if_equal",
+                            "if_also_equal"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "kind": {
+                                "not": {
+                                    "const": "KIND_A"
+                                }
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "if_not_equal"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "flag": {
+                                "const": true
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "if_boolean"
+                        ]
+                    }
+                },
+                {
+                    "if": {
+                        "properties": {
+                            "kind": {
+                                "const": "KIND_B"
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "if_both"
+                        ]
+                    }
+                }
+            ],
+            "required": [
+                "kind"
+            ],
+            "dependencies": {
+                "flag": [
+                    "if_defined",
+                    "if_both"
+                ],
+                "code": {
+                    "not": {
+                        "required": [
+                            "if_not_defined"
+                        ]
+                    }
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "version": "0.1.0",
+    "$ref": "Features.schema.json#/definitions/Root"
+}

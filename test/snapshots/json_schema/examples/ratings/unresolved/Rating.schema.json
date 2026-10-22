@@ -1,0 +1,17 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Rating",
+    "description": "Schema Lookup Tables using data group templates",
+    "definitions": {
+        "SchemaType": {
+            "type": "string",
+            "enum": [
+                "RATING"
+            ],
+            "descriptions": [
+                "Rating"
+            ]
+        }
+    },
+    "version": "0.1.0"
+}

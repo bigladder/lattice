@@ -1,0 +1,75 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Lookup Table",
+    "description": "Schema Lookup Tables using data group templates",
+    "definitions": {
+        "SchemaType": {
+            "type": "string",
+            "enum": [
+                "TYPE1",
+                "TYPE2"
+            ],
+            "descriptions": [
+                "Type 1",
+                "Type 2"
+            ]
+        },
+        "LookupTable": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for drive performance",
+                    "$ref": "LookupTable.schema.json#/definitions/GridVariables"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for drive performance",
+                    "$ref": "LookupTable.schema.json#/definitions/LookupVariables"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariables": {
+            "type": "object",
+            "properties": {
+                "output_power": {
+                    "description": "Output shaft power",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "W"
+                }
+            },
+            "required": [
+                "output_power"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariables": {
+            "type": "object",
+            "properties": {
+                "efficiency": {
+                    "description": "Efficiency of drive",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "-",
+                    "notes": "Defined as the ratio of output shaft power to input shaft power"
+                }
+            },
+            "required": [
+                "efficiency"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.1.0",
+    "$ref": "LookupTable.schema.json#/definitions/LookupTable"
+}

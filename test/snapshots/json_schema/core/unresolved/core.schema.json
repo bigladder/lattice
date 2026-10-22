@@ -1,0 +1,113 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Core",
+    "description": "Common Data Types, String Types, Enumerations, and Data Groups",
+    "definitions": {
+        "UUID": {
+            "type": "string",
+            "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+        },
+        "Date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "Timestamp": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+        },
+        "Version": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+        },
+        "Metadata": {
+            "type": "object",
+            "properties": {
+                "schema_author": {
+                    "description": "Name of the organization that published the schema",
+                    "type": "string",
+                    "notes": "Identifies the organization that defined the schema"
+                },
+                "schema_name": {
+                    "description": "Schema name or identifier",
+                    "type": "string",
+                    "notes": "Identifies the schema used to define the data content"
+                },
+                "schema_version": {
+                    "description": "The version of the schema the data complies with",
+                    "$ref": "core.schema.json#/definitions/Version"
+                },
+                "schema_url": {
+                    "description": "The Uniform Resource Locator (url) for the schema definition and/or documentation",
+                    "type": "string"
+                },
+                "author": {
+                    "description": "Name of the entity creating the serialization",
+                    "type": "string",
+                    "notes": "Identifies the organization that created the file"
+                },
+                "id": {
+                    "description": "Unique data set identifier",
+                    "$ref": "core.schema.json#/definitions/UUID",
+                    "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data."
+                },
+                "description": {
+                    "description": "Description of data content (suitable for display)",
+                    "type": "string"
+                },
+                "time_of_creation": {
+                    "description": "Timestamp indicating when the serialization was created",
+                    "$ref": "core.schema.json#/definitions/Timestamp",
+                    "notes": "Updated anytime any data content is modified"
+                },
+                "version": {
+                    "description": "Integer version identifier for the data",
+                    "$ref": "core.schema.json#/definitions/Version",
+                    "notes": [
+                        "Used by data publisher to track revisions of the data",
+                        "Shall be incremented for each data revision"
+                    ]
+                },
+                "source": {
+                    "description": "Source(s) of the data",
+                    "type": "string",
+                    "notes": [
+                        "Used by data publisher to document methods (e.g., software and version) used to generate data",
+                        "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
+                    ]
+                },
+                "disclaimer": {
+                    "description": "Characterization of accuracy, limitations, and applicability of this data",
+                    "type": "string"
+                },
+                "copyright": {
+                    "description": "Copyright notice for the data",
+                    "type": "string",
+                    "notes": "**Informative note:** e.g., 'Copyright \u00a9 2024 Acme Corporation. All rights reserved.'"
+                },
+                "license": {
+                    "description": "License governing use, reproduction, and distribution of the data",
+                    "type": "string",
+                    "notes": "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+                },
+                "expiration_date": {
+                    "description": "Date after which the data is no longer considered valid by the data publisher",
+                    "$ref": "core.schema.json#/definitions/Date"
+                },
+                "notes": {
+                    "description": "Additional Information",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "schema_author",
+                "schema_name",
+                "schema_version",
+                "author",
+                "description",
+                "time_of_creation"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.1.0"
+}

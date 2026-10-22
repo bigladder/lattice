@@ -1,0 +1,161 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Time Series",
+    "description": "Schema for time series data groups",
+    "definitions": {
+        "SchemaType": {
+            "type": "string",
+            "enum": [
+                "CLIMATE_INFORMATION"
+            ],
+            "descriptions": [
+                "Climate information"
+            ]
+        },
+        "TimeSeriesType": {
+            "type": "string",
+            "enum": [
+                "INSTANTANEOUS",
+                "AVERAGE",
+                "SUM",
+                "CUMULATIVE"
+            ],
+            "descriptions": [
+                "Instantaneous",
+                "Average",
+                "Sum",
+                "Cumulative"
+            ],
+            "notes": [
+                "Values reflect the instant of the current timestamp in the corresponding TimeIntervals data group",
+                "Values reflect the average between the previous timestamp and the current timestamp in the corresponding TimeIntervals data group",
+                "Values reflect the integrated sum between the previous timestamp and the current timestamp in the corresponding TimeIntervals data group",
+                "Values reflect the cumulative sum between the starting timestamp and the current timestamp in the corresponding TimeIntervals data group"
+            ]
+        },
+        "TimeIntervals": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "Reference identification",
+                    "type": "string"
+                },
+                "starting_time": {
+                    "description": "Timestamp indicating the beginning of the data",
+                    "notes": "Used to determine the \"previous\" timestamp for the first value in a time series where the time series type is not `INSTANTANEOUS`",
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                },
+                "regular_interval": {
+                    "description": "Duration of regular interval",
+                    "type": "number",
+                    "units": "s"
+                },
+                "timestamps": {
+                    "description": "Array of timestamps",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                    }
+                },
+                "labels": {
+                    "description": "Informal labels describing each time interval",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "notes": "e.g., month names for monthly intervals"
+                },
+                "notes": {
+                    "description": "Notes about each time interval",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "required": [
+                "id",
+                "starting_time"
+            ],
+            "dependencies": {
+                "timestamps": {
+                    "not": {
+                        "required": [
+                            "regular_interval"
+                        ]
+                    }
+                },
+                "regular_interval": {
+                    "not": {
+                        "required": [
+                            "timestamps"
+                        ]
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "TimeSeries": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Name of this time series",
+                    "type": "string"
+                },
+                "units": {
+                    "description": "Units of measurement for this time series",
+                    "type": "string"
+                },
+                "time_series_type": {
+                    "description": "Type of value",
+                    "type": "string",
+                    "enum": [
+                        "INSTANTANEOUS",
+                        "AVERAGE",
+                        "SUM",
+                        "CUMULATIVE"
+                    ],
+                    "descriptions": [
+                        "Instantaneous",
+                        "Average",
+                        "Sum",
+                        "Cumulative"
+                    ],
+                    "notes": [
+                        "Values reflect the instant of the current timestamp in the corresponding TimeIntervals data group",
+                        "Values reflect the average between the previous timestamp and the current timestamp in the corresponding TimeIntervals data group",
+                        "Values reflect the integrated sum between the previous timestamp and the current timestamp in the corresponding TimeIntervals data group",
+                        "Values reflect the cumulative sum between the starting timestamp and the current timestamp in the corresponding TimeIntervals data group"
+                    ]
+                },
+                "value_time_intervals": {
+                    "description": "Reference to a `TimeInterval` data group associated with this time series",
+                    "type": "string"
+                },
+                "values": {
+                    "description": "Time series data values",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "-"
+                }
+            },
+            "required": [
+                "name",
+                "units",
+                "time_series_type",
+                "value_time_intervals",
+                "values"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.1.0"
+}
