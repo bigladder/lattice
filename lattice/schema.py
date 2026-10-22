@@ -210,8 +210,19 @@ _value_pattern = RegularExpressionPattern(
     f"({BooleanType.value_pattern}))"
 )
 
+# A Set constraint's items: quoted strings (which may contain commas) or bare literals.
+_set_item_pattern = regex.compile(r'"[^"]*"|[^,\s\[\]]+')
+
 
 # Constraints
+def _constrained_data_type(constraint: Type[Constraint], parent_data_element: DataElement) -> DataType:
+    """The Data Type a constraint applies to: an array's item type, unless the constraint is about the array."""
+    data_type = parent_data_element.data_type
+    if isinstance(data_type, ArrayType) and not constraint.applies_to_array_container:
+        data_type = data_type.array_data_type
+    return data_type
+
+
 class Constraint:
     pattern: RegularExpressionPattern
     # Data Types this constraint may be applied to. Empty means unrestricted.
@@ -236,16 +247,38 @@ class Constraint:
         width = max(len(label) for label, _ in fields)
         return "".join(f"\n    {(label + ':'):<{width + 1}} {value}" for label, value in fields)
 
+    def _constrained_data_type(self) -> DataType:
+        return _constrained_data_type(type(self), self.parent_data_element)
+
     def _validate_applicable_data_type(self) -> None:
         if not self.applicable_data_types:
             return
-        data_type = self.parent_data_element.data_type
-        if isinstance(data_type, ArrayType) and not self.applies_to_array_container:
-            data_type = data_type.array_data_type
+        data_type = self._constrained_data_type()
         if not isinstance(data_type, tuple(self.applicable_data_types)):
             raise Exception(
                 f"Constraint '{self.text}' is not applicable to Data Type '{data_type.text}'.{self._context()}"
             )
+
+    def _parse_value(self, text: str) -> Union[int, float, str]:
+        """Convert a value literal to the constrained Data Type's Python value; raise if it isn't one."""
+        data_type = self._constrained_data_type()
+        if isinstance(data_type, IntegerType) and IntegerType.value_pattern.pattern.fullmatch(text):
+            return int(text)
+        if isinstance(data_type, NumericType) and NumericType.value_pattern.pattern.fullmatch(text):
+            return float(text)
+        if isinstance(data_type, StringType) and StringType.value_pattern.pattern.fullmatch(text):
+            content = text[1:-1]
+            # A String Type (e.g. UUID) replaces value_pattern with its own pattern for the unquoted content.
+            if type(data_type) is StringType or data_type.value_pattern.pattern.fullmatch(content):
+                return content
+        if isinstance(data_type, EnumerationType) and EnumerationType.value_pattern.pattern.fullmatch(text):
+            return text
+        raise Exception(f"Constraint value '{text}' is not a valid '{data_type.text}' value.{self._context()}")
+
+    def _parse_number(self, text: str) -> Union[int, float]:
+        value = self._parse_value(text)
+        assert isinstance(value, (int, float))  # only used by constraints applicable to Integer or Numeric
+        return value
 
     def resolve(self):
         pass
@@ -255,15 +288,49 @@ class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
     applicable_data_types = [IntegerType, NumericType]
 
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.operator: str = match.group(1)  # ">", ">=", "<" or "<="
+        self.value = self._parse_number(match.group("NumericTypeValue"))
+
 
 class MultipleConstraint(Constraint):
     pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
     applicable_data_types = [IntegerType, NumericType]
 
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.value = self._parse_number(match.group("NumericTypeValue"))
+
 
 class SetConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"\[{_value_pattern}(, ?{_value_pattern})*\]")
     applicable_data_types = [IntegerType, NumericType, StringType, EnumerationType]
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.values: List[Union[int, float, str]] = [
+            self._parse_value(item) for item in _set_item_pattern.findall(match.group(0)[1:-1])
+        ]
+
+    def resolve(self):
+        # The Enumeration is only known once the Data Type is resolved, which happens after
+        # constraints are built (see DataElement.resolve).
+        data_type = self._constrained_data_type()
+        if isinstance(data_type, EnumerationType):
+            assert data_type.enumeration is not None
+            unknown_values = [value for value in self.values if value not in data_type.enumeration.enumerators]
+            if unknown_values:
+                raise Exception(
+                    f"Constraint '{self.text}' lists {unknown_values}, which aren't enumerators of "
+                    f"'{data_type.enumeration_name}'.{self._context()}"
+                )
 
 
 class SelectorConstraint(Constraint):
@@ -291,6 +358,10 @@ class StringPatternConstraint(Constraint):
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        # Not `.pattern`: that's the class's own RegularExpressionPattern, read by _constraint_factory.
+        self.regular_expression: str = match.group(0)[1:-1]
         try:
             regex.compile(text)
         except regex.error:
@@ -509,6 +580,20 @@ class ArrayLengthLimitsConstraint(Constraint):
     applicable_data_types = [ArrayType]
     applies_to_array_container = True
 
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        range_minimum, range_maximum, exact_length = match.groups()
+        # None means that side of the range was omitted, i.e. no limit.
+        self.minimum: int | None
+        self.maximum: int | None
+        if exact_length is not None:
+            self.minimum = self.maximum = int(exact_length)
+        else:
+            self.minimum = int(range_minimum) if range_minimum else None
+            self.maximum = int(range_maximum) if range_maximum else None
+
 
 _constraint_list: List[Type[Constraint]] = [
     RangeConstraint,
@@ -524,10 +609,7 @@ _constraint_list: List[Type[Constraint]] = [
 def _compatible_data_type(constraint: Type[Constraint], parent_data_element: DataElement) -> bool:
     if not constraint.applicable_data_types:
         return True
-    data_type = parent_data_element.data_type
-    if isinstance(data_type, ArrayType) and not constraint.applies_to_array_container:
-        data_type = data_type.array_data_type
-    return isinstance(data_type, tuple(constraint.applicable_data_types))
+    return isinstance(_constrained_data_type(constraint, parent_data_element), tuple(constraint.applicable_data_types))
 
 
 def _constraint_factory(text: str, parent_data_element: DataElement) -> Constraint:
@@ -990,7 +1072,8 @@ def _validate_constraint_overrides(
             values = override.value if isinstance(override.value, list) else [override.value]
             for value in values:
                 try:
-                    _constraint_factory(value, data_element)
+                    # resolve() runs the checks that need a resolved Data Type, e.g. Set enumerators.
+                    _constraint_factory(value, data_element).resolve()
                 except Exception as exc:
                     raise Exception(
                         f"Nested Attribute Override '{override.text}' does not apply at occurrence "
