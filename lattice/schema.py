@@ -210,6 +210,25 @@ _value_pattern = RegularExpressionPattern(
     f"({BooleanType.value_pattern}))"
 )
 
+# A Set constraint's items: quoted strings (which may contain commas) or bare literals.
+_set_item_pattern = regex.compile(r'"[^"]*"|[^,\s\[\]]+')
+
+
+def _parse_number(text: str) -> Union[int, float]:
+    # Integer literals stay ints, so a constraint on an Integer element doesn't become a float.
+    return int(text) if IntegerType.value_pattern.pattern.fullmatch(text) else float(text)
+
+
+def _parse_value(text: str) -> Union[int, float, bool, str]:
+    """Convert a value literal (number, quoted string, Boolean or enumerator) to its Python value."""
+    if text.startswith('"'):
+        return text[1:-1]
+    if BooleanType.value_pattern.pattern.fullmatch(text):
+        return text == "True"
+    if NumericType.value_pattern.pattern.fullmatch(text):
+        return _parse_number(text)
+    return text
+
 
 # Constraints
 class Constraint:
@@ -255,15 +274,36 @@ class RangeConstraint(Constraint):
     pattern = RegularExpressionPattern(f"(>|>=|<=|<)({NumericType.value_pattern})")
     applicable_data_types = [IntegerType, NumericType]
 
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.operator: str = match.group(1)  # ">", ">=", "<" or "<="
+        self.value: Union[int, float] = _parse_number(match.group("NumericTypeValue"))
+
 
 class MultipleConstraint(Constraint):
     pattern = RegularExpressionPattern(f"%({NumericType.value_pattern})")
     applicable_data_types = [IntegerType, NumericType]
 
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.value: Union[int, float] = _parse_number(match.group("NumericTypeValue"))
+
 
 class SetConstraint(Constraint):
     pattern = RegularExpressionPattern(rf"\[{_value_pattern}(, ?{_value_pattern})*\]")
     applicable_data_types = [IntegerType, NumericType, StringType, EnumerationType]
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        self.values: List[Union[int, float, bool, str]] = [
+            _parse_value(item) for item in _set_item_pattern.findall(match.group(0)[1:-1])
+        ]
 
 
 class SelectorConstraint(Constraint):
@@ -291,6 +331,10 @@ class StringPatternConstraint(Constraint):
 
     def __init__(self, text: str, parent_data_element: DataElement):
         super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        # Not `.pattern`: that's the class's own RegularExpressionPattern, read by _constraint_factory.
+        self.regular_expression: str = match.group(0)[1:-1]
         try:
             regex.compile(text)
         except regex.error:
@@ -508,6 +552,20 @@ class ArrayLengthLimitsConstraint(Constraint):
     pattern = RegularExpressionPattern(r"\[(\d*)\.\.(\d*)\]|\[(\d+)\]")
     applicable_data_types = [ArrayType]
     applies_to_array_container = True
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self.pattern.match(text)
+        assert match is not None
+        range_minimum, range_maximum, exact_length = match.groups()
+        # None means that side of the range was omitted, i.e. no limit.
+        self.minimum: int | None
+        self.maximum: int | None
+        if exact_length is not None:
+            self.minimum = self.maximum = int(exact_length)
+        else:
+            self.minimum = int(range_minimum) if range_minimum else None
+            self.maximum = int(range_maximum) if range_maximum else None
 
 
 _constraint_list: List[Type[Constraint]] = [
