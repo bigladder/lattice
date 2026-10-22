@@ -1,0 +1,535 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Fan Assembly",
+    "description": "Schema for ASHRAE 205 annex RS0003: Fan Assembly",
+    "definitions": {
+        "InstallationSpeedControlType": {
+            "type": "string",
+            "enum": [
+                "FIXED",
+                "VARIABLE"
+            ],
+            "enum_text": [
+                "Fixed",
+                "Variable"
+            ],
+            "descriptions": [
+                "Fan speed does not change after installation",
+                "Fan speed can change depending on operation after installation"
+            ],
+            "notes": [
+                "***Informative note:*** Examples include dip-switch/tap selection and pulley adjustments",
+                null
+            ]
+        },
+        "ImpellerType": {
+            "type": "string",
+            "enum": [
+                "CENTRIFUGAL_FORWARD_CURVED",
+                "CENTRIFUGAL_BACKWARD_CURVED",
+                "CENTRIFUGAL_AIR_FOIL",
+                "AXIAL",
+                "PROPELLER"
+            ],
+            "enum_text": [
+                "Centrifugal Forward Curved",
+                "Centrifugal Backward Curved",
+                "Centrifugal Air Foil",
+                "Axial",
+                "Propeller"
+            ],
+            "descriptions": [
+                "Forward curved fan impeller",
+                "Backward curved or inclined fan impeller",
+                "Air foil impeller with shaped blades",
+                "Fan impeller with shaft parallel to air flow stream for high static applications",
+                "Fan impeller with shaft parallel to air flow stream for low static pressure applications"
+            ]
+        },
+        "ComponentType": {
+            "type": "string",
+            "enum": [
+                "COIL",
+                "FURNACE",
+                "FILTER",
+                "HEAT_EXCHANGER",
+                "ELECTRIC_RESISTANCE_ELEMENT",
+                "DIRECT_EVAPORATIVE",
+                "OTHER"
+            ],
+            "enum_text": [
+                "Coil",
+                "Furnace",
+                "Filter",
+                "Heat Exchanger",
+                "Electric Resistance Element",
+                "Direct Evaporative",
+                "Other"
+            ],
+            "descriptions": [
+                "Finned coil in cross-flow arrangement",
+                "Fuel-fired heating section",
+                "Air filters",
+                "Heat exchanger",
+                "Electric resistance heater elements",
+                "Wetted evaporative cooling media",
+                "Additional components in air stream"
+            ],
+            "notes": [
+                null,
+                null,
+                null,
+                "e.g., air-to-air heat exchanger",
+                null,
+                null,
+                null
+            ]
+        },
+        "RS0003": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata data group",
+                    "$ref": "core.schema.json#/definitions/Metadata"
+                },
+                "description": {
+                    "description": "Data group describing product and rating information",
+                    "$ref": "RS0003.schema.json#/definitions/Description"
+                },
+                "performance": {
+                    "description": "Data group containing performance information",
+                    "$ref": "RS0003.schema.json#/definitions/Performance"
+                }
+            },
+            "required": [
+                "metadata",
+                "performance"
+            ],
+            "additionalProperties": false
+        },
+        "Description": {
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "$ref": "RS0003.schema.json#/definitions/ProductInformation"
+                }
+            },
+            "additionalProperties": false
+        },
+        "ProductInformation": {
+            "type": "object",
+            "properties": {
+                "manufacturer": {
+                    "description": "Assembly/unit manufacturer name",
+                    "type": "string"
+                },
+                "model_number": {
+                    "description": "Assembly/unit model number",
+                    "type": "string",
+                    "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                },
+                "impeller_type": {
+                    "description": "Type of impeller in fan assembly",
+                    "$ref": "RS0003.schema.json#/definitions/ImpellerType"
+                },
+                "number_of_impellers": {
+                    "description": "Number of impellers included in the fan assembly",
+                    "type": "integer"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Performance": {
+            "type": "object",
+            "properties": {
+                "nominal_standard_air_volumetric_flow_rate": {
+                    "description": "Nominal or rated air flow rate at standard air conditions",
+                    "type": "number",
+                    "units": "m3/s",
+                    "notes": "Used for calculating component wet pressure difference",
+                    "scalable": true
+                },
+                "is_enclosed": {
+                    "description": "Fan assembly is enclosed",
+                    "type": "boolean",
+                    "notes": "True if the performance data reflects the static pressure difference across the enclosure"
+                },
+                "assembly_components": {
+                    "description": "An array of components included in the fan assembly air stream, not including any fans",
+                    "type": "array",
+                    "items": {
+                        "$ref": "RS0003.schema.json#/definitions/AssemblyComponent"
+                    }
+                },
+                "heat_loss_fraction": {
+                    "description": "Fraction of efficiency losses transferred into the air stream",
+                    "type": "number",
+                    "units": "-",
+                    "notes": "Used to determine amount of heat from the motor added to the air stream"
+                },
+                "maximum_impeller_rotational_speed": {
+                    "description": "Maximum impeller rotational speed",
+                    "type": "number",
+                    "units": "rev/s"
+                },
+                "minimum_impeller_rotational_speed": {
+                    "description": "Minimum impeller rotational speed",
+                    "type": "number",
+                    "units": "rev/s",
+                    "notes": "If no minimum, use zero"
+                },
+                "stability_curve": {
+                    "description": "The system curve defining the stability area for system selection",
+                    "$ref": "RS0003.schema.json#/definitions/SystemCurve",
+                    "notes": "***Informative note:*** Application software may use this curve to indicate to application software users when a selected fan is operating in an unstable region where surging or stalling is likely to occur"
+                },
+                "operation_speed_control_type": {
+                    "description": "Type of performance map",
+                    "$ref": "ASHRAE205.schema.json#/definitions/SpeedControlType",
+                    "notes": [
+                        "Determines which performance map data group is used for `performance_map`",
+                        "If `operation_speed_control_type` is `DISCRETE` performance map data is provided at individual impeller speeds",
+                        "If `operation_speed_control_type` is `CONTINUOUS` performance map data is provided over a range of impeller speeds"
+                    ]
+                },
+                "installation_speed_control_type": {
+                    "description": "Type of fan impeller speed control",
+                    "$ref": "RS0003.schema.json#/definitions/InstallationSpeedControlType",
+                    "notes": [
+                        "If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single discrete speed",
+                        "If `operation_speed_control_type` is `DISCRETE` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be restricted to a set of two or more discrete speeds",
+                        "If `operation_speed_control_type` is `CONTINUOUS` and `installation_speed_control_type` is `FIXED`, impeller speed shall be restricted to a single speed (which may be interpolated from `impeller_speed` values provided in the performance map)",
+                        "If `operation_speed_control_type` is `CONTINUOUS` and `installation_speed_control_type` is `VARIABLE`, impeller speed shall be unrestricted within operational limits"
+                    ]
+                },
+                "motor_representation": {
+                    "description": "The corresponding Standard 205 motor representation",
+                    "$ref": "RS0005.schema.json#/definitions/RS0005",
+                    "notes": "If the fan assembly is packaged with a motor, a motor representation shall be provided"
+                },
+                "mechanical_drive_representation": {
+                    "description": "The corresponding Standard 205 mechanical drive representation",
+                    "$ref": "RS0007.schema.json#/definitions/RS0007",
+                    "notes": "If the fan assembly is packaged with a mechanical drive, a mechanical drive representation shall be provided"
+                },
+                "scaling": {
+                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                    "$ref": "ASHRAE205.schema.json#/definitions/Scaling",
+                    "notes": "If not present, scaling of the performance data is not allowed"
+                },
+                "performance_map": {
+                    "description": "Data group describing fan assembly performance when operating",
+                    "allOf": [
+                        {
+                            "if": {
+                                "properties": {
+                                    "operation_speed_control_type": {
+                                        "const": "CONTINUOUS"
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "performance_map": {
+                                        "$ref": "RS0003.schema.json#/definitions/PerformanceMapContinuous"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "if": {
+                                "properties": {
+                                    "operation_speed_control_type": {
+                                        "const": "DISCRETE"
+                                    }
+                                }
+                            },
+                            "then": {
+                                "properties": {
+                                    "performance_map": {
+                                        "$ref": "RS0003.schema.json#/definitions/PerformanceMapDiscrete"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {
+                            "is_enclosed": {
+                                "const": true
+                            }
+                        }
+                    },
+                    "then": {
+                        "required": [
+                            "assembly_components"
+                        ]
+                    }
+                }
+            ],
+            "required": [
+                "nominal_standard_air_volumetric_flow_rate",
+                "is_enclosed",
+                "heat_loss_fraction",
+                "maximum_impeller_rotational_speed",
+                "minimum_impeller_rotational_speed",
+                "operation_speed_control_type",
+                "installation_speed_control_type",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        },
+        "AssemblyComponent": {
+            "type": "object",
+            "properties": {
+                "component_type": {
+                    "description": "Type of component",
+                    "$ref": "RS0003.schema.json#/definitions/ComponentType"
+                },
+                "component_description": {
+                    "description": "Informative description of the component",
+                    "type": "string"
+                },
+                "component_id": {
+                    "description": "Identifier of the corresponding Standard 205 representation",
+                    "$ref": "core.schema.json#/definitions/UUID",
+                    "notes": "Optionally provided if the component has a Standard 205 representation"
+                },
+                "wet_pressure_difference": {
+                    "description": "Additional static pressure difference if the component is wet (e.g., because of condensate collection or wetting evaporative media)",
+                    "type": "number",
+                    "units": "Pa",
+                    "notes": [
+                        "Corresponds to additional pressure difference at `nominal_standard_air_volumetric_flow_rate`",
+                        "If unknown, a value of 75 Pa shall be used"
+                    ],
+                    "scalable": true
+                }
+            },
+            "required": [
+                "component_type",
+                "wet_pressure_difference"
+            ],
+            "additionalProperties": false
+        },
+        "SystemCurve": {
+            "type": "object",
+            "properties": {
+                "standard_air_volumetric_flow_rate": {
+                    "description": "Volumetric air flow rate through an air distribution system at standard air conditions",
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "m3/s",
+                    "scalable": true
+                },
+                "static_pressure_difference": {
+                    "description": "Static pressure difference of an air distribution system",
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "Pa",
+                    "scalable": true
+                }
+            },
+            "required": [
+                "standard_air_volumetric_flow_rate",
+                "static_pressure_difference"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMapContinuous": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for continuous fan performance",
+                    "$ref": "RS0003.schema.json#/definitions/GridVariablesContinuous"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for continuous fan performance",
+                    "$ref": "RS0003.schema.json#/definitions/LookupVariablesContinuous"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariablesContinuous": {
+            "type": "object",
+            "properties": {
+                "standard_air_volumetric_flow_rate": {
+                    "description": "Volumetric air flow rate through fan assembly at standard air conditions",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "m3/s",
+                    "scalable": true
+                },
+                "static_pressure_difference": {
+                    "description": "External static pressure across fan assembly at dry coil conditions",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "Pa",
+                    "notes": "Any static pressure deduction (or addition) for wet coil is specified by `wet_pressure_difference` in 'assembly_components' data group"
+                }
+            },
+            "required": [
+                "standard_air_volumetric_flow_rate",
+                "static_pressure_difference"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariablesContinuous": {
+            "type": "object",
+            "properties": {
+                "impeller_rotational_speed": {
+                    "description": "Rotational speed of fan impeller",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "rev/s"
+                },
+                "shaft_power": {
+                    "description": "Mechanical shaft power input to fan assembly",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "W",
+                    "notes": "Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller",
+                    "scalable": true
+                },
+                "operation_state": {
+                    "description": "The operation state at the operating conditions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "ASHRAE205.schema.json#/definitions/OperationState"
+                    }
+                }
+            },
+            "required": [
+                "impeller_rotational_speed",
+                "shaft_power",
+                "operation_state"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMapDiscrete": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for discrete fan performance",
+                    "$ref": "RS0003.schema.json#/definitions/GridVariablesDiscrete"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for discrete fan performance",
+                    "$ref": "RS0003.schema.json#/definitions/LookupVariablesDiscrete"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariablesDiscrete": {
+            "type": "object",
+            "properties": {
+                "speed_number": {
+                    "description": "Number indicating discrete speed of fan impeller in rank order (with 1 being the lowest speed)",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "integer"
+                    },
+                    "notes": "Data shall be provided for all allowable discrete speeds or settings"
+                },
+                "static_pressure_difference": {
+                    "description": "External static pressure across fan assembly at dry coil conditions",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "Pa",
+                    "notes": "Any static pressure deduction (or addition) for wet coil is specified by `wet_pressure_difference` in 'assembly_components' data group"
+                }
+            },
+            "required": [
+                "speed_number",
+                "static_pressure_difference"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariablesDiscrete": {
+            "type": "object",
+            "properties": {
+                "standard_air_volumetric_flow_rate": {
+                    "description": "Volumetric air flow rate through fan assembly at standard air conditions",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "m3/s",
+                    "scalable": true
+                },
+                "shaft_power": {
+                    "description": "Mechanical shaft power input to fan assembly",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "W",
+                    "notes": "Does not include the mechanical efficiency of any mechanical drive used to modify rotational speed between the motor and impeller",
+                    "scalable": true
+                },
+                "impeller_rotational_speed": {
+                    "description": "Rotational speed of fan impeller",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "rev/s"
+                },
+                "operation_state": {
+                    "description": "The operation state at the operating conditions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "ASHRAE205.schema.json#/definitions/OperationState"
+                    }
+                }
+            },
+            "required": [
+                "standard_air_volumetric_flow_rate",
+                "shaft_power",
+                "impeller_rotational_speed",
+                "operation_state"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "2.0.0",
+    "$ref": "RS0003.schema.json#/definitions/RS0003"
+}

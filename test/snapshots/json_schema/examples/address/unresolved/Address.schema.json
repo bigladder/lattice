@@ -1,0 +1,79 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Address",
+    "description": "Schema for describing addresses",
+    "definitions": {
+        "SchemaType": {
+            "type": "string",
+            "enum": [
+                "USPS",
+                "USPS4"
+            ],
+            "descriptions": [
+                "Old style USPS address",
+                "New address with +4 ZIP"
+            ]
+        },
+        "Root": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata",
+                    "$ref": "core.schema.json#/definitions/Metadata"
+                },
+                "address": {
+                    "description": "Actual Address Data",
+                    "$ref": "Address.schema.json#/definitions/Address"
+                }
+            },
+            "required": [
+                "metadata",
+                "address"
+            ],
+            "additionalProperties": false
+        },
+        "Address": {
+            "type": "object",
+            "properties": {
+                "street_address": {
+                    "description": "Street Address",
+                    "type": "string"
+                },
+                "post_office_box": {
+                    "description": "Post office box",
+                    "type": "string"
+                },
+                "extended_address": {
+                    "description": "Extended Address",
+                    "type": "string"
+                },
+                "locality": {
+                    "description": "Locality",
+                    "type": "string",
+                    "notes": "E.g., city or town"
+                },
+                "postal_code": {
+                    "description": "Postal Code",
+                    "type": "string"
+                },
+                "region": {
+                    "description": "Region",
+                    "type": "string",
+                    "notes": "E.g., state or province"
+                },
+                "country": {
+                    "description": "Country",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "locality",
+                "region",
+                "country"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "0.1.0",
+    "$ref": "Address.schema.json#/definitions/Root"
+}

@@ -1,0 +1,1802 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Motor",
+    "description": "Schema for ASHRAE 205 annex RS0005: Motor",
+    "definitions": {
+        "RS0005": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata data group",
+                    "type": "object",
+                    "properties": {
+                        "schema_author": {
+                            "description": "Name of the organization that published the schema",
+                            "type": "string",
+                            "notes": "Identifies the organization that defined the schema"
+                        },
+                        "schema_name": {
+                            "description": "Schema name or identifier",
+                            "type": "string",
+                            "notes": "Identifies the schema used to define the data content"
+                        },
+                        "schema_version": {
+                            "description": "The version of the schema the data complies with",
+                            "type": "string",
+                            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                        },
+                        "schema_url": {
+                            "description": "The Uniform Resource Locator (url) for the schema definition and/or documentation",
+                            "type": "string"
+                        },
+                        "author": {
+                            "description": "Name of the entity creating the serialization",
+                            "type": "string",
+                            "notes": "Identifies the organization that created the file"
+                        },
+                        "id": {
+                            "description": "Unique data set identifier",
+                            "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                            "type": "string",
+                            "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                        },
+                        "description": {
+                            "description": "Description of data content (suitable for display)",
+                            "type": "string"
+                        },
+                        "time_of_creation": {
+                            "description": "Timestamp indicating when the serialization was created",
+                            "notes": "Updated anytime any data content is modified",
+                            "type": "string",
+                            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                        },
+                        "version": {
+                            "description": "Integer version identifier for the data",
+                            "notes": [
+                                "Used by data publisher to track revisions of the data",
+                                "Shall be incremented for each data revision"
+                            ],
+                            "type": "string",
+                            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                        },
+                        "source": {
+                            "description": "Source(s) of the data",
+                            "type": "string",
+                            "notes": [
+                                "Used by data publisher to document methods (e.g., software and version) used to generate data",
+                                "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
+                            ]
+                        },
+                        "disclaimer": {
+                            "description": "Characterization of accuracy, limitations, and applicability of this data",
+                            "type": "string"
+                        },
+                        "copyright": {
+                            "description": "Copyright notice for the data",
+                            "type": "string",
+                            "notes": "**Informative note:** e.g., 'Copyright \u00a9 2024 Acme Corporation. All rights reserved.'"
+                        },
+                        "license": {
+                            "description": "License governing use, reproduction, and distribution of the data",
+                            "type": "string",
+                            "notes": "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+                        },
+                        "expiration_date": {
+                            "description": "Date after which the data is no longer considered valid by the data publisher",
+                            "type": "string",
+                            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                        },
+                        "notes": {
+                            "description": "Additional Information",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "schema_author",
+                        "schema_name",
+                        "schema_version",
+                        "author",
+                        "description",
+                        "time_of_creation"
+                    ],
+                    "additionalProperties": false
+                },
+                "description": {
+                    "description": "Data group describing product and rating information",
+                    "type": "object",
+                    "properties": {
+                        "product_information": {
+                            "description": "Data group describing product information",
+                            "type": "object",
+                            "properties": {
+                                "manufacturer": {
+                                    "description": "Manufacturer name",
+                                    "type": "string"
+                                },
+                                "model_number": {
+                                    "description": "Model number",
+                                    "type": "string",
+                                    "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                                },
+                                "nominal_voltage": {
+                                    "description": "Nominal voltage",
+                                    "type": "number",
+                                    "units": "V"
+                                },
+                                "nominal_frequency": {
+                                    "description": "Nominal frequency",
+                                    "type": "number",
+                                    "units": "Hz"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "performance": {
+                    "description": "Data group containing performance information",
+                    "type": "object",
+                    "properties": {
+                        "maximum_power": {
+                            "description": "Maximum operational input power to the motor",
+                            "type": "number",
+                            "units": "W",
+                            "notes": "Operational limit set to prevent overheating or overcurrent, not the rated name plate power",
+                            "scalable": true
+                        },
+                        "standby_power": {
+                            "description": "Power draw when motor is not operating",
+                            "type": "number",
+                            "units": "W",
+                            "scalable": true
+                        },
+                        "number_of_poles": {
+                            "description": "Number of poles",
+                            "type": "integer"
+                        },
+                        "drive_representation": {
+                            "description": "The corresponding Standard 205 drive representation",
+                            "type": "object",
+                            "properties": {
+                                "metadata": {
+                                    "description": "Metadata data group",
+                                    "type": "object",
+                                    "properties": {
+                                        "schema_author": {
+                                            "description": "Name of the organization that published the schema",
+                                            "type": "string",
+                                            "notes": "Identifies the organization that defined the schema"
+                                        },
+                                        "schema_name": {
+                                            "description": "Schema name or identifier",
+                                            "type": "string",
+                                            "notes": "Identifies the schema used to define the data content"
+                                        },
+                                        "schema_version": {
+                                            "description": "The version of the schema the data complies with",
+                                            "type": "string",
+                                            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                                        },
+                                        "schema_url": {
+                                            "description": "The Uniform Resource Locator (url) for the schema definition and/or documentation",
+                                            "type": "string"
+                                        },
+                                        "author": {
+                                            "description": "Name of the entity creating the serialization",
+                                            "type": "string",
+                                            "notes": "Identifies the organization that created the file"
+                                        },
+                                        "id": {
+                                            "description": "Unique data set identifier",
+                                            "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                                            "type": "string",
+                                            "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                                        },
+                                        "description": {
+                                            "description": "Description of data content (suitable for display)",
+                                            "type": "string"
+                                        },
+                                        "time_of_creation": {
+                                            "description": "Timestamp indicating when the serialization was created",
+                                            "notes": "Updated anytime any data content is modified",
+                                            "type": "string",
+                                            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                                        },
+                                        "version": {
+                                            "description": "Integer version identifier for the data",
+                                            "notes": [
+                                                "Used by data publisher to track revisions of the data",
+                                                "Shall be incremented for each data revision"
+                                            ],
+                                            "type": "string",
+                                            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                                        },
+                                        "source": {
+                                            "description": "Source(s) of the data",
+                                            "type": "string",
+                                            "notes": [
+                                                "Used by data publisher to document methods (e.g., software and version) used to generate data",
+                                                "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
+                                            ]
+                                        },
+                                        "disclaimer": {
+                                            "description": "Characterization of accuracy, limitations, and applicability of this data",
+                                            "type": "string"
+                                        },
+                                        "copyright": {
+                                            "description": "Copyright notice for the data",
+                                            "type": "string",
+                                            "notes": "**Informative note:** e.g., 'Copyright \u00a9 2024 Acme Corporation. All rights reserved.'"
+                                        },
+                                        "license": {
+                                            "description": "License governing use, reproduction, and distribution of the data",
+                                            "type": "string",
+                                            "notes": "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+                                        },
+                                        "expiration_date": {
+                                            "description": "Date after which the data is no longer considered valid by the data publisher",
+                                            "type": "string",
+                                            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                                        },
+                                        "notes": {
+                                            "description": "Additional Information",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "schema_author",
+                                        "schema_name",
+                                        "schema_version",
+                                        "author",
+                                        "description",
+                                        "time_of_creation"
+                                    ],
+                                    "additionalProperties": false
+                                },
+                                "description": {
+                                    "description": "Data group describing product and rating information",
+                                    "type": "object",
+                                    "properties": {
+                                        "product_information": {
+                                            "description": "Data group describing product information",
+                                            "type": "object",
+                                            "properties": {
+                                                "manufacturer": {
+                                                    "description": "Manufacturer name",
+                                                    "type": "string"
+                                                },
+                                                "model_number": {
+                                                    "description": "Model number",
+                                                    "type": "string",
+                                                    "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                                                }
+                                            },
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "performance": {
+                                    "description": "Data group containing performance information",
+                                    "type": "object",
+                                    "properties": {
+                                        "maximum_power": {
+                                            "description": "Maximum power draw of the drive",
+                                            "type": "number",
+                                            "units": "W",
+                                            "scalable": true
+                                        },
+                                        "standby_power": {
+                                            "description": "Power draw when the motor is not operating",
+                                            "type": "number",
+                                            "units": "W",
+                                            "scalable": true
+                                        },
+                                        "cooling_method": {
+                                            "description": "Method used to cool the drive",
+                                            "type": "string",
+                                            "enum": [
+                                                "PASSIVE_COOLED",
+                                                "ACTIVE_AIR_COOLED",
+                                                "ACTIVE_LIQUID_COOLED"
+                                            ],
+                                            "enum_text": [
+                                                "Passive Cooled",
+                                                "Active Air Cooled",
+                                                "Active Liquid Cooled"
+                                            ],
+                                            "descriptions": [
+                                                "Drive is cooled using natural air convection within the surrounding environment",
+                                                "Drive is cooled using forced air convection within the surrounding environment",
+                                                "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+                                            ],
+                                            "notes": [
+                                                "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                                                [
+                                                    "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                                                    "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                                                ],
+                                                [
+                                                    "Any liquid pumping power shall be modeled external to the drive by the application software",
+                                                    "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                                                ]
+                                            ]
+                                        },
+                                        "scaling": {
+                                            "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                                            "notes": "If not present, scaling of the performance data is not allowed",
+                                            "type": "object",
+                                            "properties": {
+                                                "minimum": {
+                                                    "description": "Minimum scaling factor",
+                                                    "type": "number",
+                                                    "units": "-",
+                                                    "notes": "If not specified, may be scaled down to any value greater than zero"
+                                                },
+                                                "maximum": {
+                                                    "description": "Maximum scaling factor",
+                                                    "type": "number",
+                                                    "units": "-",
+                                                    "notes": "If not specified, unlimited"
+                                                }
+                                            },
+                                            "additionalProperties": false
+                                        },
+                                        "performance_map": {
+                                            "description": "Data group describing drive performance when operating",
+                                            "type": "object",
+                                            "properties": {
+                                                "grid_variables": {
+                                                    "description": "Data group describing grid variables for drive performance",
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "output_power": {
+                                                            "description": "Power delivered to the motor",
+                                                            "type": "array",
+                                                            "minItems": 1,
+                                                            "items": {
+                                                                "type": "number"
+                                                            },
+                                                            "units": "W",
+                                                            "scalable": true
+                                                        },
+                                                        "output_frequency": {
+                                                            "description": "Frequency delivered to the motor",
+                                                            "type": "array",
+                                                            "minItems": 1,
+                                                            "items": {
+                                                                "type": "number"
+                                                            },
+                                                            "units": "Hz"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "output_power",
+                                                        "output_frequency"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "lookup_variables": {
+                                                    "description": "Data group describing lookup variables for drive performance",
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "efficiency": {
+                                                            "description": "Efficiency of drive",
+                                                            "type": "array",
+                                                            "minItems": 1,
+                                                            "items": {
+                                                                "type": "number"
+                                                            },
+                                                            "units": "-",
+                                                            "notes": [
+                                                                "Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)",
+                                                                "Input power shall include any power required to provide active air cooling for the drive"
+                                                            ]
+                                                        },
+                                                        "operation_state": {
+                                                            "description": "The operation state at the operating conditions",
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "NORMAL",
+                                                                    "STANDBY"
+                                                                ],
+                                                                "enum_text": [
+                                                                    "Normal",
+                                                                    "Standby"
+                                                                ],
+                                                                "descriptions": [
+                                                                    "Indicates that the equipment is in normal operating state",
+                                                                    "Indicates that the equipment is in standby operating state"
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "efficiency",
+                                                        "operation_state"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "required": [
+                                                "grid_variables",
+                                                "lookup_variables"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "maximum_power",
+                                        "standby_power",
+                                        "cooling_method",
+                                        "performance_map"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "metadata",
+                                "performance"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "scaling": {
+                            "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                            "notes": "If not present, scaling of the performance data is not allowed",
+                            "type": "object",
+                            "properties": {
+                                "minimum": {
+                                    "description": "Minimum scaling factor",
+                                    "type": "number",
+                                    "units": "-",
+                                    "notes": "If not specified, may be scaled down to any value greater than zero"
+                                },
+                                "maximum": {
+                                    "description": "Maximum scaling factor",
+                                    "type": "number",
+                                    "units": "-",
+                                    "notes": "If not specified, unlimited"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "performance_map": {
+                            "description": "Data group describing motor performance when operating",
+                            "notes": [
+                                "If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power",
+                                "***Informative note:*** This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "grid_variables": {
+                                    "description": "Data group describing grid variables for motor performance",
+                                    "type": "object",
+                                    "properties": {
+                                        "shaft_power": {
+                                            "description": "Delivered rotational shaft power",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "number"
+                                            },
+                                            "units": "W",
+                                            "scalable": true
+                                        },
+                                        "shaft_rotational_speed": {
+                                            "description": "Rotational speed of shaft",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "number"
+                                            },
+                                            "units": "rev/s"
+                                        }
+                                    },
+                                    "required": [
+                                        "shaft_power",
+                                        "shaft_rotational_speed"
+                                    ],
+                                    "additionalProperties": false
+                                },
+                                "lookup_variables": {
+                                    "description": "Data group describing lookup variables for motor performance",
+                                    "type": "object",
+                                    "properties": {
+                                        "efficiency": {
+                                            "description": "Efficiency of motor",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "number"
+                                            },
+                                            "units": "-",
+                                            "notes": "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
+                                        },
+                                        "power_factor": {
+                                            "description": "Power factor of the motor",
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {
+                                                "type": "number"
+                                            },
+                                            "units": "-"
+                                        },
+                                        "operation_state": {
+                                            "description": "The operation state at the operating conditions",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "NORMAL",
+                                                    "STANDBY"
+                                                ],
+                                                "enum_text": [
+                                                    "Normal",
+                                                    "Standby"
+                                                ],
+                                                "descriptions": [
+                                                    "Indicates that the equipment is in normal operating state",
+                                                    "Indicates that the equipment is in standby operating state"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "efficiency",
+                                        "power_factor",
+                                        "operation_state"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "grid_variables",
+                                "lookup_variables"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "maximum_power",
+                        "standby_power",
+                        "number_of_poles"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "metadata",
+                "performance"
+            ],
+            "additionalProperties": false
+        },
+        "Description": {
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "type": "object",
+                    "properties": {
+                        "manufacturer": {
+                            "description": "Manufacturer name",
+                            "type": "string"
+                        },
+                        "model_number": {
+                            "description": "Model number",
+                            "type": "string",
+                            "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                        },
+                        "nominal_voltage": {
+                            "description": "Nominal voltage",
+                            "type": "number",
+                            "units": "V"
+                        },
+                        "nominal_frequency": {
+                            "description": "Nominal frequency",
+                            "type": "number",
+                            "units": "Hz"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "ProductInformation": {
+            "type": "object",
+            "properties": {
+                "manufacturer": {
+                    "description": "Manufacturer name",
+                    "type": "string"
+                },
+                "model_number": {
+                    "description": "Model number",
+                    "type": "string",
+                    "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                },
+                "nominal_voltage": {
+                    "description": "Nominal voltage",
+                    "type": "number",
+                    "units": "V"
+                },
+                "nominal_frequency": {
+                    "description": "Nominal frequency",
+                    "type": "number",
+                    "units": "Hz"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Performance": {
+            "type": "object",
+            "properties": {
+                "maximum_power": {
+                    "description": "Maximum operational input power to the motor",
+                    "type": "number",
+                    "units": "W",
+                    "notes": "Operational limit set to prevent overheating or overcurrent, not the rated name plate power",
+                    "scalable": true
+                },
+                "standby_power": {
+                    "description": "Power draw when motor is not operating",
+                    "type": "number",
+                    "units": "W",
+                    "scalable": true
+                },
+                "number_of_poles": {
+                    "description": "Number of poles",
+                    "type": "integer"
+                },
+                "drive_representation": {
+                    "description": "The corresponding Standard 205 drive representation",
+                    "type": "object",
+                    "properties": {
+                        "metadata": {
+                            "description": "Metadata data group",
+                            "type": "object",
+                            "properties": {
+                                "schema_author": {
+                                    "description": "Name of the organization that published the schema",
+                                    "type": "string",
+                                    "notes": "Identifies the organization that defined the schema"
+                                },
+                                "schema_name": {
+                                    "description": "Schema name or identifier",
+                                    "type": "string",
+                                    "notes": "Identifies the schema used to define the data content"
+                                },
+                                "schema_version": {
+                                    "description": "The version of the schema the data complies with",
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                                },
+                                "schema_url": {
+                                    "description": "The Uniform Resource Locator (url) for the schema definition and/or documentation",
+                                    "type": "string"
+                                },
+                                "author": {
+                                    "description": "Name of the entity creating the serialization",
+                                    "type": "string",
+                                    "notes": "Identifies the organization that created the file"
+                                },
+                                "id": {
+                                    "description": "Unique data set identifier",
+                                    "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                                    "type": "string",
+                                    "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                                },
+                                "description": {
+                                    "description": "Description of data content (suitable for display)",
+                                    "type": "string"
+                                },
+                                "time_of_creation": {
+                                    "description": "Timestamp indicating when the serialization was created",
+                                    "notes": "Updated anytime any data content is modified",
+                                    "type": "string",
+                                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                                },
+                                "version": {
+                                    "description": "Integer version identifier for the data",
+                                    "notes": [
+                                        "Used by data publisher to track revisions of the data",
+                                        "Shall be incremented for each data revision"
+                                    ],
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                                },
+                                "source": {
+                                    "description": "Source(s) of the data",
+                                    "type": "string",
+                                    "notes": [
+                                        "Used by data publisher to document methods (e.g., software and version) used to generate data",
+                                        "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
+                                    ]
+                                },
+                                "disclaimer": {
+                                    "description": "Characterization of accuracy, limitations, and applicability of this data",
+                                    "type": "string"
+                                },
+                                "copyright": {
+                                    "description": "Copyright notice for the data",
+                                    "type": "string",
+                                    "notes": "**Informative note:** e.g., 'Copyright \u00a9 2024 Acme Corporation. All rights reserved.'"
+                                },
+                                "license": {
+                                    "description": "License governing use, reproduction, and distribution of the data",
+                                    "type": "string",
+                                    "notes": "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+                                },
+                                "expiration_date": {
+                                    "description": "Date after which the data is no longer considered valid by the data publisher",
+                                    "type": "string",
+                                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                                },
+                                "notes": {
+                                    "description": "Additional Information",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "schema_author",
+                                "schema_name",
+                                "schema_version",
+                                "author",
+                                "description",
+                                "time_of_creation"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "description": {
+                            "description": "Data group describing product and rating information",
+                            "type": "object",
+                            "properties": {
+                                "product_information": {
+                                    "description": "Data group describing product information",
+                                    "type": "object",
+                                    "properties": {
+                                        "manufacturer": {
+                                            "description": "Manufacturer name",
+                                            "type": "string"
+                                        },
+                                        "model_number": {
+                                            "description": "Model number",
+                                            "type": "string",
+                                            "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "performance": {
+                            "description": "Data group containing performance information",
+                            "type": "object",
+                            "properties": {
+                                "maximum_power": {
+                                    "description": "Maximum power draw of the drive",
+                                    "type": "number",
+                                    "units": "W",
+                                    "scalable": true
+                                },
+                                "standby_power": {
+                                    "description": "Power draw when the motor is not operating",
+                                    "type": "number",
+                                    "units": "W",
+                                    "scalable": true
+                                },
+                                "cooling_method": {
+                                    "description": "Method used to cool the drive",
+                                    "type": "string",
+                                    "enum": [
+                                        "PASSIVE_COOLED",
+                                        "ACTIVE_AIR_COOLED",
+                                        "ACTIVE_LIQUID_COOLED"
+                                    ],
+                                    "enum_text": [
+                                        "Passive Cooled",
+                                        "Active Air Cooled",
+                                        "Active Liquid Cooled"
+                                    ],
+                                    "descriptions": [
+                                        "Drive is cooled using natural air convection within the surrounding environment",
+                                        "Drive is cooled using forced air convection within the surrounding environment",
+                                        "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+                                    ],
+                                    "notes": [
+                                        "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                                        [
+                                            "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                                            "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                                        ],
+                                        [
+                                            "Any liquid pumping power shall be modeled external to the drive by the application software",
+                                            "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                                        ]
+                                    ]
+                                },
+                                "scaling": {
+                                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                                    "notes": "If not present, scaling of the performance data is not allowed",
+                                    "type": "object",
+                                    "properties": {
+                                        "minimum": {
+                                            "description": "Minimum scaling factor",
+                                            "type": "number",
+                                            "units": "-",
+                                            "notes": "If not specified, may be scaled down to any value greater than zero"
+                                        },
+                                        "maximum": {
+                                            "description": "Maximum scaling factor",
+                                            "type": "number",
+                                            "units": "-",
+                                            "notes": "If not specified, unlimited"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "performance_map": {
+                                    "description": "Data group describing drive performance when operating",
+                                    "type": "object",
+                                    "properties": {
+                                        "grid_variables": {
+                                            "description": "Data group describing grid variables for drive performance",
+                                            "type": "object",
+                                            "properties": {
+                                                "output_power": {
+                                                    "description": "Power delivered to the motor",
+                                                    "type": "array",
+                                                    "minItems": 1,
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "units": "W",
+                                                    "scalable": true
+                                                },
+                                                "output_frequency": {
+                                                    "description": "Frequency delivered to the motor",
+                                                    "type": "array",
+                                                    "minItems": 1,
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "units": "Hz"
+                                                }
+                                            },
+                                            "required": [
+                                                "output_power",
+                                                "output_frequency"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "lookup_variables": {
+                                            "description": "Data group describing lookup variables for drive performance",
+                                            "type": "object",
+                                            "properties": {
+                                                "efficiency": {
+                                                    "description": "Efficiency of drive",
+                                                    "type": "array",
+                                                    "minItems": 1,
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "units": "-",
+                                                    "notes": [
+                                                        "Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)",
+                                                        "Input power shall include any power required to provide active air cooling for the drive"
+                                                    ]
+                                                },
+                                                "operation_state": {
+                                                    "description": "The operation state at the operating conditions",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "NORMAL",
+                                                            "STANDBY"
+                                                        ],
+                                                        "enum_text": [
+                                                            "Normal",
+                                                            "Standby"
+                                                        ],
+                                                        "descriptions": [
+                                                            "Indicates that the equipment is in normal operating state",
+                                                            "Indicates that the equipment is in standby operating state"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "efficiency",
+                                                "operation_state"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "grid_variables",
+                                        "lookup_variables"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "maximum_power",
+                                "standby_power",
+                                "cooling_method",
+                                "performance_map"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "metadata",
+                        "performance"
+                    ],
+                    "additionalProperties": false
+                },
+                "scaling": {
+                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                    "notes": "If not present, scaling of the performance data is not allowed",
+                    "type": "object",
+                    "properties": {
+                        "minimum": {
+                            "description": "Minimum scaling factor",
+                            "type": "number",
+                            "units": "-",
+                            "notes": "If not specified, may be scaled down to any value greater than zero"
+                        },
+                        "maximum": {
+                            "description": "Maximum scaling factor",
+                            "type": "number",
+                            "units": "-",
+                            "notes": "If not specified, unlimited"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "performance_map": {
+                    "description": "Data group describing motor performance when operating",
+                    "notes": [
+                        "If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power",
+                        "***Informative note:*** This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data"
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "grid_variables": {
+                            "description": "Data group describing grid variables for motor performance",
+                            "type": "object",
+                            "properties": {
+                                "shaft_power": {
+                                    "description": "Delivered rotational shaft power",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "W",
+                                    "scalable": true
+                                },
+                                "shaft_rotational_speed": {
+                                    "description": "Rotational speed of shaft",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "rev/s"
+                                }
+                            },
+                            "required": [
+                                "shaft_power",
+                                "shaft_rotational_speed"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "lookup_variables": {
+                            "description": "Data group describing lookup variables for motor performance",
+                            "type": "object",
+                            "properties": {
+                                "efficiency": {
+                                    "description": "Efficiency of motor",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "-",
+                                    "notes": "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
+                                },
+                                "power_factor": {
+                                    "description": "Power factor of the motor",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "-"
+                                },
+                                "operation_state": {
+                                    "description": "The operation state at the operating conditions",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "NORMAL",
+                                            "STANDBY"
+                                        ],
+                                        "enum_text": [
+                                            "Normal",
+                                            "Standby"
+                                        ],
+                                        "descriptions": [
+                                            "Indicates that the equipment is in normal operating state",
+                                            "Indicates that the equipment is in standby operating state"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "efficiency",
+                                "power_factor",
+                                "operation_state"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "grid_variables",
+                        "lookup_variables"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "maximum_power",
+                "standby_power",
+                "number_of_poles"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMap": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for motor performance",
+                    "type": "object",
+                    "properties": {
+                        "shaft_power": {
+                            "description": "Delivered rotational shaft power",
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "number"
+                            },
+                            "units": "W",
+                            "scalable": true
+                        },
+                        "shaft_rotational_speed": {
+                            "description": "Rotational speed of shaft",
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "number"
+                            },
+                            "units": "rev/s"
+                        }
+                    },
+                    "required": [
+                        "shaft_power",
+                        "shaft_rotational_speed"
+                    ],
+                    "additionalProperties": false
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for motor performance",
+                    "type": "object",
+                    "properties": {
+                        "efficiency": {
+                            "description": "Efficiency of motor",
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "number"
+                            },
+                            "units": "-",
+                            "notes": "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
+                        },
+                        "power_factor": {
+                            "description": "Power factor of the motor",
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "number"
+                            },
+                            "units": "-"
+                        },
+                        "operation_state": {
+                            "description": "The operation state at the operating conditions",
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "NORMAL",
+                                    "STANDBY"
+                                ],
+                                "enum_text": [
+                                    "Normal",
+                                    "Standby"
+                                ],
+                                "descriptions": [
+                                    "Indicates that the equipment is in normal operating state",
+                                    "Indicates that the equipment is in standby operating state"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "efficiency",
+                        "power_factor",
+                        "operation_state"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariables": {
+            "type": "object",
+            "properties": {
+                "shaft_power": {
+                    "description": "Delivered rotational shaft power",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "W",
+                    "scalable": true
+                },
+                "shaft_rotational_speed": {
+                    "description": "Rotational speed of shaft",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "rev/s"
+                }
+            },
+            "required": [
+                "shaft_power",
+                "shaft_rotational_speed"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariables": {
+            "type": "object",
+            "properties": {
+                "efficiency": {
+                    "description": "Efficiency of motor",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "-",
+                    "notes": "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
+                },
+                "power_factor": {
+                    "description": "Power factor of the motor",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "-"
+                },
+                "operation_state": {
+                    "description": "The operation state at the operating conditions",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "NORMAL",
+                            "STANDBY"
+                        ],
+                        "enum_text": [
+                            "Normal",
+                            "Standby"
+                        ],
+                        "descriptions": [
+                            "Indicates that the equipment is in normal operating state",
+                            "Indicates that the equipment is in standby operating state"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "efficiency",
+                "power_factor",
+                "operation_state"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "2.0.0",
+    "type": "object",
+    "properties": {
+        "metadata": {
+            "description": "Metadata data group",
+            "type": "object",
+            "properties": {
+                "schema_author": {
+                    "description": "Name of the organization that published the schema",
+                    "type": "string",
+                    "notes": "Identifies the organization that defined the schema"
+                },
+                "schema_name": {
+                    "description": "Schema name or identifier",
+                    "type": "string",
+                    "notes": "Identifies the schema used to define the data content"
+                },
+                "schema_version": {
+                    "description": "The version of the schema the data complies with",
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                },
+                "schema_url": {
+                    "description": "The Uniform Resource Locator (url) for the schema definition and/or documentation",
+                    "type": "string"
+                },
+                "author": {
+                    "description": "Name of the entity creating the serialization",
+                    "type": "string",
+                    "notes": "Identifies the organization that created the file"
+                },
+                "id": {
+                    "description": "Unique data set identifier",
+                    "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                    "type": "string",
+                    "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                },
+                "description": {
+                    "description": "Description of data content (suitable for display)",
+                    "type": "string"
+                },
+                "time_of_creation": {
+                    "description": "Timestamp indicating when the serialization was created",
+                    "notes": "Updated anytime any data content is modified",
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                },
+                "version": {
+                    "description": "Integer version identifier for the data",
+                    "notes": [
+                        "Used by data publisher to track revisions of the data",
+                        "Shall be incremented for each data revision"
+                    ],
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                },
+                "source": {
+                    "description": "Source(s) of the data",
+                    "type": "string",
+                    "notes": [
+                        "Used by data publisher to document methods (e.g., software and version) used to generate data",
+                        "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
+                    ]
+                },
+                "disclaimer": {
+                    "description": "Characterization of accuracy, limitations, and applicability of this data",
+                    "type": "string"
+                },
+                "copyright": {
+                    "description": "Copyright notice for the data",
+                    "type": "string",
+                    "notes": "**Informative note:** e.g., 'Copyright \u00a9 2024 Acme Corporation. All rights reserved.'"
+                },
+                "license": {
+                    "description": "License governing use, reproduction, and distribution of the data",
+                    "type": "string",
+                    "notes": "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+                },
+                "expiration_date": {
+                    "description": "Date after which the data is no longer considered valid by the data publisher",
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                },
+                "notes": {
+                    "description": "Additional Information",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "schema_author",
+                "schema_name",
+                "schema_version",
+                "author",
+                "description",
+                "time_of_creation"
+            ],
+            "additionalProperties": false
+        },
+        "description": {
+            "description": "Data group describing product and rating information",
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "type": "object",
+                    "properties": {
+                        "manufacturer": {
+                            "description": "Manufacturer name",
+                            "type": "string"
+                        },
+                        "model_number": {
+                            "description": "Model number",
+                            "type": "string",
+                            "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                        },
+                        "nominal_voltage": {
+                            "description": "Nominal voltage",
+                            "type": "number",
+                            "units": "V"
+                        },
+                        "nominal_frequency": {
+                            "description": "Nominal frequency",
+                            "type": "number",
+                            "units": "Hz"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "performance": {
+            "description": "Data group containing performance information",
+            "type": "object",
+            "properties": {
+                "maximum_power": {
+                    "description": "Maximum operational input power to the motor",
+                    "type": "number",
+                    "units": "W",
+                    "notes": "Operational limit set to prevent overheating or overcurrent, not the rated name plate power",
+                    "scalable": true
+                },
+                "standby_power": {
+                    "description": "Power draw when motor is not operating",
+                    "type": "number",
+                    "units": "W",
+                    "scalable": true
+                },
+                "number_of_poles": {
+                    "description": "Number of poles",
+                    "type": "integer"
+                },
+                "drive_representation": {
+                    "description": "The corresponding Standard 205 drive representation",
+                    "type": "object",
+                    "properties": {
+                        "metadata": {
+                            "description": "Metadata data group",
+                            "type": "object",
+                            "properties": {
+                                "schema_author": {
+                                    "description": "Name of the organization that published the schema",
+                                    "type": "string",
+                                    "notes": "Identifies the organization that defined the schema"
+                                },
+                                "schema_name": {
+                                    "description": "Schema name or identifier",
+                                    "type": "string",
+                                    "notes": "Identifies the schema used to define the data content"
+                                },
+                                "schema_version": {
+                                    "description": "The version of the schema the data complies with",
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                                },
+                                "schema_url": {
+                                    "description": "The Uniform Resource Locator (url) for the schema definition and/or documentation",
+                                    "type": "string"
+                                },
+                                "author": {
+                                    "description": "Name of the entity creating the serialization",
+                                    "type": "string",
+                                    "notes": "Identifies the organization that created the file"
+                                },
+                                "id": {
+                                    "description": "Unique data set identifier",
+                                    "notes": "Assigned by *data publisher* to identify this data. `id` shall remain unchanged for revisions of the same data.",
+                                    "type": "string",
+                                    "pattern": "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+                                },
+                                "description": {
+                                    "description": "Description of data content (suitable for display)",
+                                    "type": "string"
+                                },
+                                "time_of_creation": {
+                                    "description": "Timestamp indicating when the serialization was created",
+                                    "notes": "Updated anytime any data content is modified",
+                                    "type": "string",
+                                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}Z$"
+                                },
+                                "version": {
+                                    "description": "Integer version identifier for the data",
+                                    "notes": [
+                                        "Used by data publisher to track revisions of the data",
+                                        "Shall be incremented for each data revision"
+                                    ],
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-((?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"
+                                },
+                                "source": {
+                                    "description": "Source(s) of the data",
+                                    "type": "string",
+                                    "notes": [
+                                        "Used by data publisher to document methods (e.g., software and version) used to generate data",
+                                        "**Informative note:** `source` may be different from other data source(s) included elsewhere within the data"
+                                    ]
+                                },
+                                "disclaimer": {
+                                    "description": "Characterization of accuracy, limitations, and applicability of this data",
+                                    "type": "string"
+                                },
+                                "copyright": {
+                                    "description": "Copyright notice for the data",
+                                    "type": "string",
+                                    "notes": "**Informative note:** e.g., 'Copyright \u00a9 2024 Acme Corporation. All rights reserved.'"
+                                },
+                                "license": {
+                                    "description": "License governing use, reproduction, and distribution of the data",
+                                    "type": "string",
+                                    "notes": "**Informative note:** May be an SPDX identifier (e.g., 'CC-BY-4.0'), a URL to the license terms, or the full license text"
+                                },
+                                "expiration_date": {
+                                    "description": "Date after which the data is no longer considered valid by the data publisher",
+                                    "type": "string",
+                                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+                                },
+                                "notes": {
+                                    "description": "Additional Information",
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "schema_author",
+                                "schema_name",
+                                "schema_version",
+                                "author",
+                                "description",
+                                "time_of_creation"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "description": {
+                            "description": "Data group describing product and rating information",
+                            "type": "object",
+                            "properties": {
+                                "product_information": {
+                                    "description": "Data group describing product information",
+                                    "type": "object",
+                                    "properties": {
+                                        "manufacturer": {
+                                            "description": "Manufacturer name",
+                                            "type": "string"
+                                        },
+                                        "model_number": {
+                                            "description": "Model number",
+                                            "type": "string",
+                                            "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "performance": {
+                            "description": "Data group containing performance information",
+                            "type": "object",
+                            "properties": {
+                                "maximum_power": {
+                                    "description": "Maximum power draw of the drive",
+                                    "type": "number",
+                                    "units": "W",
+                                    "scalable": true
+                                },
+                                "standby_power": {
+                                    "description": "Power draw when the motor is not operating",
+                                    "type": "number",
+                                    "units": "W",
+                                    "scalable": true
+                                },
+                                "cooling_method": {
+                                    "description": "Method used to cool the drive",
+                                    "type": "string",
+                                    "enum": [
+                                        "PASSIVE_COOLED",
+                                        "ACTIVE_AIR_COOLED",
+                                        "ACTIVE_LIQUID_COOLED"
+                                    ],
+                                    "enum_text": [
+                                        "Passive Cooled",
+                                        "Active Air Cooled",
+                                        "Active Liquid Cooled"
+                                    ],
+                                    "descriptions": [
+                                        "Drive is cooled using natural air convection within the surrounding environment",
+                                        "Drive is cooled using forced air convection within the surrounding environment",
+                                        "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+                                    ],
+                                    "notes": [
+                                        "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                                        [
+                                            "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                                            "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                                        ],
+                                        [
+                                            "Any liquid pumping power shall be modeled external to the drive by the application software",
+                                            "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                                        ]
+                                    ]
+                                },
+                                "scaling": {
+                                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                                    "notes": "If not present, scaling of the performance data is not allowed",
+                                    "type": "object",
+                                    "properties": {
+                                        "minimum": {
+                                            "description": "Minimum scaling factor",
+                                            "type": "number",
+                                            "units": "-",
+                                            "notes": "If not specified, may be scaled down to any value greater than zero"
+                                        },
+                                        "maximum": {
+                                            "description": "Maximum scaling factor",
+                                            "type": "number",
+                                            "units": "-",
+                                            "notes": "If not specified, unlimited"
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "performance_map": {
+                                    "description": "Data group describing drive performance when operating",
+                                    "type": "object",
+                                    "properties": {
+                                        "grid_variables": {
+                                            "description": "Data group describing grid variables for drive performance",
+                                            "type": "object",
+                                            "properties": {
+                                                "output_power": {
+                                                    "description": "Power delivered to the motor",
+                                                    "type": "array",
+                                                    "minItems": 1,
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "units": "W",
+                                                    "scalable": true
+                                                },
+                                                "output_frequency": {
+                                                    "description": "Frequency delivered to the motor",
+                                                    "type": "array",
+                                                    "minItems": 1,
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "units": "Hz"
+                                                }
+                                            },
+                                            "required": [
+                                                "output_power",
+                                                "output_frequency"
+                                            ],
+                                            "additionalProperties": false
+                                        },
+                                        "lookup_variables": {
+                                            "description": "Data group describing lookup variables for drive performance",
+                                            "type": "object",
+                                            "properties": {
+                                                "efficiency": {
+                                                    "description": "Efficiency of drive",
+                                                    "type": "array",
+                                                    "minItems": 1,
+                                                    "items": {
+                                                        "type": "number"
+                                                    },
+                                                    "units": "-",
+                                                    "notes": [
+                                                        "Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)",
+                                                        "Input power shall include any power required to provide active air cooling for the drive"
+                                                    ]
+                                                },
+                                                "operation_state": {
+                                                    "description": "The operation state at the operating conditions",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "NORMAL",
+                                                            "STANDBY"
+                                                        ],
+                                                        "enum_text": [
+                                                            "Normal",
+                                                            "Standby"
+                                                        ],
+                                                        "descriptions": [
+                                                            "Indicates that the equipment is in normal operating state",
+                                                            "Indicates that the equipment is in standby operating state"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "efficiency",
+                                                "operation_state"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "required": [
+                                        "grid_variables",
+                                        "lookup_variables"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "maximum_power",
+                                "standby_power",
+                                "cooling_method",
+                                "performance_map"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "metadata",
+                        "performance"
+                    ],
+                    "additionalProperties": false
+                },
+                "scaling": {
+                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                    "notes": "If not present, scaling of the performance data is not allowed",
+                    "type": "object",
+                    "properties": {
+                        "minimum": {
+                            "description": "Minimum scaling factor",
+                            "type": "number",
+                            "units": "-",
+                            "notes": "If not specified, may be scaled down to any value greater than zero"
+                        },
+                        "maximum": {
+                            "description": "Maximum scaling factor",
+                            "type": "number",
+                            "units": "-",
+                            "notes": "If not specified, unlimited"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "performance_map": {
+                    "description": "Data group describing motor performance when operating",
+                    "notes": [
+                        "If no performance map is defined, the motor shall be assumed to transfer all electric power directly to mechanical shaft power",
+                        "***Informative note:*** This field may be omitted for motor-driven equipment where motor efficiencies are incorporated into their performance data"
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "grid_variables": {
+                            "description": "Data group describing grid variables for motor performance",
+                            "type": "object",
+                            "properties": {
+                                "shaft_power": {
+                                    "description": "Delivered rotational shaft power",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "W",
+                                    "scalable": true
+                                },
+                                "shaft_rotational_speed": {
+                                    "description": "Rotational speed of shaft",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "rev/s"
+                                }
+                            },
+                            "required": [
+                                "shaft_power",
+                                "shaft_rotational_speed"
+                            ],
+                            "additionalProperties": false
+                        },
+                        "lookup_variables": {
+                            "description": "Data group describing lookup variables for motor performance",
+                            "type": "object",
+                            "properties": {
+                                "efficiency": {
+                                    "description": "Efficiency of motor",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "-",
+                                    "notes": "Defined as the ratio of mechanical shaft power to electrical input power of the motor"
+                                },
+                                "power_factor": {
+                                    "description": "Power factor of the motor",
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {
+                                        "type": "number"
+                                    },
+                                    "units": "-"
+                                },
+                                "operation_state": {
+                                    "description": "The operation state at the operating conditions",
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "enum": [
+                                            "NORMAL",
+                                            "STANDBY"
+                                        ],
+                                        "enum_text": [
+                                            "Normal",
+                                            "Standby"
+                                        ],
+                                        "descriptions": [
+                                            "Indicates that the equipment is in normal operating state",
+                                            "Indicates that the equipment is in standby operating state"
+                                        ]
+                                    }
+                                }
+                            },
+                            "required": [
+                                "efficiency",
+                                "power_factor",
+                                "operation_state"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "required": [
+                        "grid_variables",
+                        "lookup_variables"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "maximum_power",
+                "standby_power",
+                "number_of_poles"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "metadata",
+        "performance"
+    ],
+    "additionalProperties": false
+}
