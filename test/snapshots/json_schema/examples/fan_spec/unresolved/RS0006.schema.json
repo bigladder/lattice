@@ -1,0 +1,199 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Electronic Motor Drive",
+    "description": "Schema for ASHRAE 205 annex RS0006: Electronic Motor Drive",
+    "definitions": {
+        "CoolingMethod": {
+            "type": "string",
+            "enum": [
+                "PASSIVE_COOLED",
+                "ACTIVE_AIR_COOLED",
+                "ACTIVE_LIQUID_COOLED"
+            ],
+            "enum_text": [
+                "Passive Cooled",
+                "Active Air Cooled",
+                "Active Liquid Cooled"
+            ],
+            "descriptions": [
+                "Drive is cooled using natural air convection within the surrounding environment",
+                "Drive is cooled using forced air convection within the surrounding environment",
+                "Drive is cooled using forced liquid convection, transferring heat to the liquid"
+            ],
+            "notes": [
+                "All drive efficiency losses are assumed to be added as heat to the surrounding environment",
+                [
+                    "Electrical power required for the active cooling system shall be included in the efficiency of the drive",
+                    "All drive efficiency losses are assumed to be added as heat to the surrounding environment"
+                ],
+                [
+                    "Any liquid pumping power shall be modeled external to the drive by the application software",
+                    "All drive efficiency losses are assumed to be added as heat to the liquid stream"
+                ]
+            ]
+        },
+        "RS0006": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata data group",
+                    "$ref": "core.schema.json#/definitions/Metadata"
+                },
+                "description": {
+                    "description": "Data group describing product and rating information",
+                    "$ref": "RS0006.schema.json#/definitions/Description"
+                },
+                "performance": {
+                    "description": "Data group containing performance information",
+                    "$ref": "RS0006.schema.json#/definitions/Performance"
+                }
+            },
+            "required": [
+                "metadata",
+                "performance"
+            ],
+            "additionalProperties": false
+        },
+        "Description": {
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "$ref": "RS0006.schema.json#/definitions/ProductInformation"
+                }
+            },
+            "additionalProperties": false
+        },
+        "ProductInformation": {
+            "type": "object",
+            "properties": {
+                "manufacturer": {
+                    "description": "Manufacturer name",
+                    "type": "string"
+                },
+                "model_number": {
+                    "description": "Model number",
+                    "type": "string",
+                    "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Performance": {
+            "type": "object",
+            "properties": {
+                "maximum_power": {
+                    "description": "Maximum power draw of the drive",
+                    "type": "number",
+                    "units": "W",
+                    "scalable": true
+                },
+                "standby_power": {
+                    "description": "Power draw when the motor is not operating",
+                    "type": "number",
+                    "units": "W",
+                    "scalable": true
+                },
+                "cooling_method": {
+                    "description": "Method used to cool the drive",
+                    "$ref": "RS0006.schema.json#/definitions/CoolingMethod"
+                },
+                "scaling": {
+                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                    "$ref": "ASHRAE205.schema.json#/definitions/Scaling",
+                    "notes": "If not present, scaling of the performance data is not allowed"
+                },
+                "performance_map": {
+                    "description": "Data group describing drive performance when operating",
+                    "$ref": "RS0006.schema.json#/definitions/PerformanceMap"
+                }
+            },
+            "required": [
+                "maximum_power",
+                "standby_power",
+                "cooling_method",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMap": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for drive performance",
+                    "$ref": "RS0006.schema.json#/definitions/GridVariables"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for drive performance",
+                    "$ref": "RS0006.schema.json#/definitions/LookupVariables"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariables": {
+            "type": "object",
+            "properties": {
+                "output_power": {
+                    "description": "Power delivered to the motor",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "W",
+                    "scalable": true
+                },
+                "output_frequency": {
+                    "description": "Frequency delivered to the motor",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "Hz"
+                }
+            },
+            "required": [
+                "output_power",
+                "output_frequency"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariables": {
+            "type": "object",
+            "properties": {
+                "efficiency": {
+                    "description": "Efficiency of drive",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "-",
+                    "notes": [
+                        "Defined as the ratio of electrical output power (to the motor) to electrical input power (to the drive)",
+                        "Input power shall include any power required to provide active air cooling for the drive"
+                    ]
+                },
+                "operation_state": {
+                    "description": "The operation state at the operating conditions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "ASHRAE205.schema.json#/definitions/OperationState"
+                    }
+                }
+            },
+            "required": [
+                "efficiency",
+                "operation_state"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "2.0.0",
+    "$ref": "RS0006.schema.json#/definitions/RS0006"
+}

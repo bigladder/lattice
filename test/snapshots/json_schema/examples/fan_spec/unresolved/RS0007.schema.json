@@ -1,0 +1,172 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Mechanical Drive",
+    "description": "Schema for ASHRAE 205 annex RS0007: Mechanical Drive",
+    "definitions": {
+        "DriveType": {
+            "type": "string",
+            "enum": [
+                "V_BELT",
+                "COGGED_BELT",
+                "SYNCHRONOUS_BELT",
+                "GEAR",
+                "CHAIN"
+            ],
+            "enum_text": [
+                "V-Belt",
+                "Cogged Belt",
+                "Synchronous Belt",
+                "Gear",
+                "Chain"
+            ],
+            "descriptions": [
+                "V-Belt",
+                "Cogged Belt",
+                "Synchronous Belt",
+                "Gear",
+                "Chain"
+            ]
+        },
+        "RS0007": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "description": "Metadata data group",
+                    "$ref": "core.schema.json#/definitions/Metadata"
+                },
+                "description": {
+                    "description": "Data group describing product and rating information",
+                    "$ref": "RS0007.schema.json#/definitions/Description"
+                },
+                "performance": {
+                    "description": "Data group containing performance information",
+                    "$ref": "RS0007.schema.json#/definitions/Performance"
+                }
+            },
+            "required": [
+                "metadata",
+                "performance"
+            ],
+            "additionalProperties": false
+        },
+        "Description": {
+            "type": "object",
+            "properties": {
+                "product_information": {
+                    "description": "Data group describing product information",
+                    "$ref": "RS0007.schema.json#/definitions/ProductInformation"
+                }
+            },
+            "additionalProperties": false
+        },
+        "ProductInformation": {
+            "type": "object",
+            "properties": {
+                "manufacturer": {
+                    "description": "Manufacturer name",
+                    "type": "string"
+                },
+                "model_number": {
+                    "description": "Model number",
+                    "type": "string",
+                    "notes": "Pattern shall match all model numbers that can be represented by the representation"
+                },
+                "drive_type": {
+                    "description": "Type of mechanical drive",
+                    "$ref": "RS0007.schema.json#/definitions/DriveType"
+                }
+            },
+            "additionalProperties": false
+        },
+        "Performance": {
+            "type": "object",
+            "properties": {
+                "speed_ratio": {
+                    "description": "Ratio of input shaft speed to output shaft speed",
+                    "type": "number",
+                    "units": "-"
+                },
+                "scaling": {
+                    "description": "Specifies the range the performance data can be scaled to represent different capacity equipment",
+                    "$ref": "ASHRAE205.schema.json#/definitions/Scaling",
+                    "notes": "If not present, scaling of the performance data is not allowed"
+                },
+                "performance_map": {
+                    "description": "Data group describing drive performance when operating",
+                    "$ref": "RS0007.schema.json#/definitions/PerformanceMap"
+                }
+            },
+            "required": [
+                "speed_ratio",
+                "performance_map"
+            ],
+            "additionalProperties": false
+        },
+        "PerformanceMap": {
+            "type": "object",
+            "properties": {
+                "grid_variables": {
+                    "description": "Data group describing grid variables for drive performance",
+                    "$ref": "RS0007.schema.json#/definitions/GridVariables"
+                },
+                "lookup_variables": {
+                    "description": "Data group describing lookup variables for drive performance",
+                    "$ref": "RS0007.schema.json#/definitions/LookupVariables"
+                }
+            },
+            "required": [
+                "grid_variables",
+                "lookup_variables"
+            ],
+            "additionalProperties": false
+        },
+        "GridVariables": {
+            "type": "object",
+            "properties": {
+                "output_power": {
+                    "description": "Output shaft power",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "W",
+                    "scalable": true
+                }
+            },
+            "required": [
+                "output_power"
+            ],
+            "additionalProperties": false
+        },
+        "LookupVariables": {
+            "type": "object",
+            "properties": {
+                "efficiency": {
+                    "description": "Efficiency of drive",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "number"
+                    },
+                    "units": "-",
+                    "notes": "Defined as the ratio of output shaft power to input shaft power"
+                },
+                "operation_state": {
+                    "description": "The operation state at the operating conditions",
+                    "type": "array",
+                    "items": {
+                        "$ref": "ASHRAE205.schema.json#/definitions/OperationState"
+                    }
+                }
+            },
+            "required": [
+                "efficiency",
+                "operation_state"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "version": "2.0.0",
+    "$ref": "RS0007.schema.json#/definitions/RS0007"
+}
