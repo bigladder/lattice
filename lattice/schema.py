@@ -36,7 +36,7 @@ class RegularExpressionPattern:
 
 # Data Types
 _type_base_names = RegularExpressionPattern("[A-Z]([A-Z]|[a-z]|[0-9])*")
-_data_element_names = RegularExpressionPattern("([a-z][a-z,0-9]*)(_([a-z,0-9])+)*")
+_data_element_names = RegularExpressionPattern("([a-z][a-z0-9]*)(_([a-z0-9])+)*")
 
 _alternation_segment = rf"\({_data_element_names}(\|{_data_element_names})*\)"
 _path_segment = rf"({_alternation_segment}|{_data_element_names})"
