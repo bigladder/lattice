@@ -124,7 +124,7 @@ Metadata:
       Required: True
       Notes: "Updated anytime any data content is modified"
     version:
-      Description: "Integer version identifier for the data"
+      Description: "Version identifier for the data"
       Type: "Version"
       Notes:
         - "Used by data publisher to track revisions of the data"
