@@ -53,7 +53,7 @@ Pattern:
 UUID:
   Object Type: "String Type"
   Description: "An effectively unique character string conforming to ITU-T Recommendation X.667 (ITU-T 2012)."
-  Regular Expression Pattern: "^[0-9,a-f,A-F]{8}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{4}-[0-9,a-f,A-F]{12}$"
+  Regular Expression Pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
   Examples:
     - "123e4567-e89b-12d3-a456-426655440000"
 
