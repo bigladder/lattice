@@ -7,7 +7,7 @@
 Lattice
 ===========
 
-A Python package that provides support for a schema-based building data model framework, currently under development as ASHRAE Standard 232P, where schema are described in compliant YAML source files. Lattice performs:
+A Python package that provides support for a schema-based building data model framework, defined by ANSI/ASHRAE/IBPSA Standard 232, where schema are described in compliant YAML source files. Lattice performs:
 
 - Data model validation: Ensures the YAML schema source files are well-formed.
 - Schema generation: Translates the YAML schema source files into equivalent JSON Schema.
@@ -60,11 +60,12 @@ The `Lattice` class is instantiated with the following parameters:
 
 The repository's *examples* directory contains sample data models exemplifying different model options, such as Data Group Templates or scoped references.
 
-More complete examples of projects using the ASHRAE Standard 232P framework include:
+More complete examples of projects using lattice include:
 
-- [IBPSA-USA Climate Information](https://github.com/IBPSA-USA/climate-information) (uses lattice)
-- [ASHRAE Standard 205](https://github.com/open205/schema-205) (transitioning to lattice)
-- [ASHRAE Standard 229](https://github.com/open229/ruleset-model-description-schema) (does not use lattice...yet)
+- [ASHRAE Standard 205](https://github.com/open205/schema-205)
+- [IBPSA-USA Climate Information](https://github.com/IBPSA-USA/climate-information)
+- [IBPSA-USA Output Reporting](https://github.com/IBPSA-USA/output-reporting)
+- [RESNET HERS Diagnostic Output](https://github.com/resnet-us/hers-diagnostic-schema)
 
 ### C++ Library Code Generation
 
