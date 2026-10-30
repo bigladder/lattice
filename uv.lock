@@ -527,7 +527,7 @@ requires-dist = [
     { name = "cbor2" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "jsonschema" },
-    { name = "markdown-grid-tables", git = "https://github.com/bigladder/markdown-grid-tables.git?branch=fix-def-list-and-preprocessing" },
+    { name = "markdown-grid-tables", git = "https://github.com/bigladder/markdown-grid-tables.git?branch=bigladder" },
     { name = "mkdocs-autorefs" },
     { name = "mkdocs-material" },
     { name = "mkdocs-print-site-plugin", specifier = ">=2.9" },
@@ -643,8 +643,8 @@ wheels = [
 
 [[package]]
 name = "markdown-grid-tables"
-version = "0.6.1.dev6+g28bfe9f62"
-source = { git = "https://github.com/bigladder/markdown-grid-tables.git?branch=fix-def-list-and-preprocessing#28bfe9f6231ee8e80f22ce10203c3e5d99a77102" }
+version = "0.6.1.dev7+g581f1cfa2"
+source = { git = "https://github.com/bigladder/markdown-grid-tables.git?branch=bigladder#581f1cfa246c903c5379718d9d661a91364d0752" }
 dependencies = [
     { name = "markdown" },
 ]

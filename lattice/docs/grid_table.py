@@ -75,6 +75,69 @@ def visual_length(text):
     return len(_strip_markdown_syntax(text))
 
 
+# A line's leading structure, which a wrapped continuation line must hang under to stay inside
+# it: indentation, a definition's ":   ", and a list item's marker.
+_LINE_PREFIX = re.compile(r"^ *(?::\s+)?(?:(?:[-*+]|\d+[.)])\s+)?")
+
+# A word that starts a block -- a list item, heading, quote, definition, reference definition,
+# setext underline, or rule -- whenever it begins a line.
+_BLOCK_MARKER = re.compile(r"^(?:[-*+>:|]|#{1,6}|\d+[.)]|=+|-{3,}|\*{3,}|_{3,}|\[[^\]]*\]:)$")
+
+
+def _split_atoms(text):
+    """
+    - text: string, one line of cell text (no newlines), without its leading structure
+    RETURN: (Array string), the pieces a wrap may break between
+
+    Splits on spaces, except inside a code span, a link (`[...]`), or an attr_list (`{...}`),
+    whose inner spaces a line break would change the meaning of. A block marker is glued to the
+    piece before it, so that no wrap can start a continuation line with it.
+    """
+    atoms = []
+    current = ""
+    in_code = False
+    bracket_depth = 0
+    brace_depth = 0
+    for char in text:
+        if char == "`":
+            in_code = not in_code
+        elif not in_code:
+            if char == "[":
+                bracket_depth += 1
+            elif char == "]":
+                bracket_depth = max(0, bracket_depth - 1)
+            elif char == "{":
+                brace_depth += 1
+            elif char == "}":
+                brace_depth = max(0, brace_depth - 1)
+        if char == " " and not in_code and bracket_depth == 0 and brace_depth == 0:
+            atoms.append(current)
+            current = ""
+        else:
+            current += char
+    atoms.append(current)
+    glued: list[str] = []
+    for atom in atoms:
+        if glued and _BLOCK_MARKER.match(atom):
+            glued[-1] += " " + atom
+        else:
+            glued.append(atom)
+    return glued
+
+
+def _line_atoms(line):
+    """
+    - line: string, one line of cell text (no newlines)
+    RETURN: (int, Array string), the hanging indent for its continuation lines, and its
+    unbreakable pieces -- the first carrying the line's leading structure (see _LINE_PREFIX)
+    """
+    match = _LINE_PREFIX.match(line)
+    prefix = match.group(0) if match else ""
+    atoms = _split_atoms(line[len(prefix) :])
+    atoms[0] = prefix + atoms[0]
+    return len(prefix), atoms
+
+
 # pylint: disable-next=too-many-branches
 def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
     """
@@ -86,47 +149,27 @@ def wrap_text_to_lines(text, width, bold=False, left_space=1, right_space=1):
     NOTE: width includes both left_space and right_space
     RETURN: (Array String), the lines
     """
-    verbose = False
     if len(text) > 0:
         if text[0:1] in ["+ ", "- ", "* "]:
             text = "\\" + text
     if "\n" in text:
         return flatten([wrap_text_to_lines(t, width, bold, left_space, right_space) for t in text.split("\n")])
-    atoms = text.split(" ")
+    # Breaks only between unbreakable pieces, and measures in literal characters: every row of a
+    # grid table has to put its borders at the same real position, Markdown syntax included.
+    hang, atoms = _line_atoms(text)
     if bold:
         atoms[0] = "**" + atoms[0]
         atoms[-1] = atoms[-1] + "**"
-    longest_atom = max([visual_length(s) for s in atoms])
-    if longest_atom + left_space + right_space > width:
-        print("Warning! Need to hyphenate atoms!")
-    lines = []
-    atom_idx = 0
-    first = True
-    line = " " * left_space
-    num_atoms = len(atoms)
-    while atom_idx < num_atoms:
-        if verbose:
-            print(f"atom_idx: {atom_idx}")
-            print(f"line    : {line}")
-            print(f"lines   : {lines}")
-            print(f"atoms   : {atoms}")
-        if first:
-            new_line = line + atoms[atom_idx]
-            first = False
-        else:
-            new_line = line + " " + atoms[atom_idx]
-        if visual_length(new_line) + right_space <= width:
-            line = new_line
+    lines: list[str] = []
+    line = " " * left_space + atoms[0]
+    for atom in atoms[1:]:
+        candidate = line + " " + atom
+        if len(candidate) + right_space <= width:
+            line = candidate
         else:
             lines.append(line + " " * right_space)
-            line = (" " * left_space) + atoms[atom_idx]
-        atom_idx += 1
-    if len(line) > 0:
-        lines.append(line + " " * right_space)
-    if verbose:
-        print(f"line    : {line}")
-        print(f"lines   : {lines}")
-        print(f"atoms   : {atoms}")
+            line = " " * (left_space + hang) + atom
+    lines.append(line + " " * right_space)
     return lines
 
 
@@ -288,21 +331,18 @@ def _real_width_floor(doa, columns):
     """
     - doa: (Dict String (Array String)), dictionary with string keys to arrays of string
     - columns: (Array String), the columns to compute a floor for
-    RETURN: (Array int), for each column, the greatest literal (unstripped) width any single
-    wrapped line of that column's header or cells could reach.
+    RETURN: (Array int), for each column, the narrowest literal (unstripped) width that still
+    fits every row `wrap_text_to_lines` could write for that column's header or cells.
 
     `get_column_sizes` measures against `visual_length`, so it may choose a column narrower than
     a cell's literal text whenever that cell carries Markdown syntax overhead (backticks, links,
-    ...). `wrap_text_to_lines` splits a cell on "\n" before wrapping each piece separately, so no
-    single physical row ever has to hold more than one "\n"-delimited line's own literal length --
-    a multi-paragraph cell (e.g. several attributes concatenated) never needs its *entire* length
-    on one row, only its longest individual line does. That line's literal length, padded the same
-    way `get_column_sizes` pads a whole (unwrapped) line -- bold **markers** on the header, the +2
-    spacing `has_spacing` always adds here -- bounds every row that line could produce, just
-    measured in literal characters instead of `visual_length`. Without this floor, the final width
-    could fall below what a cell's literal characters need, and the grid table's `+`/`|` borders
-    must land at the same real character position on every row or `markdown-grid-tables` (or
-    Pandoc) can't parse it.
+    ...). But the grid table's `+`/`|` borders must land at the same real character position on
+    every row or `markdown-grid-tables` (or Pandoc) can't parse it, so the column has to fit what
+    `wrap_text_to_lines` actually writes. It breaks only between unbreakable pieces (see
+    _line_atoms), so the widest row it can be forced into is one piece on its own: the first
+    piece of a line, or any later one after its continuation line's hanging indent. That width,
+    padded the same way `get_column_sizes` pads -- bold **markers** on the header, the +2
+    spacing `has_spacing` always adds here -- is the floor.
     """
     floor = []
     for column in columns:
@@ -310,9 +350,11 @@ def _real_width_floor(doa, columns):
         column_floor = 0
         for cell, is_bold in cells:
             for line in cell.split("\n"):
-                full_size = len(line) + 2  # +2: has_spacing is always True in make_table_from_dict_of_arrays
+                hang, atoms = _line_atoms(line)
+                widest = max([len(atoms[0])] + [hang + len(atom) for atom in atoms[1:]])
+                full_size = widest + 2  # +2: has_spacing is always True in make_table_from_dict_of_arrays
                 if is_bold:
-                    full_size += 4 if len(line.split(" ")) == 1 else 2
+                    full_size += 4 if len(atoms) == 1 else 2
                 column_floor = max(column_floor, full_size)
         floor.append(column_floor)
     return floor
