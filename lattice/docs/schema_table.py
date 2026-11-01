@@ -274,6 +274,8 @@ def create_table_from_list(  # noqa: PLR0912, PLR0913 Too many branches, too man
             for attribute in item:
                 if attribute == column:
                     attribute_string = item[attribute]
+                    if attribute_string == "":
+                        continue
                     if attribute == "Type":
                         # Each substitution expands a compact wrapper ("(X)", "[X]", "{X}",
                         # "<X>", ":X:") into its spelled-out predicate form. A Type string is also

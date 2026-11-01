@@ -135,6 +135,11 @@ def generate_meta_schema(output_path, schema=None):
                 meta_schema["definitions"]["DataElementAttributes"]
             )
 
+            meta_schema["definitions"][f"{data_group_template_name}DataElementAttributes"]["required"] = [
+                "Description",
+                "Type",
+            ]
+
             if "Unit System" in data_group_template:
                 meta_schema["definitions"][f"{data_group_template_name}DataElementAttributes"]["properties"][
                     "Units"

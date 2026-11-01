@@ -175,6 +175,7 @@ definitions:
     properties: # TODO: Need to allow custom attributes
       Description:
         type: string
+        minLength: 1
       Type:
         "$ref": meta.schema.json#/definitions/DataTypePattern
       Units:
@@ -188,6 +189,12 @@ definitions:
         "$ref": meta.schema.json#/definitions/Notes
       ID:
         type: boolean
+  DataElement:
+    allOf:
+      - "$ref": meta.schema.json#/definitions/DataElementAttributes
+    required:
+      - Description
+      - Type
   DataGroup:
     type: object
     properties:
@@ -207,10 +214,10 @@ definitions:
         type: object
         patternProperties:
           "**GENERATED**":
-            "$ref": meta.schema.json#/definitions/DataElementAttributes
+            "$ref": meta.schema.json#/definitions/DataElement
             required:
               - Description
-              - Data Type
+              - Type
             additionalProperties: false
         additionalProperties: false
     required:
