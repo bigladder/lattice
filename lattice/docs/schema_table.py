@@ -135,6 +135,9 @@ def data_elements_dict_from_data_groups(data_groups):  # TODO: Really needs to b
                 else:
                     new_obj["Units"] = new_obj["Units"].replace("-", r"·")
                     new_obj["Units"] = re.sub(r"(\d+)", r"^\1^", new_obj["Units"])
+                    numerator, solidus, denominator = new_obj["Units"].partition("/")
+                    if solidus and "·" in denominator and not denominator.startswith("("):
+                        new_obj["Units"] = f"{numerator}/({denominator})"
             if "Scalable" in new_obj:  # TODO: Custom from 205. Needs to be generalized.
                 if isinstance(new_obj["Scalable"], bool):
                     if new_obj["Scalable"]:
