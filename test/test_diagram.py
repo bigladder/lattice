@@ -1,3 +1,7 @@
+from copy import deepcopy
+
+import pytest
+
 from lattice.docs.diagram import build_data_group_tree, render_tree
 from lattice.file_io import dump
 from lattice.schema import Schema
@@ -137,3 +141,31 @@ def test_render_tree_includes_caption_when_given(tmp_path):
     tree = build_data_group_tree(_sample_schema(tmp_path).get_data_group("Root"))
     diagram = render_tree([tree], caption="A caption")
     assert diagram.startswith("**A caption**\n\n```mermaid\n")
+
+
+@pytest.mark.parametrize("requirements", [(False, False), (False, True), (True, False)])
+def test_repeated_children_keep_first_order_and_any_required_marker(tmp_path, requirements):
+    contents = deepcopy(_SCHEMA)
+    contents["Root"]["Data Elements"] = {
+        "first": {"Description": "d", "Type": "Group(Required)", "Required": requirements[0]},
+        "middle": {"Description": "d", "Type": "Group(Optional)"},
+        "last": {"Description": "d", "Type": "Array(Group(Required))", "Required": requirements[1]},
+    }
+    schema = Schema(_write_schema(tmp_path, contents))
+    children = build_data_group_tree(schema.get_data_group("Root"))["subcategories"]
+    assert [child["name"] for child in children] == ["Required" if any(requirements) else "Required*", "Optional*"]
+
+
+def test_repeated_nested_references_do_not_exceed_mermaid_text_limit(tmp_path):
+    contents = deepcopy(_SCHEMA)
+    for parent, child in (("Root", "Required"), ("Required", "Optional")):
+        contents[parent]["Data Elements"] = {
+            f"field_{index}": {"Description": "d", "Type": f"Group({child})", "Required": True} for index in range(50)
+        }
+    schema = Schema(_write_schema(tmp_path, contents))
+    diagram = render_tree([build_data_group_tree(schema.get_data_group("Root"))])
+    mermaid_text_limit = 50_000
+    assert len(diagram) < mermaid_text_limit
+    assert diagram.count('"Required"') == 1
+    assert diagram.count('"Optional"') == 1
+    assert diagram.count("n_Root_Required_Optional --> n_Root_Required_Optional") == 1
