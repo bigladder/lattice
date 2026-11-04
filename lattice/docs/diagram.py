@@ -77,7 +77,8 @@ def build_data_group_tree(
       walked into just like a locally-defined one, instead of stopping as a leaf
     - required: bool, whether the Data Element that references `data_group` is required --
       carried into the rendered label as the same "*" (not required) marker used in hand-written
-      Data Group Hierarchy sections
+      Data Group Hierarchy sections. Repeated references to the same child are collapsed in
+      first-seen order, and the child is required if any referencing element is required.
     - ancestors: tuple of (DataGroup, array of string) pairs, each an ancestor Data Group paired
       with its own rendered node path (in render_tree's path terms), used both to stop recursion
       at a repeated (e.g. self-referencing) Data Group and to point a cycle back at the exact
@@ -92,10 +93,13 @@ def build_data_group_tree(
     for ancestor_group, ancestor_path in ancestors:
         if ancestor_group is data_group:
             return {"name": label, "recursive_target_path": ancestor_path}
+    child_requirements: dict[DataGroup, bool] = {}
+    for element, child in data_group.referenced_children():
+        if isinstance(child, DataGroup):
+            child_requirements[child] = child_requirements.get(child, False) or bool(element.required)
     children = [
-        build_data_group_tree(child, required=bool(element.required), ancestors=(*ancestors, (data_group, my_path)))
-        for element, child in data_group.referenced_children()
-        if isinstance(child, DataGroup)
+        build_data_group_tree(child, required=child_required, ancestors=(*ancestors, (data_group, my_path)))
+        for child, child_required in child_requirements.items()
     ]
     node: dict[str, Any] = {"name": label}
     if children:
