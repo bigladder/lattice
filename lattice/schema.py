@@ -3,7 +3,8 @@ from __future__ import (
 )  # Needed for type hinting classes that are not yet fully defined
 
 import pathlib
-from typing import Any, Dict, List, Tuple, Type, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Literal, Tuple, Type, Union
 
 import regex
 
@@ -214,6 +215,26 @@ _value_pattern = RegularExpressionPattern(
 _set_item_pattern = regex.compile(r'"[^"]*"|[^,\s\[\]]+')
 
 
+def _parse_value(text: str, data_type: DataType) -> Union[int, float, str, bool, None]:  # noqa: PLR0911 too-many-return-statements
+    """Convert a value literal to the Data Type's Python value, or None if it isn't one."""
+    if isinstance(data_type, IntegerType) and IntegerType.value_pattern.pattern.fullmatch(text):
+        return int(text)
+    if isinstance(data_type, NumericType) and NumericType.value_pattern.pattern.fullmatch(text):
+        return float(text)
+    if isinstance(data_type, BooleanType) and BooleanType.value_pattern.pattern.fullmatch(text):
+        return text == "True"
+    if isinstance(data_type, StringType) and StringType.value_pattern.pattern.fullmatch(text):
+        content = text[1:-1]
+        # A String Type (e.g. UUID) replaces value_pattern with its own pattern for the unquoted content.
+        if type(data_type) is StringType or data_type.value_pattern.pattern.fullmatch(content):
+            return content
+    if isinstance(data_type, PatternType) and PatternType.value_pattern.pattern.fullmatch(text):
+        return text[1:-1]
+    if isinstance(data_type, EnumerationType) and EnumerationType.value_pattern.pattern.fullmatch(text):
+        return text
+    return None
+
+
 # Constraints
 def _constrained_data_type(constraint: Type[Constraint], parent_data_element: DataElement) -> DataType:
     """The Data Type a constraint applies to: an array's item type, unless the constraint is about the array."""
@@ -262,18 +283,10 @@ class Constraint:
     def _parse_value(self, text: str) -> Union[int, float, str]:
         """Convert a value literal to the constrained Data Type's Python value; raise if it isn't one."""
         data_type = self._constrained_data_type()
-        if isinstance(data_type, IntegerType) and IntegerType.value_pattern.pattern.fullmatch(text):
-            return int(text)
-        if isinstance(data_type, NumericType) and NumericType.value_pattern.pattern.fullmatch(text):
-            return float(text)
-        if isinstance(data_type, StringType) and StringType.value_pattern.pattern.fullmatch(text):
-            content = text[1:-1]
-            # A String Type (e.g. UUID) replaces value_pattern with its own pattern for the unquoted content.
-            if type(data_type) is StringType or data_type.value_pattern.pattern.fullmatch(content):
-                return content
-        if isinstance(data_type, EnumerationType) and EnumerationType.value_pattern.pattern.fullmatch(text):
-            return text
-        raise Exception(f"Constraint value '{text}' is not a valid '{data_type.text}' value.{self._context()}")
+        value = _parse_value(text, data_type)
+        if value is None:
+            raise Exception(f"Constraint value '{text}' is not a valid '{data_type.text}' value.{self._context()}")
+        return value
 
     def _parse_number(self, text: str) -> Union[int, float]:
         value = self._parse_value(text)
@@ -642,27 +655,144 @@ def _constraint_factory(text: str, parent_data_element: DataElement) -> Constrai
 
 
 # Required
+@dataclass(frozen=True)
+class Condition:
+    """A test on a Data Element in the same Data Group, e.g. that it's defined or has a given value."""
+
+    data_element_name: str
+    kind: Literal["defined", "equals", "contains"]
+    value: Union[int, float, str, bool, None] = None  # the Data Element's (or its items') Python value
+    negated: bool = False
+
+
+@dataclass(frozen=True)
+class ConditionalRequirement:
+    """A Data Element that is required when all of its conditions hold."""
+
+    conditions: Tuple[Condition, ...]
+    data_element: DataElement
+
+
 class Required:
+    """One clause of a conditional Required, e.g. "if kind=KIND_A", parsed into a Condition."""
+
     pattern: RegularExpressionPattern
 
     def __init__(self, text: str, parent_data_element: DataElement):
         self.text = text
         self.parent_data_element = parent_data_element
+        self.condition: Condition
+
+    def _context(self) -> str:
+        return _required_context(self.parent_data_element)
+
+    def _match(self) -> regex.Match:
+        match = self.pattern.match(self.text, anchored=True)
+        assert match is not None  # _required_factory chose this class by the same match
+        return match
+
+    def _sibling_data_type(self, data_element_name: str) -> DataType:
+        data_elements = self.parent_data_element.parent_data_group.data_elements
+        if data_element_name not in data_elements:
+            raise Exception(
+                f"Required '{self.text}' refers to '{data_element_name}', which isn't a Data Element of this "
+                f"Data Group.{self._context()}"
+            )
+        return data_elements[data_element_name].data_type
+
+    def _parse_value(self, text: str, data_type: DataType) -> Union[int, float, str, bool]:
+        value = _parse_value(text, data_type)
+        if value is None:
+            raise Exception(f"Required value '{text}' is not a valid '{data_type.text}' value.{self._context()}")
+        if isinstance(data_type, EnumerationType):
+            # The sibling's EnumerationType may not be resolved yet, so look the Enumeration up directly.
+            schema = self.parent_data_element.parent_data_group.parent_schema
+            if value not in schema.get_enumeration(data_type.enumeration_name).enumerators:
+                raise Exception(
+                    f"Required '{self.text}' uses '{value}', which isn't an enumerator of "
+                    f"'{data_type.enumeration_name}'.{self._context()}"
+                )
+        return value
 
     def resolve(self):
         pass
 
 
 class PrerequisiteDefinitionRequired(Required):
-    pattern = RegularExpressionPattern(f"if !?({_data_element_names})")
+    pattern = RegularExpressionPattern(f"if (?P<Not>!?)(?P<DataElementName>{_data_element_names})")
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self._match()
+        name = match.group("DataElementName")
+        self._sibling_data_type(name)
+        self.condition = Condition(name, "defined", negated=bool(match.group("Not")))
 
 
 class PrerequisiteValueRequired(Required):
-    pattern = RegularExpressionPattern(f"if ({_data_element_names})!?=({_value_pattern})")
+    pattern = RegularExpressionPattern(
+        f"if (?P<DataElementName>{_data_element_names})(?P<Not>!?)=(?P<Value>{_value_pattern})"
+    )
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self._match()
+        name = match.group("DataElementName")
+        value = self._parse_value(match.group("Value"), self._sibling_data_type(name))
+        self.condition = Condition(name, "equals", value, negated=bool(match.group("Not")))
 
 
 class PrerequisiteArrayValueRequired(Required):
-    pattern = RegularExpressionPattern(rf"if ({_data_element_names}) contains\(({_value_pattern})\)")
+    pattern = RegularExpressionPattern(
+        rf"if (?P<DataElementName>{_data_element_names}) contains\((?P<Value>{_value_pattern})\)"
+    )
+
+    def __init__(self, text: str, parent_data_element: DataElement):
+        super().__init__(text, parent_data_element)
+        match = self._match()
+        name = match.group("DataElementName")
+        data_type = self._sibling_data_type(name)
+        if not isinstance(data_type, ArrayType):
+            raise Exception(f"Required '{self.text}' needs '{name}' to be an Array.{self._context()}")
+        value = self._parse_value(match.group("Value"), data_type.array_data_type)
+        self.condition = Condition(name, "contains", value)
+
+
+def _required_context(data_element: DataElement) -> str:
+    data_group = data_element.parent_data_group
+    return (
+        f" Schema={data_group.parent_schema.file_path}, Data Group={data_group.name}, Data Element={data_element.name}"
+    )
+
+
+# " and " outside a quoted string value: an even number of quotes follows it.
+_required_clause_separator = regex.compile(r' and (?=(?:[^"]*"[^"]*")*[^"]*$)')
+
+
+def _required_factory(text: str, parent_data_element: DataElement) -> List[Required]:
+    """Parse a conditional Required ("if <clause>[ and <clause>]...") into one Required per clause."""
+    if not text.startswith("if "):
+        raise Exception(
+            f"Required '{text}' must be True, False or start with 'if '.{_required_context(parent_data_element)}"
+        )
+    clauses: List[Required] = []
+    for clause in _required_clause_separator.split(text[len("if ") :]):
+        # The subclass patterns each describe a whole one-clause Required, so every clause gets its own "if ".
+        clause_text = f"if {clause}"
+        for required_class in (
+            PrerequisiteDefinitionRequired,
+            PrerequisiteValueRequired,
+            PrerequisiteArrayValueRequired,
+        ):
+            if required_class.pattern.match(clause_text, anchored=True):
+                clauses.append(required_class(clause_text, parent_data_element))
+                break
+        else:
+            raise Exception(
+                f"Required '{text}' has a clause, '{clause}', that isn't a recognized condition."
+                f"{_required_context(parent_data_element)}"
+            )
+    return clauses
 
 
 # Required attributes that a NestedAttributeOverride may supply on behalf of a Data Element,
@@ -776,6 +906,10 @@ class DataElement:
         self.notes = self.dictionary.get("Notes", None)
         self.units = self.dictionary.get("Units", None)
         self.required = self.dictionary.get("Required", False)
+        self.conditional_requirement: ConditionalRequirement | None = None
+        if isinstance(self.required, str):
+            conditions = tuple(required.condition for required in _required_factory(self.required, self))
+            self.conditional_requirement = ConditionalRequirement(conditions, self)
 
         self.is_id = self.dictionary.get("ID", False)
         if self.is_id:
@@ -875,6 +1009,18 @@ class DataGroup:
     def resolve(self):
         for data_element in self.data_elements.values():
             data_element.resolve()
+
+    def required_elements(self) -> List[DataElement]:
+        """Data Elements that are always required (`Required: True`), in declared order."""
+        return [data_element for data_element in self.data_elements.values() if data_element.required is True]
+
+    def conditional_requirements(self) -> List[ConditionalRequirement]:
+        """Data Elements that are required only when conditions hold (`Required: if ...`), in declared order."""
+        return [
+            data_element.conditional_requirement
+            for data_element in self.data_elements.values()
+            if data_element.conditional_requirement is not None
+        ]
 
     def referenced_children(self) -> List[Tuple[DataElement, Union["DataGroup", "Enumeration"]]]:
         """
